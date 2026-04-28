@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#3aa6e6"/>
+      <stop offset="0.55" stop-color="#a3dcf5"/>
+      <stop offset="1" stop-color="#dff0fa"/>
+    </linearGradient>
+    <linearGradient id="hill" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#7ec24a"/>
+      <stop offset="0.5" stop-color="#4f9b2b"/>
+      <stop offset="1" stop-color="#2e6b18"/>
+    </linearGradient>
+    <linearGradient id="hillFar" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#9bd075"/>
+      <stop offset="1" stop-color="#5da134"/>
+    </linearGradient>
+    <radialGradient id="cloud" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+
+  <!-- soft clouds -->
+  <ellipse cx="240" cy="190" rx="180" ry="38" fill="url(#cloud)"/>
+  <ellipse cx="520" cy="140" rx="220" ry="40" fill="url(#cloud)"/>
+  <ellipse cx="1100" cy="220" rx="260" ry="44" fill="url(#cloud)"/>
+  <ellipse cx="1420" cy="120" rx="180" ry="34" fill="url(#cloud)"/>
+
+  <!-- distant rolling hill -->
+  <path d="M0,720 C260,640 540,700 820,660 C1100,620 1340,690 1600,640 L1600,1000 L0,1000 Z"
+        fill="url(#hillFar)" opacity="0.85"/>
+
+  <!-- foreground hill -->
+  <path d="M0,820 C220,720 480,780 760,740 C1060,700 1320,800 1600,740 L1600,1000 L0,1000 Z"
+        fill="url(#hill)"/>
+</svg>
