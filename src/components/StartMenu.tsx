@@ -1,19 +1,47 @@
+import type { ReactNode } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { apps, type AppId } from "../apps/registry";
-import { MyComputerIcon, NotepadIcon, InfoIcon, RecycleBinIcon } from "../icons";
-import type { ReactNode } from "react";
+import {
+  ControlPanelIcon,
+  DocumentsIcon,
+  HelpIcon,
+  LogOffIcon,
+  RunIcon,
+  SearchIcon,
+  ShutdownIcon,
+} from "../icons";
+import styles from "./StartMenu.module.css";
 
 type Props = { onClose: () => void };
 
-const leftItems: { appId: AppId; label: string; icon: ReactNode; sub?: string }[] = [
-  { appId: "notepad", label: "Notepad", icon: <NotepadIcon size={28} />, sub: "Plain-text editor" },
-  { appId: "about", label: "About funOS", icon: <InfoIcon size={28} />, sub: "Project info" },
+/* Pinned programs — the bold entries at the top of the white column. */
+const pinned: { appId: AppId; sub: string }[] = [
+  { appId: "notepad", sub: "Plain-text editor" },
+  { appId: "about", sub: "Project info" },
 ];
 
-const rightItems: { appId: AppId; label: string; icon: ReactNode }[] = [
-  { appId: "myComputer", label: "My Computer", icon: <MyComputerIcon size={22} /> },
-  { appId: "recycleBin", label: "Recycle Bin", icon: <RecycleBinIcon size={22} /> },
+/* Places — the right column. Entries with no app behind them are rendered
+ * disabled rather than omitted: the shape of the menu is part of what makes it
+ * recognisable, and a greyed row is an honest "not built yet" where a missing
+ * row is a silent one.
+ */
+const places: { appId?: AppId; label: string; icon: ReactNode }[] = [
+  { label: "My Documents", icon: <DocumentsIcon size={22} /> },
+  { appId: "myComputer", label: "My Computer", icon: <AppGlyph id="myComputer" /> },
+  { appId: "recycleBin", label: "Recycle Bin", icon: <AppGlyph id="recycleBin" /> },
 ];
+
+const tools: { label: string; icon: ReactNode }[] = [
+  { label: "Control Panel", icon: <ControlPanelIcon size={22} /> },
+  { label: "Help and Support", icon: <HelpIcon size={22} /> },
+  { label: "Search", icon: <SearchIcon size={22} /> },
+  { label: "Run...", icon: <RunIcon size={22} /> },
+];
+
+function AppGlyph({ id, size = 22 }: { id: AppId; size?: number }) {
+  const Icon = apps[id].icon;
+  return <Icon size={size} />;
+}
 
 export function StartMenu({ onClose }: Props) {
   const open = useWindowStore((s) => s.open);
@@ -25,113 +53,62 @@ export function StartMenu({ onClose }: Props) {
   };
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        bottom: 30,
-        width: 380,
-        height: 460,
-        zIndex: 10000,
-        boxShadow: "2px 2px 6px rgba(0,0,0,0.4)",
-        border: "1px solid #0a3290",
-        borderBottom: "none",
-        background: "#fff",
-        display: "flex",
-        flexDirection: "column",
-        borderTopLeftRadius: 8,
-        borderTopRightRadius: 8,
-        overflow: "hidden",
-        fontSize: 11,
-      }}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      {/* Header bar */}
-      <div
-        style={{
-          height: 56,
-          background:
-            "linear-gradient(to bottom, #1f5fc7 0%, #2f7be0 50%, #1f5fc7 100%)",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 12px",
-          gap: 10,
-          color: "#fff",
-          borderBottom: "2px solid #f6a623",
-        }}
-      >
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: "50%",
-            background: "#fff",
-            border: "2px solid #fff",
-            display: "grid",
-            placeItems: "center",
-            color: "#1f5fc7",
-            fontWeight: "bold",
-            fontSize: 18,
-          }}
-        >
-          U
-        </div>
-        <div style={{ fontWeight: "bold", fontSize: 14, textShadow: "1px 1px 1px #000" }}>
-          User
-        </div>
+    <div className={styles.menu} onMouseDown={(e) => e.stopPropagation()}>
+      <div className={styles.header}>
+        <div className={styles.avatar}>U</div>
+        <div className={styles.userName}>User</div>
       </div>
 
-      {/* Two columns */}
-      <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-        <div style={{ flex: 1, background: "#fff", padding: "8px 4px" }}>
-          {leftItems.map((it) => (
+      <div className={styles.body}>
+        <div className={styles.left}>
+          {pinned.map(({ appId, sub }) => (
             <MenuItem
-              key={it.appId}
-              icon={it.icon}
-              label={it.label}
-              sub={it.sub}
-              onClick={() => launch(it.appId)}
+              key={appId}
+              icon={<AppGlyph id={appId} size={28} />}
+              label={apps[appId].label}
+              sub={sub}
+              onClick={() => launch(appId)}
             />
           ))}
+
+          <div className={styles.sep} />
+
+          <div className={styles.allPrograms}>
+            <button type="button" className={styles.allProgramsButton} disabled>
+              All Programs
+              <span className={styles.chevron}>▶</span>
+            </button>
+          </div>
         </div>
-        <div
-          style={{
-            width: 170,
-            background: "#d3e5fa",
-            padding: "8px 4px",
-            borderLeft: "1px solid #b0c8e8",
-          }}
-        >
-          {rightItems.map((it) => (
+
+        <div className={styles.right}>
+          {places.map((p) => (
             <MenuItem
-              key={it.appId}
-              icon={it.icon}
-              label={it.label}
-              onClick={() => launch(it.appId)}
-              compact
+              key={p.label}
+              icon={p.icon}
+              label={p.label}
+              disabled={!p.appId}
+              onClick={() => p.appId && launch(p.appId)}
             />
+          ))}
+
+          <div className={styles.sep} />
+
+          {tools.map((t) => (
+            <MenuItem key={t.label} icon={t.icon} label={t.label} disabled onClick={() => {}} />
           ))}
         </div>
       </div>
 
-      {/* Footer */}
-      <div
-        style={{
-          height: 38,
-          background:
-            "linear-gradient(to bottom, #1f5fc7 0%, #2f7be0 50%, #1f5fc7 100%)",
-          color: "#fff",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          padding: "0 12px",
-          gap: 12,
-          borderTop: "2px solid #f6a623",
-          fontSize: 11,
-        }}
-      >
-        <span style={{ textShadow: "1px 1px 1px #000" }}>Log Off</span>
-        <span style={{ textShadow: "1px 1px 1px #000" }}>Turn Off Computer</span>
+      <div className={styles.footer}>
+        <button type="button" className={styles.footerButton} onClick={onClose}>
+          <LogOffIcon size={20} />
+          Log Off
+        </button>
+        <button type="button" className={styles.footerButton} onClick={onClose}>
+          <ShutdownIcon size={20} />
+          Turn Off Computer
+        </button>
       </div>
     </div>
   );
@@ -142,41 +119,20 @@ function MenuItem({
   label,
   sub,
   onClick,
-  compact,
+  disabled,
 }: {
   icon: ReactNode;
   label: string;
   sub?: string;
   onClick: () => void;
-  compact?: boolean;
+  disabled?: boolean;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        all: "unset",
-        cursor: "default",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        width: "100%",
-        boxSizing: "border-box",
-        padding: compact ? "4px 8px" : "6px 8px",
-      }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.background = "linear-gradient(to bottom, #316ac5, #1c52a8)")
-      }
-      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-      onFocus={(e) =>
-        (e.currentTarget.style.background = "linear-gradient(to bottom, #316ac5, #1c52a8)")
-      }
-      onBlur={(e) => (e.currentTarget.style.background = "transparent")}
-    >
-      <span style={{ width: compact ? 22 : 28, display: "grid", placeItems: "center" }}>{icon}</span>
-      <span style={{ display: "flex", flexDirection: "column", color: "inherit" }}>
-        <span style={{ fontWeight: compact ? "normal" : "bold" }}>{label}</span>
-        {sub && <span style={{ fontSize: 10, opacity: 0.85 }}>{sub}</span>}
+    <button type="button" className={styles.item} onClick={onClick} disabled={disabled}>
+      <span className={styles.glyph}>{icon}</span>
+      <span className={styles.itemText}>
+        <span className={styles.itemLabel}>{label}</span>
+        {sub && <span className={styles.itemSub}>{sub}</span>}
       </span>
     </button>
   );

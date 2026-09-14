@@ -1,66 +1,37 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import styles from "./DesktopIcon.module.css";
 
 type Props = {
   label: string;
   icon: ReactNode;
+  selected: boolean;
+  onSelect: () => void;
   onOpen: () => void;
 };
 
-export function DesktopIcon({ label, icon, onOpen }: Props) {
-  const [selected, setSelected] = useState(false);
-
+/* Selection is a prop, not local state.
+ *
+ * It used to be `useState` per icon, cleared on blur, which meant two icons
+ * could both look selected (blur does not fire when the click lands on the
+ * desktop) and the desktop had no way to clear them. Exactly one thing is
+ * selected at a time, so exactly one place should know which.
+ */
+export function DesktopIcon({ label, icon, selected, onSelect, onOpen }: Props) {
   return (
     <button
       type="button"
-      onClick={(e) => {
+      className={selected ? `${styles.icon} ${styles.selected}` : styles.icon}
+      onMouseDown={(e) => {
         e.stopPropagation();
-        setSelected(true);
+        onSelect();
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
         onOpen();
       }}
-      onBlur={() => setSelected(false)}
-      style={{
-        all: "unset",
-        width: 76,
-        cursor: "default",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 4,
-        padding: 4,
-        textAlign: "center",
-      }}
     >
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          display: "grid",
-          placeItems: "center",
-          background: selected ? "rgba(0, 64, 200, 0.45)" : "transparent",
-          border: selected ? "1px dotted #fff" : "1px dotted transparent",
-          padding: 2,
-        }}
-      >
-        {icon}
-      </div>
-      <span
-        style={{
-          color: "#fff",
-          fontSize: 11,
-          textShadow: "1px 1px 1px rgba(0,0,0,0.85)",
-          padding: "1px 3px",
-          background: selected ? "#0a246a" : "transparent",
-          border: selected ? "1px dotted #fff" : "1px dotted transparent",
-          maxWidth: 72,
-          wordBreak: "break-word",
-          lineHeight: 1.15,
-        }}
-      >
-        {label}
-      </span>
+      <span className={styles.glyph}>{icon}</span>
+      <span className={styles.label}>{label}</span>
     </button>
   );
 }

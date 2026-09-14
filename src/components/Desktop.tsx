@@ -1,49 +1,30 @@
+import { useState } from "react";
 import { useWindowStore } from "../store/windowStore";
-import { apps } from "../apps/registry";
+import { apps, appIds, type AppId } from "../apps/registry";
 import { DesktopIcon } from "./DesktopIcon";
-import {
-  MyComputerIcon,
-  RecycleBinIcon,
-  NotepadIcon,
-  InfoIcon,
-} from "../icons";
+import styles from "./Desktop.module.css";
 
-const desktopApps: { appId: keyof typeof apps; label: string; icon: React.ReactNode }[] = [
-  { appId: "myComputer", label: "My Computer", icon: <MyComputerIcon /> },
-  { appId: "recycleBin", label: "Recycle Bin", icon: <RecycleBinIcon /> },
-  { appId: "notepad", label: "Notepad", icon: <NotepadIcon /> },
-  { appId: "about", label: "About funOS", icon: <InfoIcon /> },
-];
+const desktopApps = appIds.filter((id) => apps[id].onDesktop);
 
 export function Desktop() {
   const open = useWindowStore((s) => s.open);
+  const [selected, setSelected] = useState<AppId | null>(null);
 
   return (
-    <div className="desktop">
-      <div
-        style={{
-          padding: 12,
-          display: "grid",
-          gridAutoFlow: "column",
-          gridTemplateRows: "repeat(auto-fill, 92px)",
-          gap: 4,
-          height: "calc(100% - 30px)",
-          alignContent: "start",
-          justifyContent: "start",
-        }}
-      >
-        {desktopApps.map((d) => {
-          const app = apps[d.appId];
+    <div className="desktop" onMouseDown={() => setSelected(null)}>
+      <div className={styles.field}>
+        {desktopApps.map((id) => {
+          const app = apps[id];
+          const Icon = app.icon;
           return (
             <DesktopIcon
-              key={d.appId}
-              label={d.label}
-              icon={d.icon}
+              key={id}
+              label={app.label}
+              icon={<Icon size={32} />}
+              selected={selected === id}
+              onSelect={() => setSelected(id)}
               onOpen={() =>
-                open(d.appId, {
-                  title: app.title,
-                  bounds: app.defaultSize,
-                })
+                open(id, { title: app.title, bounds: app.defaultSize })
               }
             />
           );

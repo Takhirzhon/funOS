@@ -1,38 +1,98 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Bliss, from memory rather than from the file.
+
+    The photograph is Microsoft's, so this is a reconstruction of what makes it
+    read as Bliss at a glance: a saturated blue sky that lightens sharply toward
+    the horizon, soft cumulus with no hard edges, and one green hill whose crest
+    runs from the lower left up to the right and then falls away.
+
+    Everything is gradients and blurred ellipses - it is about 3KB and gzips to
+    under one, against a bundle budget that a photograph would eat whole.
+  -->
   <defs>
     <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#3aa6e6"/>
-      <stop offset="0.55" stop-color="#a3dcf5"/>
-      <stop offset="1" stop-color="#dff0fa"/>
+      <stop offset="0" stop-color="#1e63c8"/>
+      <stop offset="0.28" stop-color="#3e8ede"/>
+      <stop offset="0.58" stop-color="#8cc4ee"/>
+      <stop offset="0.82" stop-color="#cfe7f5"/>
+      <stop offset="1" stop-color="#eaf4fa"/>
     </linearGradient>
-    <linearGradient id="hill" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#7ec24a"/>
-      <stop offset="0.5" stop-color="#4f9b2b"/>
-      <stop offset="1" stop-color="#2e6b18"/>
+
+    <linearGradient id="hillNear" x1="0" x2="0.3" y1="0" y2="1">
+      <stop offset="0" stop-color="#8fc63f"/>
+      <stop offset="0.35" stop-color="#6fae2c"/>
+      <stop offset="0.75" stop-color="#4c8c1e"/>
+      <stop offset="1" stop-color="#356a15"/>
     </linearGradient>
+
+    <linearGradient id="hillMid" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#a6d15a"/>
+      <stop offset="1" stop-color="#6aa72a"/>
+    </linearGradient>
+
     <linearGradient id="hillFar" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#9bd075"/>
-      <stop offset="1" stop-color="#5da134"/>
+      <stop offset="0" stop-color="#c3df8d"/>
+      <stop offset="1" stop-color="#8cc047"/>
     </linearGradient>
-    <radialGradient id="cloud" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
-      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-    </radialGradient>
+
+    <!-- Clouds are blurred white blobs. A cumulus with a crisp outline reads as
+         a cartoon, and the blur is what keeps this on the right side of that. -->
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+    <filter id="softer" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="44"/>
+    </filter>
+
+    <!-- The haze where the land meets the sky. Without it the hill looks pasted
+         onto the sky instead of standing in front of it. -->
+    <linearGradient id="haze" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.55"/>
+    </linearGradient>
   </defs>
 
   <rect width="1600" height="1000" fill="url(#sky)"/>
 
-  <!-- soft clouds -->
-  <ellipse cx="240" cy="190" rx="180" ry="38" fill="url(#cloud)"/>
-  <ellipse cx="520" cy="140" rx="220" ry="40" fill="url(#cloud)"/>
-  <ellipse cx="1100" cy="220" rx="260" ry="44" fill="url(#cloud)"/>
-  <ellipse cx="1420" cy="120" rx="180" ry="34" fill="url(#cloud)"/>
+  <!-- High, thin cloud -->
+  <g filter="url(#softer)" opacity="0.5">
+    <ellipse cx="380" cy="150" rx="300" ry="46" fill="#ffffff"/>
+    <ellipse cx="1250" cy="110" rx="260" ry="38" fill="#ffffff"/>
+  </g>
 
-  <!-- distant rolling hill -->
-  <path d="M0,720 C260,640 540,700 820,660 C1100,620 1340,690 1600,640 L1600,1000 L0,1000 Z"
+  <!-- The main cumulus bank, upper right -->
+  <g filter="url(#soft)" opacity="0.92">
+    <ellipse cx="1180" cy="270" rx="210" ry="78" fill="#ffffff"/>
+    <ellipse cx="1320" cy="238" rx="150" ry="62" fill="#ffffff"/>
+    <ellipse cx="1050" cy="300" rx="140" ry="54" fill="#ffffff"/>
+    <ellipse cx="1420" cy="292" rx="120" ry="44" fill="#f2f8fc"/>
+  </g>
+
+  <!-- A smaller bank on the left, lower and lighter so it reads as further away -->
+  <g filter="url(#soft)" opacity="0.72">
+    <ellipse cx="300" cy="330" rx="190" ry="54" fill="#ffffff"/>
+    <ellipse cx="430" cy="312" rx="120" ry="42" fill="#ffffff"/>
+    <ellipse cx="180" cy="352" rx="110" ry="36" fill="#f4fafd"/>
+  </g>
+
+  <!-- Distant hills, hazed almost into the sky -->
+  <path d="M0 612 C 240 578, 470 596, 700 610 C 960 626, 1240 600, 1600 566 L1600 1000 L0 1000 Z"
         fill="url(#hillFar)" opacity="0.85"/>
 
-  <!-- foreground hill -->
-  <path d="M0,820 C220,720 480,780 760,740 C1060,700 1320,800 1600,740 L1600,1000 L0,1000 Z"
-        fill="url(#hill)"/>
+  <!-- Middle ridge -->
+  <path d="M0 668 C 300 620, 560 648, 840 668 C 1120 688, 1360 664, 1600 630 L1600 1000 L0 1000 Z"
+        fill="url(#hillMid)"/>
+
+  <!-- The near hill: the crest climbs from the left, peaks around a third of the
+       way across, and rolls away to the right. -->
+  <path d="M0 760 C 220 690, 420 636, 620 628 C 880 618, 1100 672, 1330 716 C 1440 737, 1520 748, 1600 756 L1600 1000 L0 1000 Z"
+        fill="url(#hillNear)"/>
+
+  <!-- Sun-catch along the crest -->
+  <path d="M0 760 C 220 690, 420 636, 620 628 C 880 618, 1100 672, 1330 716 C 1440 737, 1520 748, 1600 756 L1600 786 C 1500 776, 1400 764, 1300 744 C 1080 700, 870 648, 624 658 C 430 666, 230 716, 0 790 Z"
+        fill="#b6e05c" opacity="0.55"/>
+
+  <!-- Horizon haze, drawn over the far hills only -->
+  <rect x="0" y="520" width="1600" height="130" fill="url(#haze)" opacity="0.5"/>
 </svg>

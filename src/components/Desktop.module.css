@@ -1,0 +1,18 @@
+/* The icon field.
+ *
+ * Column-major flow, because that is how Windows fills a desktop: down the left
+ * edge first, then a new column. `grid-auto-flow: column` with a fixed row
+ * height is the direct expression of that, and it means the layout reflows
+ * correctly when the window gets shorter instead of overflowing behind the
+ * taskbar.
+ */
+.field {
+  padding: 8px 4px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(auto-fill, 84px);
+  grid-auto-columns: 80px;
+  justify-content: start;
+  align-content: start;
+  height: calc(100% - var(--taskbar-height));
+}

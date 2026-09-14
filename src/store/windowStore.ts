@@ -2,6 +2,12 @@ import { create } from "zustand";
 
 export type Bounds = { x: number; y: number; width: number; height: number };
 
+/* Kept in step with --taskbar-height in index.css. A maximized window has to
+ * stop where the taskbar starts, and that is the one place the layout needs the
+ * number in JavaScript rather than CSS.
+ */
+export const TASKBAR_HEIGHT = 30;
+
 export type WindowState = {
   id: string;
   appId: string;
@@ -31,6 +37,7 @@ type Store = {
   setBounds: (id: string, bounds: Partial<Bounds>) => void;
   toggleMaximize: (id: string) => void;
   minimize: (id: string) => void;
+  minimizeAll: () => void;
   restore: (id: string) => void;
   toggleFromTaskbar: (id: string) => void;
 };
@@ -117,7 +124,7 @@ export const useWindowStore = create<Store>((set, get) => ({
             x: 0,
             y: 0,
             width: window.innerWidth,
-            height: window.innerHeight - 30,
+            height: window.innerHeight - TASKBAR_HEIGHT,
           },
         };
       }),
@@ -129,6 +136,16 @@ export const useWindowStore = create<Store>((set, get) => ({
         w.id === id ? { ...w, minimized: true } : w
       ),
       focusedId: s.focusedId === id ? null : s.focusedId,
+    })),
+
+  /* Show the Desktop. Minimizes rather than hides, so the task buttons stay put
+   * and clicking one brings its window back - which is what the real button
+   * does, and why it is not called "hide all".
+   */
+  minimizeAll: () =>
+    set((s) => ({
+      windows: s.windows.map((w) => ({ ...w, minimized: true })),
+      focusedId: null,
     })),
 
   restore: (id) => get().focus(id),

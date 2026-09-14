@@ -1,38 +1,108 @@
+/* Global foundation: the Luna palette, the shell typeface, and the fixes that
+ * xp.css needs to stop looking like Windows 98 in a blue coat.
+ *
+ * Everything here is global on purpose. Component-specific styling lives in
+ * *.module.css next to its component, so a class name cannot leak.
+ */
 @import "xp.css/dist/XP.css";
 
 :root {
-  --xp-blue: #0058ee;
-  --xp-titlebar-active: linear-gradient(
+  /* ---- Luna palette -------------------------------------------------------
+   * Defined once, here, because a colour with four spellings across three
+   * files is a colour that drifts. Phase 4's theme switcher (Olive, Silver)
+   * is a matter of overriding this block and nothing else, which is the whole
+   * reason it is a block.
+   */
+  --luna-blue: #0058ee;
+  --luna-blue-dark: #003fc4;
+
+  /* The taskbar. Nine stops, not three: the band is only 30px tall, and what
+   * makes it read as XP rather than "a blue bar" is the bright 3-10% sliver
+   * near the top and the darker lip at the bottom. A two-stop gradient over
+   * the same range looks like a button.
+   */
+  --luna-taskbar: linear-gradient(
     to bottom,
-    #0058ee 0%,
-    #3a93ff 8%,
-    #288eff 40%,
-    #248bff 88%,
-    #0058ee 100%
+    #1f2f86 0%,
+    #3165c4 3%,
+    #3d84e4 6%,
+    #4490e6 10%,
+    #3883e1 12%,
+    #2b71de 15%,
+    #235bd6 20%,
+    #2258d5 90%,
+    #2054ce 94%,
+    #1d4ec0 97%,
+    #1a47b1 100%
   );
-  --xp-taskbar: linear-gradient(
+  /* The 1px highlight that sits on top of the taskbar. XP draws it; every
+   * cheap reproduction forgets it, and its absence is why a flat blue bar
+   * looks pasted onto the page instead of resting on it.
+   */
+  --luna-taskbar-top: #2c5dd0;
+
+  /* The notification area is NOT the taskbar colour. It is a separate, flatter,
+   * slightly cyan band with a bevel on its left edge.
+   */
+  --luna-tray: linear-gradient(
     to bottom,
-    #245edc 0%,
-    #3f8cf3 9%,
-    #245edc 18%,
-    #245edc 92%,
-    #225bda 100%
-  );
-  --xp-start: linear-gradient(
-    to bottom,
-    #5eac56 0%,
-    #62a957 8%,
-    #62a957 40%,
-    #4d9842 88%,
-    #2f6f23 100%
+    #0c59b9 0%,
+    #128bea 8%,
+    #1290ea 50%,
+    #1387e2 88%,
+    #0e6fc4 100%
   );
 
-  font-family: "Tahoma", "Segoe UI", sans-serif;
+  /* Start button green. The current one was mixed by eye and sits too far
+   * toward emerald; Luna's is a warmer, duller olive-green.
+   */
+  --luna-start: linear-gradient(
+    to bottom,
+    #3c993c 0%,
+    #56ad4f 8%,
+    #67bd58 22%,
+    #55a942 46%,
+    #3f8f32 88%,
+    #2e6f22 100%
+  );
+  --luna-start-pressed: linear-gradient(
+    to bottom,
+    #2e6f22 0%,
+    #3f8f32 40%,
+    #4d9842 80%,
+    #2e6f22 100%
+  );
+
+  /* Task buttons on the taskbar. */
+  --luna-task: linear-gradient(to bottom, #3c81f3 0%, #2c6fe0 45%, #2361d9 100%);
+  --luna-task-active: linear-gradient(to bottom, #1e52b7 0%, #2a63c8 50%, #2f6bd0 100%);
+  --luna-task-hover: linear-gradient(to bottom, #5a9bf8 0%, #3a7fe8 45%, #2f6ce0 100%);
+
+  --luna-face: #ece9d8; /* the XP "3D object" beige, on every dialog */
+
+  /* ---- Type ---------------------------------------------------------------
+   * XP's shell is Tahoma 8pt, which is 11px at 96dpi. Not Arial, and not the
+   * "Pixelated MS Sans Serif" bitmap face xp.css reaches for - that is the
+   * Windows 95/98 font, and it is the reason every button in this project has
+   * been rendering with 1998 letterforms inside a 2001 chrome.
+   *
+   * Tahoma is not redistributable, so this is a stack rather than a webfont:
+   * Windows and most Macs have it locally; Verdana (same designer, same
+   * humanist skeleton, a little wider) covers the rest; DejaVu Sans covers
+   * Linux. Bundling a metric-compatible clone would cost ~100KB gzipped
+   * against a 120KB entry budget, to fix a font most visitors already have.
+   */
+  --font-ui: Tahoma, Verdana, "DejaVu Sans", sans-serif;
+  /* XP title bars really are Trebuchet MS Bold - xp.css gets this one right. */
+  --font-caption: "Trebuchet MS", Tahoma, sans-serif;
+
+  --taskbar-height: 30px;
+
+  font-family: var(--font-ui);
   font-size: 11px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  user-select: none;
   color-scheme: light;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -49,16 +119,98 @@ body,
   overflow: hidden;
 }
 
+/* Beats xp.css's `body{font-family:Arial;font-size:12px}`, which otherwise wins
+ * over :root for everything that inherits from body - i.e. everything.
+ */
 body {
+  font-family: var(--font-ui);
+  font-size: 11px;
   background: #3a6ea5;
 }
 
-button {
-  font-family: inherit;
-  font-size: inherit;
+/* Same correction, for the controls xp.css points at the Win98 bitmap font.
+ * Kept as one selector list so it is obvious this is a single decision.
+ */
+button,
+input,
+label,
+textarea,
+select,
+option,
+ul.tree-view,
+.status-bar-field {
+  font-family: var(--font-ui);
+  font-size: 11px;
 }
 
-/* XP-style desktop wallpaper (Bliss-inspired SVG via CSS) */
+/* xp.css gets the caption face right - XP really is Trebuchet MS - but declares
+ * it with no fallback at all. On a machine without Trebuchet, which is most
+ * Linux boxes, every title bar drops to the browser's default serif.
+ */
+.title-bar {
+  font-family: var(--font-caption);
+}
+
+/* ---- Scrollbars -----------------------------------------------------------
+ * xp.css ships Windows 98 scrollbars: grey, square, with a dithered trough.
+ * They show up in every window that has content, so they quietly undo a lot of
+ * other work. Luna's are blue and rounded with a gradient thumb.
+ *
+ * WebKit only. Firefox gets `scrollbar-color` below, which cannot express the
+ * gradient but at least stops the scrollbar being the one grey thing on screen.
+ */
+* {
+  scrollbar-color: #b8cce8 #f1f5fb;
+  scrollbar-width: auto;
+}
+
+::-webkit-scrollbar {
+  width: 17px;
+  height: 17px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5fb;
+  border: 1px solid #d4e0f0;
+  background-image: none;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 1px solid #4a7ec4;
+  border-radius: 2px;
+  background: linear-gradient(to right, #ffffff 0%, #d8e6f8 18%, #b3cdec 60%, #92b4e0 100%);
+  box-shadow: none;
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(to bottom, #ffffff 0%, #d8e6f8 18%, #b3cdec 60%, #92b4e0 100%);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to right, #ffffff 0%, #e4eefb 18%, #c3daf4 60%, #a3c4ea 100%);
+}
+
+::-webkit-scrollbar-button {
+  height: 17px;
+  width: 17px;
+  border: 1px solid #4a7ec4;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, #ffffff 0%, #dbe8f9 30%, #b3cdec 100%);
+}
+
+::-webkit-scrollbar-button:horizontal:end:increment,
+::-webkit-scrollbar-button:horizontal:start:decrement,
+::-webkit-scrollbar-button:vertical:end:increment,
+::-webkit-scrollbar-button:vertical:start:decrement {
+  display: block;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f1f5fb;
+}
+
+/* ---- Desktop --------------------------------------------------------------
+ */
 .desktop {
   position: absolute;
   inset: 0;
@@ -68,10 +220,12 @@ button {
   overflow: hidden;
 }
 
-/* react-rnd needs a positioned parent */
+/* react-rnd needs a positioned parent. Pointer events are off so that clicks
+ * that miss a window reach the desktop underneath (selection, context menu).
+ */
 .window-host {
   position: absolute;
-  inset: 0 0 30px 0;
+  inset: 0 0 var(--taskbar-height) 0;
   pointer-events: none;
 }
 

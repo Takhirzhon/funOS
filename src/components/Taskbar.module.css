@@ -1,0 +1,178 @@
+/* The taskbar, in the order XP draws it:
+ *   [ start ][ quick launch | ][ task buttons ................ ][ tray ]
+ */
+
+.bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--taskbar-height);
+  background: var(--luna-taskbar);
+  display: flex;
+  align-items: stretch;
+  z-index: 9999;
+}
+
+/* The highlight along the very top edge. One pixel, drawn over the gradient
+ * rather than added as a border so it cannot change the element's height and
+ * push the 30px bar to 31.
+ */
+.bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--luna-taskbar-top);
+}
+
+/* ---- Quick Launch --------------------------------------------------------- */
+
+.quickLaunch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px 0 2px;
+}
+
+.quickButton {
+  all: unset;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  cursor: default;
+}
+
+.quickButton:hover {
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.quickButton:active {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* The raised grip that separates each taskbar section. XP draws a column of
+ * paired dots; a repeating gradient is the cheap and pixel-accurate way to say
+ * that, and it scales with the bar instead of being a fixed-height image.
+ */
+.grip {
+  flex: none;
+  width: 6px;
+  margin: 4px 3px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.55) 0 1px,
+    transparent 1px 2px,
+    rgba(0, 0, 0, 0.28) 2px 3px,
+    transparent 3px 4px
+  );
+  background-size: 2px 100%;
+  background-repeat: repeat-x;
+  background-position: 1px 0;
+}
+
+/* ---- Task buttons --------------------------------------------------------- */
+
+.tasks {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 3px;
+  overflow: hidden;
+}
+
+.task {
+  all: unset;
+  box-sizing: border-box;
+  height: 22px;
+  flex: 0 1 160px;
+  min-width: 40px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  font-size: 11px;
+  border-radius: 3px;
+  cursor: default;
+  background: var(--luna-task);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset -1px 0 0 rgba(0, 0, 0, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.task:hover {
+  background: var(--luna-task-hover);
+}
+
+/* Pressed in, not merely darker: the active window's button is the one control
+ * on the taskbar that is genuinely sunken, and the inner shadow is what says so.
+ */
+.task.active {
+  background: var(--luna-task-active);
+  box-shadow:
+    inset 1px 1px 2px rgba(0, 0, 0, 0.45),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.task.active:hover {
+  background: var(--luna-task-active);
+}
+
+.taskLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taskIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+/* ---- Notification area ---------------------------------------------------- */
+
+.tray {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 4px;
+  background: var(--luna-tray);
+  /* The bevel that makes the tray look recessed into the bar. */
+  box-shadow:
+    inset 1px 0 0 #0c4d8a,
+    inset 2px 0 0 rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.trayIcons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.trayIcon {
+  all: unset;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+
+.clock {
+  font-size: 11px;
+  min-width: 54px;
+  text-align: center;
+  padding-left: 2px;
+  cursor: default;
+}

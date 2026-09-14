@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import styles from "./Taskbar.module.css";
 
 const fmt = (d: Date) => {
   const h = d.getHours();
@@ -8,31 +9,25 @@ const fmt = (d: Date) => {
   return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
 };
 
+/* The clock draws no background of its own: it sits inside the tray, and the
+ * tray owns the recessed band. It used to paint its own gradient, which is why
+ * there was a visible seam where the two blues met.
+ */
 export function Clock() {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000 * 15);
+    /* Ticking every 15s rather than every second. The display has minute
+     * resolution, so a per-second interval is 59 re-renders an hour that
+     * change nothing - and it would still be up to 15s stale at the boundary
+     * either way.
+     */
+    const id = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(id);
   }, []);
 
   return (
-    <div
-      title={now.toLocaleString()}
-      style={{
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        padding: "0 10px",
-        color: "#fff",
-        background: "linear-gradient(to bottom, #1290e2 0%, #0a73c4 50%, #1290e2 100%)",
-        boxShadow: "inset 1px 0 #0c4d8a, inset -1px 0 rgba(255,255,255,0.18)",
-        fontSize: 11,
-        minWidth: 64,
-        justifyContent: "center",
-        userSelect: "none",
-      }}
-    >
+    <div className={styles.clock} title={now.toLocaleDateString(undefined, { dateStyle: "full" })}>
       {fmt(now)}
     </div>
   );

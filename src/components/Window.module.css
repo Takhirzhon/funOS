@@ -1,0 +1,86 @@
+/* Window chrome on top of xp.css.
+ *
+ * xp.css gets the active frame and caption right and has no concept of an
+ * inactive window at all - it ships one title bar, always the focused blue.
+ * That gap is why the previous code reached for `filter: saturate(0.4)` over
+ * the active gradient, which desaturates the caption text and the three control
+ * buttons along with it and ends up looking like a screenshot left in the sun.
+ */
+
+.frame {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The focused window is the only one that casts a real shadow. XP is subtle
+ * about this and it does most of the work of saying which window is on top.
+ *
+ * On the react-rnd WRAPPER, not on .window itself. xp.css builds the entire
+ * blue window frame out of six stacked `inset` box-shadows, so adding an outer
+ * shadow to the same element replaces the frame with nothing - the border
+ * silently disappears and the window becomes a beige rectangle. Putting it one
+ * level out leaves that alone; the wrapper shares the window's geometry, and
+ * matching the corner radius keeps the shadow from squaring off at the top.
+ */
+.shadowWrap {
+  border-radius: 8px 8px 0 0;
+}
+
+.focused.shadowWrap {
+  box-shadow: 3px 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+.blurred.shadowWrap {
+  box-shadow: 2px 2px 7px rgba(0, 0, 0, 0.25);
+}
+
+/* The real Luna inactive caption: the same gradient shape, mixed toward grey,
+ * with the text dimmed rather than bleached. Drawn from scratch rather than
+ * filtered so the close button keeps its red.
+ */
+.blurred .titleBar {
+  background: linear-gradient(
+    180deg,
+    #a9bfe0 0%,
+    #7e9ac9 8%,
+    #7b97c7 40%,
+    #7592c4 88%,
+    #7592c4 93%,
+    #6f8dc0 95%,
+    #5c79ac 96%,
+    #5c79ac 100%
+  );
+  border-top-color: #8ba5cd;
+  border-left-color: #8ba5cd;
+  border-right-color: #6d87b4;
+  text-shadow: 1px 1px #6b7fa3;
+}
+
+.blurred .titleBar :global(.title-bar-text) {
+  color: #e2e8f2;
+}
+
+/* xp.css draws the control buttons as background images that do not change with
+ * focus. Dropping their opacity is enough to read as inactive without turning
+ * them grey - XP keeps the red close button red on an inactive window too.
+ */
+.blurred .titleBar :global(.title-bar-controls) button {
+  opacity: 0.75;
+}
+
+.titleBar {
+  flex: none;
+}
+
+.body {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--luna-face);
+}

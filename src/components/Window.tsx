@@ -1,6 +1,7 @@
 import { Rnd } from "react-rnd";
 import { useWindowStore, type WindowState } from "../store/windowStore";
 import { apps } from "../apps/registry";
+import styles from "./Window.module.css";
 
 type Props = { window: WindowState };
 
@@ -46,20 +47,11 @@ export function Window({ window: w }: Props) {
         });
       }}
       style={{ zIndex: w.zIndex }}
+      className={`${styles.shadowWrap} ${isFocused ? styles.focused : styles.blurred}`}
     >
-      <div
-        className="window"
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          opacity: isFocused ? 1 : 0.97,
-        }}
-      >
+      <div className={`window ${styles.frame}`}>
         <div
-          className="title-bar"
-          style={{ filter: isFocused ? undefined : "saturate(0.4)" }}
+          className={`title-bar ${styles.titleBar}`}
           onDoubleClick={() => toggleMaximize(w.id)}
         >
           <div className="title-bar-text">{w.title}</div>
@@ -87,17 +79,7 @@ export function Window({ window: w }: Props) {
             />
           </div>
         </div>
-        <div
-          className="window-body"
-          style={{
-            flex: 1,
-            margin: 0,
-            padding: 0,
-            overflow: "auto",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+        <div className={`window-body ${styles.body}`}>
           <Body {...(w.props ?? {})} />
         </div>
       </div>

@@ -1,0 +1,63 @@
+/* The Start button.
+ *
+ * Previously a `clipPath: polygon()` trapezoid, which is the wrong shape: Luna's
+ * button is flush with the left screen edge and bulges into a large rounded cap
+ * on the right. clip-path also cuts the element off, so the gloss and the shadow
+ * were being clipped with it.
+ */
+
+.start {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  height: var(--taskbar-height);
+  padding: 0 26px 2px 9px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: default;
+  color: #fff;
+  font-family: var(--font-caption);
+  font-size: 15px;
+  font-weight: bold;
+  font-style: italic;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55);
+  background: var(--luna-start);
+  border-radius: 0 9px 9px 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    1px 0 2px rgba(0, 0, 0, 0.35);
+}
+
+/* The gloss. XP puts a soft white sheen over the top third of the button and
+ * lets it fade out; without it the green reads as flat paint.
+ */
+.start::after {
+  content: "";
+  position: absolute;
+  inset: 1px 2px auto 1px;
+  height: 45%;
+  border-radius: 0 8px 6px 6px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.start:hover {
+  filter: brightness(1.08);
+}
+
+.start.open {
+  background: var(--luna-start-pressed);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.start.open::after {
+  opacity: 0.35;
+}
+
+.logo {
+  flex: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+}

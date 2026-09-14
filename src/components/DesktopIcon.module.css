@@ -1,0 +1,65 @@
+.icon {
+  all: unset;
+  box-sizing: border-box;
+  width: 76px;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 0 4px;
+  text-align: center;
+}
+
+.glyph {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  /* XP drops a soft shadow behind desktop icons so they sit on the wallpaper
+   * rather than in it. It is subtle and it is most of the reason the real
+   * desktop looks lit.
+   */
+  filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Selection follows the icon's silhouette, it does not box it. XP tints the
+ * pixels of the icon itself and highlights the label; a filled rectangle behind
+ * a transparent icon - which is what this did before - reads as a sticker.
+ *
+ * Stacked drop-shadows are the trick: each one is cast from the alpha channel,
+ * so a tight blue shadow at zero offset hugs the artwork exactly.
+ */
+.selected .glyph {
+  filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 2px rgba(49, 106, 197, 0.95))
+    drop-shadow(0 0 2px rgba(49, 106, 197, 0.8));
+}
+
+.label {
+  position: relative;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 1px 3px;
+  max-width: 74px;
+  word-break: break-word;
+  /* Two shadows, offset differently: one tight and dark for contrast against a
+   * light wallpaper, one soft and wide so the text survives a busy one.
+   */
+  text-shadow:
+    1px 1px 1px rgba(0, 0, 0, 0.9),
+    0 0 4px rgba(0, 0, 0, 0.55);
+  border: 1px solid transparent;
+}
+
+.selected .label {
+  background: #316ac5;
+  border: 1px dotted #fff;
+  text-shadow: none;
+}
+
+.icon:focus-visible .label {
+  outline: 1px dotted #fff;
+  outline-offset: -2px;
+}
