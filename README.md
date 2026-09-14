@@ -1,5 +1,8 @@
 # funOS
 
+[![CI](https://github.com/Takhirzhon/funOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Takhirzhon/funOS/actions/workflows/ci.yml)
+[![CVE Watch](https://github.com/Takhirzhon/funOS/actions/workflows/cve-watch.yml/badge.svg)](https://github.com/Takhirzhon/funOS/actions/workflows/cve-watch.yml)
+
 A Windows XP-style desktop environment that runs in the browser. Inspired by
 [daedalOS](https://github.com/DustinBrett/daedalOS), but reskinned around the
 Luna theme of Windows XP.
@@ -59,6 +62,21 @@ src/
 └── assets/
     └── wallpaper.svg
 ```
+
+## CI / CD
+
+Every push and pull request runs `.github/workflows/ci.yml`: actionlint on the
+workflows, `tsc -b`, eslint, the Vite build, a gzipped bundle-size guard
+(120KB entry JS / 64KB CSS), a gitleaks secret scan, and a real build of the
+production image with a smoke test against the running container.
+`cve-watch.yml` scans the lockfile weekly for fixable CRITICAL/HIGH advisories.
+
+Deployment is pull-based: the server runs `deploy/auto_deploy.sh` on a ~90s
+systemd timer, which watches `origin/main`, asks GitHub whether that commit's
+checks passed, and only then rebuilds. **Merging to main is deploying.**
+
+See [`deploy/README.md`](deploy/README.md) for the server setup, the Traefik
+route file, and what to check when a deploy does not land.
 
 ## Roadmap
 

@@ -1,0 +1,37 @@
+# Traefik dynamic configuration for funOS.
+# Installed by deploy/auto_deploy.sh to /opt/traefik/dynamic/funos.yml
+#
+# Traefik merges every file in that directory into one configuration, so every
+# router, service and middleware name here is prefixed with `funos-`.
+#
+# funOS serves the apex, `khirokhito.tech`. The deployment guide still lists the
+# apex as Oqu's - that is stale, Oqu has been moved off it and the name is free
+# as of 2026-09-14.
+#
+# `www.khirokhito.tech` is deliberately NOT claimed here. Add a second router for
+# it (plus its own A record) if you want it to resolve; without one it 404s.
+#
+# No `:80` router is needed: /opt/traefik/dynamic/00-platform.yml already
+# redirects every hostname on the box to HTTPS.
+http:
+  routers:
+    funos-web:
+      rule: "Host(`khirokhito.tech`)"
+      service: funos-web
+      entryPoints: [websecure]
+      # No explicit `priority`. The guide's example sets one because it splits
+      # /api and the SPA across two routers on one hostname; funOS has a single
+      # router and nothing to outrank. Pinning a low number here would be a
+      # footgun rather than a safeguard - Traefik's default priority is the rule
+      # length, so a hardcoded 10 is LOWER than the default this rule would
+      # otherwise get. Add priorities the day a second router appears.
+      tls:
+        certResolver: le
+
+  services:
+    funos-web:
+      loadBalancer:
+        servers:
+          # The network alias from deploy/docker-compose.yml, plus the
+          # container-internal port - never a host port.
+          - url: "http://funos-web:80"

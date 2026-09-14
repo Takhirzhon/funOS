@@ -1,0 +1,25 @@
+[Unit]
+Description=funOS pull-based deploy from origin/main
+After=docker.service network-online.target
+Requires=docker.service
+# `After=` alone does not pull network-online.target in — without `Wants=` it may
+# simply never be reached, and ordering against a target nobody activates is a
+# no-op. The first tick after a reboot would then race the network.
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/funos
+ExecStart=/usr/bin/env bash /opt/funos/deploy/auto_deploy.sh
+TimeoutStartSec=1800
+# Type=oneshot will not start a second instance while one is running, so a slow
+# build cannot overlap with the next tick.
+#
+# The Vite build runs on the same 2 vCPU that serve the live site. Nice it so
+# a deploy slows itself down rather than the pages Traefik is serving. Note
+# `docker compose build` hands the work to the Docker daemon, which does not
+# inherit this — only the git/curl/jq side of the tick does. The real limit on
+# build load is BuildKit's cache: a deploy that changed only src/ reuses the
+# `npm ci` layer and is mostly the bundler.
+Nice=10
+IOSchedulingClass=idle

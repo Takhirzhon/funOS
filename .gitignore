@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 TODO.md
+
+# Deploy state, written on the server by deploy/auto_deploy.sh. Both must stay
+# untracked: `git reset --hard` leaves untracked files alone, which is the only
+# reason the deployer can remember anything across ticks.
+.deployed_sha
+.ci_wait
+.refused
+deploy/.env

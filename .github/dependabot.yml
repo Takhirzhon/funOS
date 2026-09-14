@@ -1,0 +1,46 @@
+# Dependabot is the other half of cve-watch.yml: that workflow reports, this
+# opens the PR. Three ecosystems, all weekly on the same morning so one sitting
+# clears them.
+#
+#   github-actions — the SHA pins in .github/workflows/*.yml. Dependabot reads
+#     the `# vX.Y.Z` comment after each pin and bumps both together; without it
+#     a SHA pin is frozen forever, which is only slightly better than a moved
+#     tag.
+#   npm — grouped, because a Vite/eslint/typescript bump usually arrives as five
+#     packages that only pass CI together. Majors are left out of the group so
+#     they arrive alone and get read.
+#   docker — the FROM lines in deploy/Dockerfile. This is what would have
+#     caught nginx:1.27-alpine going stale. Node majors are ignored: the major
+#     is coupled to NODE_VERSION in ci.yml and is a deliberate change, not a
+#     Monday PR.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Asia/Bishkek
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Asia/Bishkek
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Asia/Bishkek
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]

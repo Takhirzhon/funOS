@@ -1,0 +1,77 @@
+# Closes the loop after a green CI run on main: polls /health on the live site
+# until it reports the commit CI just passed.
+#
+# This is detection, not prevention — by the time it runs the box has already
+# made its own decision (deploy/auto_deploy.sh). What it catches is the deploy
+# that never happened at all: a stopped timer, a box that cannot reach GitHub, a
+# build that fails on 2 vCPU but passed on the runner. Without it, CI goes green
+# and the site quietly serves last week's bundle.
+#
+# A separate workflow, not a job in ci.yml, because the box gates on ci.yml's
+# run being `completed`. As a job there, it would have held that run open while
+# waiting for a deploy that was waiting for the run — auto_deploy.sh used to
+# exclude it by name to break that loop, and the README carried a warning about
+# renaming it. `workflow_run` fires only after ci.yml has fully completed, so
+# there is nothing to exclude.
+#
+# Skipped until the repository variable DEPLOY_HEALTH_URL is set, so this is
+# not red for everyone before the server exists.
+name: Verify deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+# A second push while this is polling for the first: the first CI run is
+# cancelled (ci.yml's own concurrency), so this workflow sees `cancelled` and
+# skips — but a poll already in flight for an older commit is now checking for
+# a SHA the box will skip straight past. Cancel it.
+concurrency:
+  group: verify-deploy
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  verify:
+    name: Verify deployed commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    steps:
+      - name: Poll health endpoint
+        env:
+          HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL }}
+          # Not GITHUB_SHA: for a workflow_run event that is the head of the
+          # default branch at trigger time, which may already be a newer commit.
+          # The commit CI actually tested is on the event.
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HEALTH_URL:-}" ]; then
+            echo "DEPLOY_HEALTH_URL is not set — skipping deploy verification."
+            echo "Set it to https://<hostname>/health once the box is up (deploy/README.md)."
+            exit 0
+          fi
+
+          # 40 x 15s = 10 minutes. The timer ticks every ~90s and the image build
+          # on the box takes a few minutes, so anything under ~5 would report a
+          # failure that is really just impatience.
+          echo "Waiting for $HEALTH_URL to report ${SHA} (CI run: ${RUN_URL})"
+          for attempt in $(seq 1 40); do
+            body=$(curl -fsS --max-time 10 "$HEALTH_URL" || true)
+            echo "attempt ${attempt}: ${body:-no response}"
+            case "$body" in
+              *"$SHA"*) echo "Deployed."; exit 0 ;;
+            esac
+            sleep 15
+          done
+
+          echo "::error::$HEALTH_URL never reported $SHA after 10 minutes."
+          echo "On the box: cat /opt/funos/.deployed_sha /opt/funos/.refused; systemctl status funos-deploy.timer; journalctl -u funos-deploy -n 50"
+          exit 1

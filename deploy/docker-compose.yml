@@ -1,0 +1,34 @@
+# Production stack for funOS. Static SPA behind the shared Traefik.
+#
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#
+# No `ports:` on anything - Traefik is the only public listener on this box.
+name: funos
+
+networks:
+  proxy:
+    external: true
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    image: funos-web:latest
+    container_name: funos-web
+    restart: unless-stopped
+    networks:
+      proxy:
+        # App-prefixed alias. /opt/traefik/dynamic/funos.yml points at this
+        # name, never at the bare service name `web`, which another project on
+        # the shared network may also answer to.
+        aliases: [funos-web]
+    # No healthcheck: here — it comes from the HEALTHCHECK in deploy/Dockerfile,
+    # which is also what CI's `docker run` smoke test gets.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

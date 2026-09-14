@@ -1,0 +1,11 @@
+[Unit]
+Description=Check origin/main for funOS every 90 seconds
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=90
+AccuracySec=10s
+Unit=funos-deploy.service
+
+[Install]
+WantedBy=timers.target

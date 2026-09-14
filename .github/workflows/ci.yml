@@ -1,0 +1,322 @@
+# funOS is a static SPA: one Vite bundle, one nginx container, no backend and no
+# database. So this pipeline is the frontend half of the Tazabar one, minus the
+# Go jobs, and with one structural difference worth reading before editing it:
+#
+#   Tazabar PUSHES a deploy from CI (a `deploy` job gated on `needs:`), so its
+#   gate is the job graph. funOS PULLS — the box runs deploy/auto_deploy.sh on a
+#   ~90s timer and decides for itself. A `needs:` here therefore gates nothing on
+#   the server. The gate lives in auto_deploy.sh, which asks GitHub for THIS
+#   workflow's run on the commit (by file name, `ci.yml`) and refuses to deploy
+#   anything whose run is not green. Jobs can be renamed or added freely; the
+#   file name is the contract. If you rename the file, update CI_WORKFLOW in
+#   auto_deploy.sh. If you make this workflow not run at all on a push to main,
+#   the box waits five minutes for a run that never comes and then deploys with
+#   a warning — see `ci_verdict` there.
+#
+#   Closing the loop — polling /health until it serves the merged commit — is
+#   verify-deploy.yml, triggered by `workflow_run` when this one completes. It
+#   is a separate workflow on purpose: as a job here it would keep this run
+#   in_progress while it waited on the box, and the box waits on this run.
+#
+# Actions are pinned to commit SHAs, not tags. A tag can be moved (tj-actions,
+# March 2025); a SHA cannot. The `# vX.Y.Z` comment is what Dependabot reads to
+# propose the next bump — keep it, and keep it accurate.
+name: CI
+
+on:
+  # A push that touches nothing but prose does not need building or an image.
+  # `paths-ignore` only skips a run when EVERY changed file matches, so a commit
+  # carrying code and docs together still runs the whole pipeline.
+  #
+  # Scoped to Markdown, and note what that deliberately does NOT cover:
+  # deploy/*.yml, deploy/Dockerfile and deploy/nginx.conf are code as far as the
+  # box is concerned, so a route-file typo still runs CI.
+  #
+  # auto_deploy.sh knows this rule: when the range since the last deploy is
+  # Markdown-only it deploys at once, without waiting for a run.
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+  # Re-run by hand from the Actions UI: a run that failed for an environmental
+  # reason, or a docs-only push that turned out to need a rebuild after all.
+  # Every gate still runs — it is a retry, not a shortcut. The box picks the
+  # newest run for the commit, so a green re-run un-refuses it.
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # 24, not this machine's 22.12. eslint 10 requires ^20.19 || ^22.13 || >=24 and
+  # warns EBADENGINE on 22.12 locally; deploy/Dockerfile carries the same major
+  # so CI and the box build the bundle with the same toolchain.
+  NODE_VERSION: "24"
+
+jobs:
+  # Two kinds of file here have no safety net of their own:
+  #
+  #   Workflow files — a mistake fails the run before any job starts, with zero
+  #   jobs and no message. actionlint parses them the way GitHub does.
+  #
+  #   deploy/auto_deploy.sh — the box checks it out and executes it. A syntax
+  #   error there would once have wedged the deployer permanently; now the box
+  #   refuses to check out anything this workflow did not pass, which makes
+  #   THIS job the thing standing between a typo and a server that needs SSH.
+  #
+  # Neither needs npm, so this is its own job rather than four wasted minutes
+  # at the head of `frontend`.
+  lint-infra:
+    name: Lint workflows and scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The release tarball, verified against the checksum published with it —
+      # not the project's `download-actionlint.bash`, which is fetched from its
+      # `main` branch and could change under us even with the version pinned.
+      - name: actionlint
+        env:
+          VERSION: "1.7.12"
+          SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          set -euo pipefail
+          curl -sSfL -o actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${VERSION}/actionlint_${VERSION}_linux_amd64.tar.gz"
+          echo "${SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar xzf actionlint.tar.gz actionlint
+          ./actionlint -color
+
+      # shellcheck ships on ubuntu-latest. `bash -n` is the parse check
+      # shellcheck does not do; it is the one that matters for point 4 in
+      # auto_deploy.sh.
+      - name: shellcheck deploy scripts
+        run: |
+          set -euo pipefail
+          for f in deploy/*.sh; do bash -n "$f"; done
+          shellcheck -S warning deploy/*.sh
+
+  frontend:
+    name: Frontend
+    # ubuntu-latest, not the [self-hosted, prod] that Tazabar's jobs moved to in
+    # August. That move was a response to the Actions allowance running out that
+    # month, and its own comment says to move back when the allowance resets.
+    # It has (September), and in any case `taza-prod` is registered to that
+    # repository, not this one. This pipeline is a few minutes of npm; it does
+    # not need the box, and running it there would put a Vite build on the 2 vCPU
+    # that serve the live site.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      # `tsc -b`, not `tsc --noEmit`. They are not the same check: --noEmit
+      # type-checks the root tsconfig's own `include`, while -b walks the project
+      # references (tsconfig.app.json / tsconfig.node.json) the way `npm run
+      # build` does. A gate that green-lights code the build rejects is worse
+      # than no gate, because it is believed.
+      #
+      # Then `vite build` directly rather than `npm run build`, which is
+      # `tsc -b && vite build` and would type-check a second time. Keeping the
+      # two apart means a type error is reported as a type error, not as a
+      # failed bundle half a minute later.
+      - run: npx tsc -b
+      - run: npm run lint
+      - run: npx vite build
+
+      - name: Bundle size guard
+        # funOS is a toy desktop that people open on a phone out of curiosity and
+        # close if it hangs, so first paint is the whole product. There is no
+        # route splitting and no manualChunks — everything is one JS chunk and
+        # one CSS file — so two budgets cover it, both measured gzipped because
+        # that is what nginx actually sends.
+        #
+        # Deliberately NOT a whole-dist total: dist also carries ~70KB of woff2
+        # that is fixed, already optimal and would only add noise to the number.
+        #
+        #   js  — the single entry chunk: React 19 + react-rnd + zustand + every
+        #         app in src/apps. Measured 75KB at gzip -9 on 2026-09-14. 120KB
+        #         leaves room for the File Explorer and Paint clones on the
+        #         roadmap, and still catches a date or chart library landing in
+        #         it. (Vite's own build log says 79KB — it reports default-level
+        #         gzip, this measures -9. Compare like with like when updating.)
+        #   css — xp.css plus App.css. Measured 37KB, and it is nearly all
+        #         xp.css, which does not grow. 64KB catches a second UI kit
+        #         landing next to it.
+        #
+        # When one of these trips, the fix is to look at what got imported, not
+        # to raise the number. Raising it three times in a week is how Tazabar's
+        # old single-total guard became useless.
+        #
+        # `failglob`: a glob that matches nothing is an error, not an empty
+        # string. Without it a missing index-*.css measures as 0KB and passes.
+        run: |
+          set -euo pipefail
+          shopt -s failglob
+
+          js=$((  $(gzip -9 -c dist/assets/index-*.js  | wc -c) / 1024 ))
+          css=$(( $(gzip -9 -c dist/assets/index-*.css | wc -c) / 1024 ))
+
+          # Context, not gated — makes a jump explainable without failing a build
+          # for having shipped more fonts.
+          total=$(find dist -type f ! -name '*.map' -print0 | xargs -0 du -ck | tail -1 | cut -f1)
+
+          echo "entry js  (gz): ${js}KB / 120KB"
+          echo "css       (gz): ${css}KB / 64KB"
+          echo "--- context (not gated) ---"
+          echo "all assets excl. maps: ${total}KB"
+
+          fail=0
+          if [ "$js" -gt 120 ]; then
+            echo "::error::entry chunk is ${js}KB gzipped, over the 120KB first-paint budget — check what landed in src/apps or src/components"
+            fail=1
+          fi
+          if [ "$css" -gt 64 ]; then
+            echo "::error::css is ${css}KB gzipped, over the 64KB budget — a second UI kit probably got imported alongside xp.css"
+            fail=1
+          fi
+          exit "$fail"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # gitleaks-action lists the PR's commits to decide what to scan, so on a
+    # pull_request event it needs pull-requests: read. Without it the step dies
+    # with an unhandled 403 "Resource not accessible by integration" — which
+    # reads like a secret was found, when nothing was scanned at all.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      # Full history, unlike every other job here. gitleaks picks its scan range
+      # from the event: a push of ONE commit is `--log-opts=-1` and needs no
+      # history, which is why a shallow checkout passes for a while; a push of
+      # several, or any pull request, becomes `<first>^..<last>` and needs the
+      # parent to exist. Against fetch-depth 1 that is `fatal: ambiguous
+      # argument`, which the action reports as a bare "Unexpected exit code [1]"
+      # — a secret scanner that scanned nothing, reporting like it found
+      # something.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { fetch-depth: 0 }
+
+      # No `npm audit` here. It used to run with `|| true`, which made it a step
+      # that could never fail — noise dressed as a gate. Dependency CVEs are
+      # cve-watch.yml's job: Trivy over the lockfile, unfixable advisories
+      # ignored, on every lockfile change and weekly.
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  image:
+    name: Build production image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Runs on pull requests too, unlike Tazabar's `images` job, which is
+    # main-only because it pushes to GHCR and a PR has nothing to push to.
+    # Nothing is pushed here — the box builds its own image from the checkout —
+    # so this job's only product is the answer to "does deploy/Dockerfile still
+    # work". That answer is worth having BEFORE merge: with a pull deployer,
+    # a Dockerfile that does not build means the box retries a failing build
+    # every 30 minutes and the site silently stays on the old bundle.
+    #
+    # Not gated on `frontend` either. It repeats the Vite build inside the image,
+    # so running it afterwards would make the pipeline the sum of the two rather
+    # than the longer of them.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      # load: true, push: false — the image stays in this runner's daemon just
+      # long enough for the smoke test below, then dies with the runner.
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: deploy/Dockerfile
+          load: true
+          push: false
+          tags: funos-web:ci
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      # Three assertions, each for a failure this project can actually have:
+      #
+      #   /health reports THIS commit — proves the GIT_SHA build-arg reached the
+      #     sed in the Dockerfile. If it silently did not, auto_deploy.sh's
+      #     health check can never match and no deploy would ever be recorded.
+      #   / serves the React root div — proves dist was copied, not an empty
+      #     nginx welcome page. A wrong COPY path fails exactly this way: 200 OK
+      #     on a page with no app in it.
+      #   a deep path returns the shell — proves the SPA fallback. Nothing routes
+      #     client-side in funOS today, but the roadmap has an IE6 shell with
+      #     iframe browsing, and a broken try_files only shows up on reload.
+      #
+      # Plus one for the size budget's premise: the JS really is served gzipped.
+      # The `frontend` job measures gzip -9 bytes; if nginx's gzip_types did not
+      # match the mime type nginx picks for .js, the budget would be a fiction.
+      - name: Smoke test the image
+        run: |
+          set -euo pipefail
+          docker run -d --name funos-ci -p 8080:80 funos-web:ci
+
+          # `up` distinguishes "the container never answered" from "it answered
+          # with the wrong thing". Without it a container that dies on boot fails
+          # later, on a grep against an empty file, which reads like a bad build
+          # rather than a crashed one.
+          up=0
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/health -o /tmp/health.json; then up=1; break; fi
+            sleep 1
+          done
+          if [ "$up" -ne 1 ]; then
+            echo "::error::funos-web never answered on /health — the container did not start"
+            exit 1
+          fi
+
+          cat /tmp/health.json; echo
+          grep -q "$GITHUB_SHA" /tmp/health.json
+
+          # Each response goes to a file before it is grepped. `curl | grep -q`
+          # looks tidier and is a race: grep exits on the first match, curl takes
+          # SIGPIPE, and `set -o pipefail` turns that into exit 141. These pages
+          # are small enough that curl usually finishes writing first, which is
+          # the worst version of the bug — it fails perhaps one run in fifty and
+          # reads like flaky infrastructure.
+          curl -fsS http://127.0.0.1:8080/ -o /tmp/root.html
+          grep -q '<div id="root"' /tmp/root.html
+          curl -fsS http://127.0.0.1:8080/some/deep/route -o /tmp/deep.html
+          grep -q '<div id="root"' /tmp/deep.html
+
+          js_path=$(grep -o '/assets/index-[^"]*\.js' /tmp/root.html | head -1)
+          curl -fsS -H 'Accept-Encoding: gzip' -D /tmp/js.headers -o /dev/null "http://127.0.0.1:8080${js_path}"
+          grep -qi '^content-encoding: gzip' /tmp/js.headers || {
+            echo "::error::${js_path} was not served gzipped — check gzip_types in deploy/nginx.conf"
+            cat /tmp/js.headers; exit 1
+          }
+
+      - name: Container logs
+        if: failure()
+        run: docker logs funos-ci || true
