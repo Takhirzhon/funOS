@@ -140,27 +140,38 @@ jobs:
 
       - name: Bundle size guard
         # funOS is a toy desktop that people open on a phone out of curiosity and
-        # close if it hangs, so first paint is the whole product. There is no
-        # route splitting and no manualChunks — everything is one JS chunk and
-        # one CSS file — so two budgets cover it, both measured gzipped because
-        # that is what nginx actually sends.
+        # close if it hangs, so first paint is the whole product. These numbers
+        # are not a platform limit - they are a tripwire, and their value is not
+        # the threshold but that crossing one is a decision somebody made rather
+        # than a thing that happened. Raising a budget three times in a week is
+        # how Tazabar's old single-total guard became useless.
         #
-        # Deliberately NOT a whole-dist total: dist also carries ~70KB of woff2
-        # that is fixed, already optimal and would only add noise to the number.
+        # All four are measured gzipped, because that is what nginx sends.
         #
-        #   js  — the single entry chunk: React 19 + react-rnd + zustand + every
-        #         app in src/apps. Measured 75KB at gzip -9 on 2026-09-14. 120KB
-        #         leaves room for the File Explorer and Paint clones on the
-        #         roadmap, and still catches a date or chart library landing in
-        #         it. (Vite's own build log says 79KB — it reports default-level
-        #         gzip, this measures -9. Compare like with like when updating.)
-        #   css — xp.css plus App.css. Measured 37KB, and it is nearly all
-        #         xp.css, which does not grow. 64KB catches a second UI kit
-        #         landing next to it.
+        #   js    - the entry chunk. Since every app became a lazy import this is
+        #           React 19 + react-rnd + zustand + the shell, and it is now
+        #           structural: adding applications does not grow it. Measured
+        #           91KB. The 120KB ceiling is no longer "room for more apps",
+        #           it is "catch a date library or a chart kit landing in the
+        #           shell". (Vite's build log says 95KB - it reports default-level
+        #           gzip, this measures -9. Compare like with like.)
+        #   css   - xp.css plus the shell's modules. Measured 40KB, nearly all of
+        #           it xp.css, which does not grow. 64KB catches a second UI kit.
+        #   chunk - the largest lazily-loaded app. This is the hole that code
+        #           splitting opened: applications left the entry chunk and
+        #           stopped being measured by anything at all, so one of them
+        #           could quietly pull in a 300KB dependency and no gate would
+        #           notice. Measured 4KB today; 48KB is generous on purpose.
+        #   first - what a visitor downloads before anything renders: the entry
+        #           JS, the entry CSS and the wallpaper. Worth stating plainly,
+        #           because the wallpaper is 184KB and is therefore larger than
+        #           both code budgets put together - guarding 91KB of JavaScript
+        #           while shipping it unwatched would be measuring the easy half.
+        #           A photograph is the one thing here worth its bytes, so the
+        #           ceiling is set to allow it and to catch a second one.
         #
-        # When one of these trips, the fix is to look at what got imported, not
-        # to raise the number. Raising it three times in a week is how Tazabar's
-        # old single-total guard became useless.
+        # Fonts are excluded: ~70KB of woff2 that is fixed, already optimal, and
+        # only adds noise. Nothing fetches them before first paint either.
         #
         # `failglob`: a glob that matches nothing is an error, not an empty
         # string. Without it a missing index-*.css measures as 0KB and passes.
@@ -170,23 +181,46 @@ jobs:
 
           js=$((  $(gzip -9 -c dist/assets/index-*.js  | wc -c) / 1024 ))
           css=$(( $(gzip -9 -c dist/assets/index-*.css | wc -c) / 1024 ))
+          wallpaper=$(( $(wc -c < dist/assets/bliss-*.webp) / 1024 ))
+          first=$(( js + css + wallpaper ))
 
-          # Context, not gated — makes a jump explainable without failing a build
-          # for having shipped more fonts.
+          # The largest app chunk, and which one it is - "48KB" alone sends the
+          # next person hunting through nine files to find out who grew.
+          chunk=0
+          chunk_name="(none)"
+          for file in dist/assets/*.js; do
+            case "$(basename "$file")" in index-*) continue ;; esac
+            size=$(( $(gzip -9 -c "$file" | wc -c) / 1024 ))
+            if [ "$size" -gt "$chunk" ]; then
+              chunk=$size
+              chunk_name=$(basename "$file")
+            fi
+          done
+
           total=$(find dist -type f ! -name '*.map' -print0 | xargs -0 du -ck | tail -1 | cut -f1)
 
-          echo "entry js  (gz): ${js}KB / 120KB"
-          echo "css       (gz): ${css}KB / 64KB"
-          echo "--- context (not gated) ---"
+          echo "entry js     (gz): ${js}KB / 120KB"
+          echo "entry css    (gz): ${css}KB / 64KB"
+          echo "largest app  (gz): ${chunk}KB / 48KB  (${chunk_name})"
+          echo "first paint  (gz): ${first}KB / 400KB  (js + css + wallpaper)"
+          echo "--- context, not gated ---"
           echo "all assets excl. maps: ${total}KB"
 
           fail=0
           if [ "$js" -gt 120 ]; then
-            echo "::error::entry chunk is ${js}KB gzipped, over the 120KB first-paint budget — check what landed in src/apps or src/components"
+            echo "::error::entry chunk is ${js}KB gzipped, over 120KB - something heavy was imported by the shell rather than by an app"
             fail=1
           fi
           if [ "$css" -gt 64 ]; then
-            echo "::error::css is ${css}KB gzipped, over the 64KB budget — a second UI kit probably got imported alongside xp.css"
+            echo "::error::css is ${css}KB gzipped, over 64KB - a second UI kit probably got imported alongside xp.css"
+            fail=1
+          fi
+          if [ "$chunk" -gt 48 ]; then
+            echo "::error::${chunk_name} is ${chunk}KB gzipped, over the 48KB per-app budget"
+            fail=1
+          fi
+          if [ "$first" -gt 400 ]; then
+            echo "::error::first paint is ${first}KB, over 400KB - check the wallpaper before the code"
             fail=1
           fi
           exit "$fail"

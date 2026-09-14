@@ -69,11 +69,26 @@ back. Both are wired up anyway — they work on some Linux desktops and in kiosk
 mode, and cost nothing when they do not. The shortcut that always arrives is
 `Ctrl+Alt+Left/Right`. Worth knowing before this gets filed as a bug.
 
-**The bundle budget has room again, and it is worth keeping.** CI fails the
-build over 120KB of gzipped entry JS and 64KB of CSS. Every app is now a lazy
-import, which took the entry from 103KB to **91KB** and put each application in
-its own chunk. Keep new apps out of the entry: add them to `apps/registry.ts`
-with `app(() => import("./Thing"), "Thing")` and they stay out by construction.
+**The bundle budgets are a tripwire, not a limit.** Nothing about the browser
+stops this being twice the size; the numbers in `ci.yml` are chosen, and their
+value is not the threshold but that crossing one has to be a decision somebody
+made rather than a thing that happened. Four of them:
+
+| | now | ceiling | what it catches |
+|---|---|---|---|
+| entry JS | 91KB | 120KB | a heavy library imported by the shell |
+| entry CSS | 40KB | 64KB | a second UI kit next to xp.css |
+| largest app chunk | 3KB | 48KB | one app pulling in something enormous |
+| first paint | 315KB | 400KB | the total a visitor waits for |
+
+The entry is structural now: every app is a lazy import, so adding
+applications does not grow it. Add them to `apps/registry.ts` with
+`app(() => import("./Thing"), "Thing")` and they stay out by construction.
+
+Worth knowing when one trips: **the wallpaper is 184KB, which is larger than
+the entry JS and CSS together.** The code budgets guard the smaller half. If
+first paint ever needs to come down, the photograph is the first place to
+look, not the JavaScript.
 
 **The desktop and Explorer drag differently, on purpose.** The desktop uses
 pointer events, because it is moving an icon to a *position*; Explorer uses
