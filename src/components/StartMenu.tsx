@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useWindowStore } from "../store/windowStore";
+import { useSessionStore } from "../store/sessionStore";
 import { apps, appIds, type AppId } from "../apps/registry";
 import {
   ControlPanelIcon,
@@ -49,6 +50,8 @@ const allPrograms = [...appIds].sort((a, b) => apps[a].label.localeCompare(apps[
 
 export function StartMenu({ onClose }: Props) {
   const open = useWindowStore((s) => s.open);
+  const logOff = useSessionStore((s) => s.logOff);
+  const askTurnOff = useSessionStore((s) => s.askTurnOff);
   const [allOpen, setAllOpen] = useState(false);
 
   const launch = (appId: AppId) => {
@@ -132,11 +135,28 @@ export function StartMenu({ onClose }: Props) {
       </div>
 
       <div className={styles.footer}>
-        <button type="button" className={styles.footerButton} onClick={onClose}>
+        <button
+          type="button"
+          className={styles.footerButton}
+          onClick={() => {
+            onClose();
+            logOff();
+          }}
+        >
           <LogOffIcon size={20} />
           Log Off
         </button>
-        <button type="button" className={styles.footerButton} onClick={onClose}>
+        <button
+          type="button"
+          className={styles.footerButton}
+          onClick={() => {
+            /* Close the menu first: the dialog dims the desktop, and leaving
+               the Start menu open underneath it looks like two things are
+               happening at once. */
+            onClose();
+            askTurnOff();
+          }}
+        >
           <ShutdownIcon size={20} />
           Turn Off Computer
         </button>

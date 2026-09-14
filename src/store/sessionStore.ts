@@ -1,0 +1,82 @@
+import { create } from "zustand";
+
+/* The machine every screen before the desktop belongs to.
+ *
+ *   boot     the black screen with the progress blocks
+ *   login    the blue welcome screen with the user tile
+ *   desktop  the actual thing
+ *   goodbye  "It is now safe to turn off your computer."
+ *
+ * One store rather than a flag per screen, because these are states of one
+ * session and only one can be true. Two booleans would allow "shutting down
+ * while logged out", which is not a thing.
+ */
+export type Phase = "boot" | "login" | "desktop" | "goodbye";
+
+const SEEN_KEY = "funos.booted";
+
+/* The boot sequence plays once per browser tab, not once per page load.
+ *
+ * It is two seconds of nostalgia the first time and two seconds of friction
+ * every time after that, and the reload that matters most is the one somebody
+ * does because something broke. sessionStorage draws that line exactly:
+ * a new tab boots, a refresh does not.
+ */
+const alreadyBooted = (): boolean => {
+  try {
+    return sessionStorage.getItem(SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const rememberBoot = () => {
+  try {
+    sessionStorage.setItem(SEEN_KEY, "1");
+  } catch {
+    /* Private mode. Booting twice is not worth an error. */
+  }
+};
+
+type SessionStore = {
+  phase: Phase;
+  /** True while the shutdown dialog is up, which dims the desktop behind it. */
+  turningOff: boolean;
+  finishBoot: () => void;
+  logIn: () => void;
+  logOff: () => void;
+  askTurnOff: () => void;
+  cancelTurnOff: () => void;
+  turnOff: () => void;
+  restart: () => void;
+};
+
+export const useSessionStore = create<SessionStore>((set) => ({
+  phase: alreadyBooted() ? "login" : "boot",
+  turningOff: false,
+
+  finishBoot: () => {
+    rememberBoot();
+    set({ phase: "login" });
+  },
+
+  logIn: () => set({ phase: "desktop", turningOff: false }),
+  logOff: () => set({ phase: "login", turningOff: false }),
+
+  askTurnOff: () => set({ turningOff: true }),
+  cancelTurnOff: () => set({ turningOff: false }),
+
+  turnOff: () => set({ phase: "goodbye", turningOff: false }),
+
+  /* Restart replays the boot screen, so it has to clear the once-per-tab flag
+   * as well as the phase - otherwise "Restart" would drop straight to the login
+   * screen, which is the one thing it is not. */
+  restart: () => {
+    try {
+      sessionStorage.removeItem(SEEN_KEY);
+    } catch {
+      /* As above. */
+    }
+    set({ phase: "boot", turningOff: false });
+  },
+}));

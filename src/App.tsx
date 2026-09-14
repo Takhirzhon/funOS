@@ -5,10 +5,18 @@ import { Taskbar } from "./components/Taskbar";
 import { ContextMenu } from "./components/ContextMenu";
 import { Dialog } from "./components/Dialog";
 import { TaskSwitcher } from "./components/TaskSwitcher";
+import { BootScreen, GoodbyeScreen, LoginScreen, TurnOffDialog } from "./boot/Session";
 import { useWindowStore } from "./store/windowStore";
+import { useSessionStore } from "./store/sessionStore";
 
 export default function App() {
   const windows = useWindowStore((s) => s.windows);
+  const phase = useSessionStore((s) => s.phase);
+  const turningOff = useSessionStore((s) => s.turningOff);
+
+  if (phase === "boot") return <BootScreen />;
+  if (phase === "login") return <LoginScreen />;
+  if (phase === "goodbye") return <GoodbyeScreen />;
 
   return (
     <>
@@ -19,13 +27,14 @@ export default function App() {
         ))}
       </div>
       <Taskbar />
+      <TaskSwitcher />
       {/* Last, and mounted once: the context menu has to draw over every window
           and over the taskbar, and there should only ever be one of it. */}
-      <TaskSwitcher />
       <ContextMenu />
       {/* Above even the context menu: a modal dialog is the one thing that
           should win against everything else on screen. */}
       <Dialog />
+      {turningOff && <TurnOffDialog />}
     </>
   );
 }

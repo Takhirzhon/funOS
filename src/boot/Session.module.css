@@ -1,0 +1,285 @@
+/* ---- Boot ------------------------------------------------------------------
+ * Black, the logo, and the three sliding blocks. XP's boot screen has almost
+ * nothing on it, and the restraint is the look.
+ */
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 40000;
+  background: #000;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  cursor: default;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoText {
+  font-family: var(--font-caption);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.logoText small {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 3px;
+  opacity: 0.8;
+}
+
+/* The trough is inset and the blocks slide through it. Three blocks, evenly
+ * spaced, looping - not a bar that fills, which is a different Windows.
+ */
+.trough {
+  position: relative;
+  width: 148px;
+  height: 14px;
+  padding: 2px;
+  overflow: hidden;
+  border: 1px solid #6b6b6b;
+  border-radius: 2px;
+}
+
+.blocks {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  display: flex;
+  gap: 4px;
+  animation: marquee 2.4s linear infinite;
+}
+
+.block {
+  width: 12px;
+  height: 8px;
+  background: linear-gradient(to bottom, #6fb7ff 0%, #1d5fc4 100%);
+}
+
+@keyframes marquee {
+  from { transform: translateX(-56px); }
+  to { transform: translateX(148px); }
+}
+
+.hint {
+  position: absolute;
+  bottom: 24px;
+  font-size: 11px;
+  color: #6b6b6b;
+}
+
+/* ---- Login ------------------------------------------------------------------
+ * The welcome screen: a blue field with a bright band across the middle and a
+ * hairline above and below it. The bands are what make it read as XP rather
+ * than as a blue page.
+ */
+.login {
+  position: fixed;
+  inset: 0;
+  z-index: 40000;
+  background: linear-gradient(to bottom, #5a7edc 0%, #3f6bcc 40%, #4d78d6 100%);
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  color: #fff;
+  cursor: default;
+}
+
+.loginTop,
+.loginBottom {
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+}
+
+.loginTop {
+  justify-content: flex-end;
+  border-bottom: 1px solid #ffffff55;
+  box-shadow: 0 1px 0 #00000022;
+}
+
+.loginBottom {
+  justify-content: space-between;
+  border-top: 1px solid #ffffff55;
+  box-shadow: 0 -1px 0 #00000022;
+  font-size: 11px;
+  color: #dbe6ff;
+}
+
+.loginBrand {
+  text-align: right;
+}
+
+.loginBrand strong {
+  display: block;
+  font-family: var(--font-caption);
+  font-size: 34px;
+  font-weight: normal;
+  line-height: 1.05;
+}
+
+.loginBand {
+  background: linear-gradient(to bottom, #5f86e4 0%, #7ba0ee 50%, #5578d8 100%);
+  padding: 26px 40px;
+  display: flex;
+  align-items: center;
+  gap: 60px;
+}
+
+.loginPrompt {
+  flex: 1;
+  text-align: right;
+  font-size: 13px;
+  text-shadow: 1px 1px 2px #00000055;
+}
+
+.tile {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 4px;
+  cursor: default;
+  color: #fff;
+}
+
+.tile:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 5px;
+  border: 2px solid #fff;
+  background: linear-gradient(135deg, #8fc9f5 0%, #2f74d8 100%);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-caption);
+  font-size: 26px;
+  font-weight: bold;
+  box-shadow: 0 1px 4px #00000055;
+}
+
+.tileName {
+  font-family: var(--font-caption);
+  font-size: 18px;
+  text-shadow: 1px 1px 2px #00000055;
+}
+
+/* ---- Turn off ---------------------------------------------------------------
+ * XP dims the desktop behind this one, which is the single moment it does -
+ * everywhere else a modal simply sits on top. It is what makes the choice feel
+ * like it applies to the whole machine.
+ */
+.dim {
+  position: fixed;
+  inset: 0;
+  z-index: 35000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: grayscale(0.7);
+}
+
+.turnOff {
+  width: 420px;
+  border: 1px solid #0a3290;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 4px 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.turnOffHead {
+  padding: 10px 14px;
+  background: linear-gradient(to bottom, #1e5fc7 0%, #3a84e4 45%, #14459c 100%);
+  color: #fff;
+  font-family: var(--font-caption);
+  font-size: 17px;
+  text-shadow: 1px 1px 1px #00000066;
+}
+
+.turnOffBody {
+  padding: 22px 14px 18px;
+  background: linear-gradient(to bottom, #4a79d8 0%, #3a66c4 100%);
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+}
+
+.choice {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 92px;
+  cursor: default;
+  color: #fff;
+  font-size: 11px;
+  text-align: center;
+}
+
+.choiceIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  box-shadow: inset 0 -2px 6px #00000055, 0 2px 4px #00000044;
+}
+
+.choice:hover .choiceIcon {
+  filter: brightness(1.15);
+}
+
+.choice:disabled {
+  opacity: 0.5;
+}
+
+.turnOffFoot {
+  padding: 8px 14px;
+  background: #c7d7f2;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---- Goodbye ----------------------------------------------------------------- */
+
+.goodbye {
+  position: fixed;
+  inset: 0;
+  z-index: 40000;
+  background: #000;
+  color: #e0a000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  font-family: "Perfect DOS VGA 437 Win", "Lucida Console", monospace;
+  font-size: 20px;
+  text-align: center;
+  cursor: default;
+}
+
+.goodbyeAction {
+  all: unset;
+  padding: 6px 16px;
+  border: 1px solid #6b6b6b;
+  color: #c0c0c0;
+  font-size: 13px;
+  cursor: default;
+}
+
+.goodbyeAction:hover {
+  background: #1a1a1a;
+}

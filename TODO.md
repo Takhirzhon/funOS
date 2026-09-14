@@ -48,8 +48,6 @@ Ordered by ratio of "makes the place feel alive" to effort.
 
 ## The details nobody asks for and everybody notices
 
-- [ ] **Boot splash and login screen.** The progress bar, then the blue user-tile
-      screen.
 - [ ] **Sounds.** Startup chime, ding on error, the click. Muted by default —
       autoplay policy blocks it anyway, so it needs a first-gesture unlock.
 - [ ] **Themes.** Luna Blue, Olive Green, Silver. The palette is already in
@@ -57,7 +55,6 @@ Ordered by ratio of "makes the place feel alive" to effort.
       rather than a rewrite.
 - [ ] **Screensavers.** Pipes, 3D Maze, Starfield.
 - [ ] **Balloon tips** from the tray.
-- [ ] **Shutdown.** The dimmed overlay and the three-button dialog.
 
 ---
 
