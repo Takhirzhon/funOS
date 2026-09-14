@@ -20,7 +20,7 @@ RUN npm run build
 # recurring: Dependabot (.github/dependabot.yml, `docker` ecosystem) opens a PR
 # when the next minor exists, and cve-watch.yml scans whatever this line names
 # every Monday, so a CVE on a stale tag is at least reported.
-FROM nginx:1.30-alpine AS runtime
+FROM nginx:1.31-alpine AS runtime
 
 # The commit this image was built from. Served at /health so a deploy can be
 # verified from outside the box (guide section 7).
