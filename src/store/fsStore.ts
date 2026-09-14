@@ -17,11 +17,51 @@ export type FsEntry = {
    *  entry passed around on its own still knows where it lives. */
   path: string;
   kind: "dir" | "file";
-  /** Empty for directories. Text only for now; binary arrives with Paint. */
+  /** Text payload. Empty for directories and for binary files. */
   content: string;
+  /* Binary payload. Its *presence* is what makes a file binary - there is no
+   * separate `encoding` field to get out of step with the data.
+   *
+   * Added alongside `content` rather than replacing it with a `string | Blob`
+   * union, which would have been tidier on paper. The file system is already
+   * live and holding somebody's files: an additive field needs no migration
+   * and cannot mangle an entry written by an older build, where a union would
+   * need migration code that can only be tested against data I do not have.
+   *
+   * Uint8Array rather than Blob because reading a Blob is asynchronous, and
+   * every caller from Notepad to the thumbnail grid reads synchronously during
+   * render. Bytes convert to a Blob URL in one synchronous line when a browser
+   * API actually needs one.
+   */
+  bytes?: Uint8Array;
+  /** MIME type, binary files only. */
+  mime?: string;
   created: number;
   modified: number;
 };
+
+/** True for files written by `writeBinary` - the ones Notepad cannot show. */
+export const isBinary = (entry: FsEntry | undefined): boolean =>
+  entry?.kind === "file" && entry.bytes !== undefined;
+
+/* Object URLs are cached per path+timestamp. Minting a new one on every render
+ * leaks: each URL pins its Blob in memory until revoked, and a thumbnail grid
+ * re-rendering on every keystroke would mint one per image per keystroke.
+ */
+const urlCache = new Map<string, { key: string; url: string }>();
+
+export function blobUrlFor(entry: FsEntry): string | undefined {
+  if (!entry.bytes) return undefined;
+  const key = `${entry.modified}:${entry.bytes.byteLength}`;
+  const cached = urlCache.get(entry.path);
+  if (cached?.key === key) return cached.url;
+  if (cached) URL.revokeObjectURL(cached.url);
+  const url = URL.createObjectURL(
+    new Blob([entry.bytes as unknown as BlobPart], { type: entry.mime ?? "application/octet-stream" })
+  );
+  urlCache.set(entry.path, { key, url });
+  return url;
+}
 
 const STORAGE_KEY = "fs.entries";
 
@@ -44,6 +84,7 @@ type FsStore = {
 
   mkdir: (path: string) => boolean;
   writeFile: (path: string, content: string) => boolean;
+  writeBinary: (path: string, bytes: Uint8Array, mime: string) => boolean;
   readFile: (path: string) => string | undefined;
   remove: (path: string) => boolean;
   rename: (path: string, nextName: string) => string | null;
@@ -171,7 +212,35 @@ export const useFsStore = create<FsStore>((set, get) => ({
         path: target,
         kind: "file" as const,
         content,
+        /* Saving text over a file that used to be binary has to drop the bytes,
+         * or the entry keeps reporting itself as binary and the text is
+         * invisible everywhere. */
         created: existing?.created ?? now,
+        modified: now,
+      },
+    };
+    set({ entries: next });
+    persist(next);
+    return true;
+  },
+
+  writeBinary: (path, bytes, mime) => {
+    const target = normalize(path);
+    const { entries } = get();
+    const parent = dirname(target);
+    if (!(parent in entries) || entries[parent].kind !== "dir") return false;
+    if (entries[target]?.kind === "dir") return false;
+
+    const now = Date.now();
+    const next = {
+      ...entries,
+      [target]: {
+        path: target,
+        kind: "file" as const,
+        content: "",
+        bytes,
+        mime,
+        created: entries[target]?.created ?? now,
         modified: now,
       },
     };

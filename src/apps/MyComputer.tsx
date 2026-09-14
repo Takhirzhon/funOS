@@ -21,12 +21,16 @@ export function MyComputer() {
   const open = useWindowStore((s) => s.open);
   const [selected, setSelected] = useState<string | null>(null);
 
-  /* Size on disk, invented from the only thing that is real: how much text the
-   * file system is actually holding. It goes up when you save something, which
-   * is a small joke that costs nothing and is better than a hardcoded 40.0 GB.
+  /* Size on disk, from the only thing here that is real: how much the file
+   * system is actually holding, text and bytes both. It goes up when you save
+   * something, which costs nothing and is better than a hardcoded 40.0 GB.
    */
   const used = useMemo(
-    () => Object.values(entries).reduce((total, e) => total + e.content.length, 0),
+    () =>
+      Object.values(entries).reduce(
+        (total, e) => total + (e.bytes ? e.bytes.byteLength : e.content.length),
+        0
+      ),
     [entries]
   );
 

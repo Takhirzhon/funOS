@@ -23,6 +23,9 @@ import {
 import { useMenuStore } from "../store/menuStore";
 import { confirmDialog, errorDialog, promptDialog } from "../store/dialogStore";
 import { DESKTOP_DIR } from "../fs/seed";
+import { importFiles } from "../fs/import";
+import { launchFile } from "../fs/open";
+import { dropPathAt, useDndStore } from "../store/dndStore";
 import { PATH_MIME } from "../fs/dnd";
 import { basename, extname } from "../fs/path";
 import { FileIcon, FolderIcon, NotepadIcon } from "../icons";
@@ -60,7 +63,6 @@ const fileIcon = (entry: FsEntry) => {
 export function Desktop() {
   const open = useWindowStore((s) => s.open);
   const entries = useFsStore((s) => s.entries);
-  const writeFile = useFsStore((s) => s.writeFile);
   const move = useFsStore((s) => s.move);
   const remove = useFsStore((s) => s.remove);
   const rename = useFsStore((s) => s.rename);
@@ -71,6 +73,7 @@ export function Desktop() {
   const setPosition = useDesktopStore((s) => s.setPosition);
   const resetPositions = useDesktopStore((s) => s.resetPositions);
   const openMenu = useMenuStore((s) => s.open);
+  const setHoverPath = useDndStore((s) => s.setHoverPath);
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState(8);
@@ -140,6 +143,15 @@ export function Desktop() {
         d.pos = { x: x - d.offsetX, y: y - d.offsetY };
         d.moved = true;
         setDrag({ ...d });
+        /* Ask the document whether something under the cursor is advertising
+         * itself as a folder. The desktop field advertises nothing, so this is
+         * null for the whole time the drag stays at home - no separate "am I
+         * still inside" test is needed.
+         *
+         * Only a file can land somewhere else: an application shortcut has no
+         * path to move, and its id is an app id rather than one starting "C:".
+         */
+        setHoverPath(d.id.startsWith("C:") ? dropPathAt(e.clientX, e.clientY) : null);
         return;
       }
 
@@ -170,9 +182,22 @@ export function Desktop() {
     const onUp = () => {
       const d = dragRef.current;
       if (d) {
-        if (d.moved) setPosition(d.id, snap(d.pos));
+        const target = useDndStore.getState().hoverPath;
+        if (d.moved && target) {
+          /* Dropped into a folder somewhere else on screen. The icon's stored
+           * position is deliberately not updated - it is leaving. */
+          if (useFsStore.getState().move(d.id, target) === null) {
+            void errorDialog(
+              "Move",
+              `Cannot move '${basename(d.id)}' there: something with that name already exists.`
+            );
+          }
+        } else if (d.moved) {
+          setPosition(d.id, snap(d.pos));
+        }
         dragRef.current = null;
         setDrag(null);
+        setHoverPath(null);
       }
       if (marqueeRef.current) {
         marqueeRef.current = null;
@@ -186,7 +211,7 @@ export function Desktop() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [select, setPosition]);
+  }, [select, setPosition, setHoverPath]);
 
   const launch = (appId: AppId) =>
     open(appId, { title: apps[appId].title, bounds: apps[appId].defaultSize });
@@ -204,11 +229,7 @@ export function Desktop() {
       });
       return;
     }
-    open("notepad", {
-      title: `${item.label} - Notepad`,
-      bounds: { width: 560, height: 420 },
-      props: { path: item.entry.path },
-    });
+    launchFile(item.entry);
   };
 
   const beginDrag = (id: string) => (e: ReactPointerEvent<HTMLButtonElement>) => {
@@ -362,22 +383,10 @@ export function Desktop() {
       return;
     }
 
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length === 0) return;
-
-    void (async () => {
-      for (const file of files) {
-        /* Text only, until the file system can hold bytes. Saying so is better
-         * than writing the string "[object Blob]" into a file and calling it
-         * imported. */
-        if (file.size > 1_000_000) {
-          void errorDialog("Copy", `${file.name} is too large to copy here.`);
-          continue;
-        }
-        const text = await file.text();
-        writeFile(uniquePath(DESKTOP_DIR, file.name), text);
-      }
-    })();
+    if (e.dataTransfer.files.length === 0) return;
+    void importFiles(e.dataTransfer.files, DESKTOP_DIR).then((error) => {
+      if (error) void errorDialog("Copy", error);
+    });
   };
 
   return (

@@ -2,6 +2,7 @@ import type { ComponentType, CSSProperties } from "react";
 import { Notepad } from "./Notepad";
 import { MyComputer } from "./MyComputer";
 import { Explorer } from "./Explorer";
+import { ImageViewer } from "./ImageViewer";
 import { About } from "./About";
 import { RecycleBin } from "./RecycleBin";
 import {
@@ -9,6 +10,7 @@ import {
   InfoIcon,
   MyComputerIcon,
   NotepadIcon,
+  PictureIcon,
   RecycleBinIcon,
 } from "../icons";
 
@@ -53,6 +55,16 @@ export const apps = {
     icon: DocumentsIcon,
     defaultSize: { width: 660, height: 460 },
     onDesktop: true,
+  },
+  /* Not on the desktop and not in the Start menu: it is opened by
+   * double-clicking a picture, the way Windows Picture and Fax Viewer was. */
+  imageViewer: {
+    title: "Windows Picture Viewer",
+    label: "Picture Viewer",
+    component: ImageViewer as ComponentType<Record<string, unknown>>,
+    icon: PictureIcon,
+    defaultSize: { width: 620, height: 480 },
+    onDesktop: false,
   },
   recycleBin: {
     title: "Recycle Bin",

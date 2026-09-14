@@ -25,6 +25,12 @@
 .dragging {
   opacity: 0.65;
   z-index: 5;
+  /* Transparent to hit-testing while it is being dragged. The icon sits under
+   * the cursor for the whole gesture, so without this `elementFromPoint` only
+   * ever finds the icon itself - and the drag could never discover the Explorer
+   * folder underneath it.
+   */
+  pointer-events: none;
 }
 
 .glyph {

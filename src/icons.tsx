@@ -144,6 +144,22 @@ export const FileIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+export const PictureIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="pic-sky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#6fb7ea" />
+        <stop offset="1" stopColor="#c7e6f7" />
+      </linearGradient>
+    </defs>
+    <rect x="3" y="6" width="26" height="20" rx="1.5" fill="#fff" stroke="#7a8794" strokeWidth="0.9" />
+    <rect x="5" y="8" width="22" height="16" fill="url(#pic-sky)" />
+    {/* A hill, a sun and nothing else - at 16px anything more is a smudge */}
+    <circle cx="10" cy="12.5" r="2.2" fill="#ffe07a" />
+    <path d="M5 24l6.5-7 4.5 4.6 4-3.4L27 24z" fill="#5aa84a" />
+  </svg>
+);
+
 export const DriveIcon = ({ size = 32, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>

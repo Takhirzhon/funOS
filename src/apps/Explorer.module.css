@@ -146,41 +146,189 @@
   margin-left: 2px;
 }
 
-.list {
+/* ---- The item pane, in four views -----------------------------------------
+ * One container, four layouts. The items themselves are the same markup in
+ * every view except Details, which needs cells - which is why Details is the
+ * one branch in the component and the other three are pure CSS.
+ */
+
+.pane {
   flex: 1;
   min-width: 0;
   overflow: auto;
   background: #fff;
   padding: 4px;
   align-content: start;
+}
+
+.thumbnails,
+.icons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 88px);
   gap: 2px;
+}
+
+.icons {
+  grid-template-columns: repeat(auto-fill, 88px);
+}
+
+.thumbnails {
+  grid-template-columns: repeat(auto-fill, 112px);
+}
+
+/* List flows in columns and wraps to a new one at the bottom of the pane -
+ * which is what makes it a list view rather than a narrow icon view. It needs
+ * a height to wrap against, hence the 100%. */
+.list {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  height: 100%;
+  gap: 0 16px;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
 }
 
 .item {
   all: unset;
   box-sizing: border-box;
-  width: 88px;
-  padding: 4px 2px;
   display: flex;
-  flex-direction: column;
+  cursor: default;
   align-items: center;
+}
+
+.icons .item,
+.thumbnails .item {
+  flex-direction: column;
+  padding: 4px 2px;
   gap: 3px;
   text-align: center;
-  cursor: default;
+}
+
+.icons .item {
+  width: 88px;
+}
+
+.thumbnails .item {
+  width: 112px;
+}
+
+.list .item {
+  flex-direction: row;
+  gap: 5px;
+  height: 18px;
+  padding: 0 4px;
+  max-width: 220px;
+}
+
+.thumb {
+  display: grid;
+  place-items: center;
+}
+
+.thumbnails .thumb {
+  width: 96px;
+  height: 84px;
+  border: 1px solid #d8d5cc;
+  background: #fbfbf9;
+  overflow: hidden;
+}
+
+.preview {
+  max-width: 94px;
+  max-height: 82px;
+  object-fit: contain;
+  display: block;
 }
 
 .itemLabel {
-  max-width: 84px;
   padding: 1px 3px;
   line-height: 1.2;
+}
+
+.icons .itemLabel,
+.thumbnails .itemLabel {
+  max-width: 100%;
   overflow-wrap: anywhere;
+}
+
+.list .itemLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .item.selected .itemLabel {
   background: #316ac5;
   color: #fff;
+}
+
+/* ---- Details ---- */
+
+.headerRow,
+.detailRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 2fr) 70px minmax(90px, 1fr) minmax(120px, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  height: 18px;
+}
+
+/* Sticky, so scrolling a long folder does not scroll the column names away. */
+.headerRow {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 20px;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 100%);
+  border-bottom: 1px solid #c8c4b4;
+  color: #333;
+  font-weight: normal;
+}
+
+.detailRow {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(120px, 2fr) 70px minmax(90px, 1fr) minmax(120px, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  height: 18px;
+  cursor: default;
+  color: #000;
+}
+
+.detailRow:hover {
+  background: #e4eefb;
+}
+
+.detailRow.selected {
+  background: #316ac5;
+  color: #fff;
+}
+
+.cellName {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.cellSize {
+  text-align: right;
+  color: inherit;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* The folder a drop would land in. Dotted rather than solid so it cannot be
@@ -193,7 +341,6 @@
 }
 
 .empty {
-  grid-column: 1 / -1;
   padding: 12px;
   color: #7a7a72;
 }

@@ -120,8 +120,11 @@ desktop.
       a status bar. History is a stack and a cursor, so navigating from the
       middle truncates what was ahead of it. Double-clicking a file opens it in
       Notepad.
-- [ ] **Explorer view modes.** Only the icon view exists; Details, List and
-      Thumbnails do not.
+- [x] **Explorer view modes.** Thumbnails, Icons, List and Details, from the
+      View menu or by cycling the toolbar button. Three of the four are pure CSS
+      on one container — only Details needs different markup, because it needs
+      cells. Its header row is `position: sticky`, so scrolling a long folder
+      does not scroll the column names away.
 - [x] **Window manager.** Edge snapping on drop, Cascade and Tile from the
       taskbar's own context menu, and an Alt+Tab switcher with the XP icon
       strip. MRU order comes free from `zIndex`, since focusing raises.
@@ -144,12 +147,30 @@ desktop.
       imported. Getting here needed the desktop to stop being only a launcher:
       it now shows `C:\Documents and Settings\User\Desktop` alongside the
       shortcuts, which is what makes "drop a file on the desktop" mean anything.
-- [ ] **Drag out of the desktop into Explorer.** The desktop drags icons with
-      pointer events, to position them; Explorer uses HTML5 drag, to move files.
-      The two do not meet, so the desktop is a drop target and not a drag source.
-- [ ] **Binary files.** The file system holds strings, so imported files are read
-      as text — an image dropped in becomes mojibake. Needs `content` to accept
-      a `Blob`, which is the same change Paint needs.
+- [x] **Drag out of the desktop into Explorer.** The two drag systems still do
+      not see each other and neither was converted - the desktop would lose free
+      positioning, or Explorer would lose the ability to accept files from the
+      host OS. Instead a pointer drag that leaves the desktop asks
+      `document.elementFromPoint` what is underneath and looks for a
+      `data-drop-path` attribute; anything that wants dropped files advertises
+      itself with one. The dragged icon needs `pointer-events: none` or it is
+      the only thing hit-testing ever finds — it sits under the cursor for the
+      whole gesture.
+- [x] **Binary files.** `FsEntry` grew `bytes` and `mime`, and the *presence* of
+      `bytes` is what makes a file binary — there is no `encoding` field that
+      can get out of step with the data. Added alongside `content` rather than
+      replacing it with a `string | Blob` union: the file system is live and
+      holding real files, so an additive field needs no migration where a union
+      would need migration code testable only against data I do not have.
+      `Uint8Array` rather than `Blob`, because reading a Blob is asynchronous
+      and every caller from Notepad to the thumbnail grid reads during render.
+
+      Dropped images open in a small picture viewer — a binary file that nothing
+      can open is not a feature. Notepad refuses them by name instead of filling
+      itself with mojibake, which reads as a corrupt file rather than as the
+      wrong program.
+- [ ] **Binary round-trip.** Nothing *writes* bytes yet except the importer.
+      Paint is what exercises the other direction.
 
 ## Phase 3 — applications
 
@@ -159,7 +180,10 @@ Ordered by ratio of "makes the place feel alive" to effort.
       marker in the caption, and a prompt before discarding unsaved changes.
       The window caption is set through the store, so the title bar and the task
       button cannot disagree about which file is open.
-- [ ] **File Explorer** — see Phase 2.
+- [x] **File Explorer** — see Phase 2.
+- [x] **Picture Viewer** — opens what the importer brings in. Fit-to-window and
+      actual size, on the grey surround every picture viewer has, because a
+      white one makes every light image look like it has no edges.
 - [ ] **Command Prompt** — `dir`, `cd`, `type`, `echo`, `cls`. Reads the VFS.
 - [ ] **Paint** — canvas, the tool palette, save to the VFS as PNG.
 - [ ] **Minesweeper** — small, self-contained, and instantly recognisable.

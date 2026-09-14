@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useFsStore } from "../store/fsStore";
+import { isBinary, useFsStore } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
 import { confirmDialog, errorDialog, promptDialog } from "../store/dialogStore";
 import { basename, dirname, display, extname, join, normalize } from "../fs/path";
@@ -95,6 +95,12 @@ export function Notepad({ path, windowId }: Props) {
     if (entered === null) return;
 
     const target = normalize(entered);
+    /* Notepad on a PNG does not fail, it fills the window with mojibake - which
+     * looks like a corrupt file rather than the wrong program. */
+    if (isBinary(useFsStore.getState().get(target))) {
+      void errorDialog("Open", `${display(target)}\n\nThis is not a text file.`);
+      return;
+    }
     const content = readFile(target);
     if (content === undefined) {
       void errorDialog("Open", `${display(target)}\n\nFile not found.`);

@@ -4,9 +4,9 @@ import {
   type DragEvent as ReactDragEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { listEntries, useFsStore, type FsEntry } from "../store/fsStore";
-import { useWindowStore } from "../store/windowStore";
+import { blobUrlFor, isBinary, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { useMenuStore } from "../store/menuStore";
+import { useDndStore } from "../store/dndStore";
 import { confirmDialog, errorDialog, promptDialog } from "../store/dialogStore";
 import {
   ancestors,
@@ -19,19 +19,58 @@ import {
 } from "../fs/path";
 import { MY_DOCUMENTS } from "../fs/seed";
 import { PATH_MIME } from "../fs/dnd";
-import { DriveIcon, FileIcon, FolderIcon, NotepadIcon } from "../icons";
+import { importFiles } from "../fs/import";
+import { launchFile } from "../fs/open";
+import { MenuBar } from "../components/MenuBar";
+import { DriveIcon, FileIcon, FolderIcon, NotepadIcon, PictureIcon } from "../icons";
 import styles from "./Explorer.module.css";
 
 type Props = { path?: string };
 
+type ViewMode = "thumbnails" | "icons" | "list" | "details";
+
+const VIEW_LABELS: Record<ViewMode, string> = {
+  thumbnails: "Thumbnails",
+  icons: "Icons",
+  list: "List",
+  details: "Details",
+};
+
 const iconFor = (entry: FsEntry, size: number) => {
   if (entry.kind === "dir") return <FolderIcon size={size} />;
-  return extname(entry.path) === ".txt" ? (
-    <NotepadIcon size={size} />
-  ) : (
-    <FileIcon size={size} />
-  );
+  if (entry.mime?.startsWith("image/")) return <PictureIcon size={size} />;
+  return extname(entry.path) === ".txt" ? <NotepadIcon size={size} /> : <FileIcon size={size} />;
 };
+
+/* Windows shows a type for everything, and "File" for what it does not know.
+ * Blank cells in a Details view read as a rendering bug. */
+const typeLabel = (entry: FsEntry): string => {
+  if (entry.kind === "dir") return "File Folder";
+  if (entry.mime?.startsWith("image/")) {
+    return `${entry.mime.slice(6).toUpperCase()} Image`;
+  }
+  const ext = extname(entry.path);
+  if (ext === ".txt") return "Text Document";
+  return ext ? `${ext.slice(1).toUpperCase()} File` : "File";
+};
+
+const sizeOf = (entry: FsEntry): number =>
+  entry.bytes ? entry.bytes.byteLength : entry.content.length;
+
+/* KB, rounded up, because that is what Explorer shows - a 12-byte file is
+ * "1 KB" there too, and showing bytes would be more accurate and less familiar.
+ */
+const sizeLabel = (entry: FsEntry): string =>
+  entry.kind === "dir" ? "" : `${Math.max(1, Math.ceil(sizeOf(entry) / 1024))} KB`;
+
+const dateLabel = (ms: number) =>
+  new Date(ms).toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 export function Explorer({ path }: Props) {
   const entries = useFsStore((s) => s.entries);
@@ -41,13 +80,12 @@ export function Explorer({ path }: Props) {
   const move = useFsStore((s) => s.move);
   const rename = useFsStore((s) => s.rename);
   const uniquePath = useFsStore((s) => s.uniquePath);
-  const openWindow = useWindowStore((s) => s.open);
   const openMenu = useMenuStore((s) => s.open);
+  /* Highlighting a folder that a *desktop* drag is hovering over. HTML5 drag
+   * events never fire for a pointer drag, so this is the only way Explorer
+   * learns about one. */
+  const hoverPath = useDndStore((s) => s.hoverPath);
 
-  /* Back and forward are a stack and a cursor, not two stacks. Navigating from
-   * the middle of the history truncates everything ahead of it, which is what
-   * every browser and every Explorer does and what people expect.
-   */
   const [nav, setNav] = useState(() => ({
     stack: [normalize(path ?? MY_DOCUMENTS)],
     index: 0,
@@ -57,16 +95,13 @@ export function Explorer({ path }: Props) {
   const [address, setAddress] = useState(() => display(current));
   const [selected, setSelected] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [view, setView] = useState<ViewMode>("icons");
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(ancestors(normalize(path ?? MY_DOCUMENTS)))
   );
 
   const items = useMemo(() => listEntries(entries, current), [entries, current]);
 
-  /* The address bar and the selection are updated by whatever navigates, not by
-   * an effect watching `current`. An effect would also fire while someone is
-   * halfway through typing a path, and rewrite what they were typing.
-   */
   const arriveAt = (target: string) => {
     setAddress(display(target));
     setSelected(null);
@@ -77,10 +112,7 @@ export function Explorer({ path }: Props) {
     const target = normalize(to);
     const entry = entries[target];
     if (!entry || entry.kind !== "dir") {
-      void errorDialog(
-        "funOS",
-        `${display(target)} is not accessible.\n\nThe path does not exist.`
-      );
+      void errorDialog("funOS", `${display(target)} is not accessible.\n\nThe path does not exist.`);
       setAddress(display(current));
       return;
     }
@@ -99,22 +131,13 @@ export function Explorer({ path }: Props) {
   };
 
   const openEntry = (entry: FsEntry) => {
-    if (entry.kind === "dir") {
-      navigate(entry.path);
-      return;
-    }
-    /* Everything opens in Notepad, because Notepad is the only editor there is.
-     * When that stops being true this becomes a lookup by extension. */
-    openWindow("notepad", {
-      title: `${basename(entry.path)} - Notepad`,
-      bounds: { width: 560, height: 420 },
-      props: { path: entry.path },
-    });
+    if (entry.kind === "dir") navigate(entry.path);
+    else launchFile(entry);
   };
 
   const newFolder = async () => {
-    const target = uniquePath(current, "New Folder");
-    const name = await promptDialog("New Folder", "Name the new folder:", basename(target));
+    const suggested = uniquePath(current, "New Folder");
+    const name = await promptDialog("New Folder", "Name the new folder:", basename(suggested));
     if (name === null) return;
     if (!mkdir(uniquePath(current, name.trim()))) {
       void errorDialog("New Folder", "That folder could not be created.");
@@ -122,8 +145,8 @@ export function Explorer({ path }: Props) {
   };
 
   const newTextDocument = async () => {
-    const target = uniquePath(current, "New Text Document.txt");
-    const name = await promptDialog("New Text Document", "Name the new file:", basename(target));
+    const suggested = uniquePath(current, "New Text Document.txt");
+    const name = await promptDialog("New Text Document", "Name the new file:", basename(suggested));
     if (name === null) return;
     const withExt = extname(name) ? name.trim() : `${name.trim()}.txt`;
     if (!writeFile(uniquePath(current, withExt), "")) {
@@ -162,6 +185,17 @@ export function Explorer({ path }: Props) {
     openMenu(e.clientX, e.clientY, [
       {
         kind: "item",
+        label: "View",
+        submenu: (Object.keys(VIEW_LABELS) as ViewMode[]).map((mode) => ({
+          kind: "item" as const,
+          label: VIEW_LABELS[mode],
+          bold: view === mode,
+          onClick: () => setView(mode),
+        })),
+      },
+      { kind: "separator" },
+      {
+        kind: "item",
         label: "New",
         submenu: [
           { kind: "item", label: "Folder", onClick: () => void newFolder() },
@@ -170,7 +204,6 @@ export function Explorer({ path }: Props) {
       },
       { kind: "separator" },
       { kind: "item", label: "Paste", disabled: true },
-      { kind: "separator" },
       { kind: "item", label: "Properties", disabled: true },
     ]);
   };
@@ -189,12 +222,8 @@ export function Explorer({ path }: Props) {
     ]);
   };
 
-  /* ---- Drag and drop -----------------------------------------------------
-   * Explorer is both a source and a target. Dragging an item out sets the path
-   * on the dataTransfer; dropping onto a folder - or onto empty space, meaning
-   * the folder being viewed - moves it. Real files from the host operating
-   * system are imported instead.
-   */
+  /* ---- Drag and drop ------------------------------------------------------ */
+
   const moveInto = (source: string, folder: string) => {
     if (move(source, folder) === null) {
       void errorDialog(
@@ -202,18 +231,6 @@ export function Explorer({ path }: Props) {
         `Cannot move '${basename(source)}' here: something with that name already exists, or that folder is inside the one being moved.`
       );
     }
-  };
-
-  const importFiles = (list: FileList, folder: string) => {
-    void (async () => {
-      for (const file of Array.from(list)) {
-        if (file.size > 1_000_000) {
-          void errorDialog("Copy", `${file.name} is too large to copy here.`);
-          continue;
-        }
-        writeFile(uniquePath(folder, file.name), await file.text());
-      }
-    })();
   };
 
   const acceptsDrag = (e: ReactDragEvent) =>
@@ -224,9 +241,57 @@ export function Explorer({ path }: Props) {
     e.stopPropagation();
     setDropTarget(null);
     const source = e.dataTransfer.getData(PATH_MIME);
-    if (source) moveInto(source, folder);
-    else if (e.dataTransfer.files.length) importFiles(e.dataTransfer.files, folder);
+    if (source) {
+      moveInto(source, folder);
+    } else if (e.dataTransfer.files.length) {
+      void importFiles(e.dataTransfer.files, folder).then((error) => {
+        if (error) void errorDialog("Copy", error);
+      });
+    }
   };
+
+  const dragOver = (folder: string) => (e: ReactDragEvent) => {
+    if (!acceptsDrag(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    setDropTarget(folder);
+  };
+
+  /** Highlighted because either drag system is hovering it. */
+  const isDropTarget = (p: string) => dropTarget === p || hoverPath === p;
+
+  const dragProps = (entry: FsEntry) => ({
+    draggable: true,
+    onDragStart: (e: ReactDragEvent) => {
+      e.dataTransfer.setData(PATH_MIME, entry.path);
+      e.dataTransfer.effectAllowed = "move";
+    },
+    onDragOver: entry.kind === "dir" ? dragOver(entry.path) : undefined,
+    onDragLeave: () => setDropTarget(null),
+    onDrop: entry.kind === "dir" ? dropOn(entry.path) : undefined,
+    /* Advertised to the desktop's pointer drag, which cannot see HTML5 events. */
+    "data-drop-path": entry.kind === "dir" ? entry.path : undefined,
+  });
+
+  const itemProps = (entry: FsEntry) => ({
+    key: entry.path,
+    type: "button" as const,
+    onMouseDown: (e: ReactMouseEvent) => {
+      e.stopPropagation();
+      setSelected(entry.path);
+    },
+    onDoubleClick: () => openEntry(entry),
+    onContextMenu: itemMenu(entry),
+    ...dragProps(entry),
+  });
+
+  const stateClasses = (entry: FsEntry, base: string) =>
+    [
+      base,
+      selected === entry.path ? styles.selected : "",
+      isDropTarget(entry.path) ? styles.dropTarget : "",
+    ].join(" ");
 
   const canBack = nav.index > 0;
   const canForward = nav.index < nav.stack.length - 1;
@@ -234,24 +299,31 @@ export function Explorer({ path }: Props) {
 
   return (
     <div className={styles.app}>
+      <MenuBar
+        menus={[
+          {
+            label: "File",
+            items: [
+              { label: "New Folder", onClick: () => void newFolder() },
+              { label: "New Text Document", onClick: () => void newTextDocument() },
+            ],
+          },
+          {
+            label: "View",
+            items: (Object.keys(VIEW_LABELS) as ViewMode[]).map((mode) => ({
+              label: view === mode ? `• ${VIEW_LABELS[mode]}` : `   ${VIEW_LABELS[mode]}`,
+              onClick: () => setView(mode),
+            })),
+          },
+        ]}
+      />
+
       <div className={styles.bar}>
         <span className={styles.grip} />
-        <button
-          type="button"
-          className={styles.toolButton}
-          disabled={!canBack}
-          onClick={() => go(-1)}
-          title="Back"
-        >
+        <button type="button" className={styles.toolButton} disabled={!canBack} onClick={() => go(-1)}>
           ← Back
         </button>
-        <button
-          type="button"
-          className={styles.toolButton}
-          disabled={!canForward}
-          onClick={() => go(1)}
-          title="Forward"
-        >
+        <button type="button" className={styles.toolButton} disabled={!canForward} onClick={() => go(1)}>
           → Forward
         </button>
         <button
@@ -259,9 +331,22 @@ export function Explorer({ path }: Props) {
           className={styles.toolButton}
           disabled={!canUp}
           onClick={() => navigate(dirname(current))}
-          title="Up One Level"
         >
           ↑ Up
+        </button>
+        <span className={styles.grip} />
+        <button
+          type="button"
+          className={styles.toolButton}
+          title="Change the view"
+          /* Cycles rather than opening a menu, which is what the toolbar button
+           * does in XP too - the menu is on the arrow beside it. */
+          onClick={() => {
+            const order = Object.keys(VIEW_LABELS) as ViewMode[];
+            setView(order[(order.indexOf(view) + 1) % order.length]);
+          }}
+        >
+          Views: {VIEW_LABELS[view]}
         </button>
       </div>
 
@@ -304,55 +389,54 @@ export function Explorer({ path }: Props) {
         </div>
 
         <div
-          className={
-            dropTarget === current ? `${styles.list} ${styles.dropTarget}` : styles.list
-          }
+          className={[
+            styles.pane,
+            styles[view],
+            isDropTarget(current) ? styles.dropTarget : "",
+          ].join(" ")}
           onContextMenu={backgroundMenu}
           onMouseDown={() => setSelected(null)}
-          onDragOver={(e) => {
-            if (!acceptsDrag(e)) return;
-            e.preventDefault();
-            e.dataTransfer.dropEffect = "move";
-            setDropTarget(current);
-          }}
+          onDragOver={dragOver(current)}
           onDragLeave={() => setDropTarget(null)}
           onDrop={dropOn(current)}
+          data-drop-path={current}
         >
           {items.length === 0 && <div className={styles.empty}>This folder is empty.</div>}
-          {items.map((entry) => (
-            <button
-              key={entry.path}
-              type="button"
-              className={[
-                styles.item,
-                selected === entry.path ? styles.selected : "",
-                dropTarget === entry.path ? styles.dropTarget : "",
-              ].join(" ")}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData(PATH_MIME, entry.path);
-                e.dataTransfer.effectAllowed = "move";
-              }}
-              onDragOver={(e) => {
-                if (entry.kind !== "dir" || !acceptsDrag(e)) return;
-                e.preventDefault();
-                e.stopPropagation();
-                e.dataTransfer.dropEffect = "move";
-                setDropTarget(entry.path);
-              }}
-              onDragLeave={() => setDropTarget(null)}
-              onDrop={entry.kind === "dir" ? dropOn(entry.path) : undefined}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                setSelected(entry.path);
-              }}
-              onDoubleClick={() => openEntry(entry)}
-              onContextMenu={itemMenu(entry)}
-            >
-              {iconFor(entry, 32)}
-              <span className={styles.itemLabel}>{basename(entry.path)}</span>
-            </button>
-          ))}
+
+          {view === "details" ? (
+            <>
+              <div className={styles.headerRow}>
+                <span>Name</span>
+                <span>Size</span>
+                <span>Type</span>
+                <span>Date Modified</span>
+              </div>
+              {items.map((entry) => (
+                <button {...itemProps(entry)} className={stateClasses(entry, styles.detailRow)}>
+                  <span className={styles.cellName}>
+                    {iconFor(entry, 16)}
+                    <span className={styles.ellipsis}>{basename(entry.path)}</span>
+                  </span>
+                  <span className={styles.cellSize}>{sizeLabel(entry)}</span>
+                  <span className={styles.ellipsis}>{typeLabel(entry)}</span>
+                  <span className={styles.ellipsis}>{dateLabel(entry.modified)}</span>
+                </button>
+              ))}
+            </>
+          ) : (
+            items.map((entry) => (
+              <button {...itemProps(entry)} className={stateClasses(entry, styles.item)}>
+                <span className={styles.thumb}>
+                  {view === "thumbnails" && isBinary(entry) && entry.mime?.startsWith("image/") ? (
+                    <img className={styles.preview} src={blobUrlFor(entry)} alt="" />
+                  ) : (
+                    iconFor(entry, view === "thumbnails" ? 48 : view === "list" ? 16 : 32)
+                  )}
+                </span>
+                <span className={styles.itemLabel}>{basename(entry.path)}</span>
+              </button>
+            ))
+          )}
         </div>
       </div>
 
