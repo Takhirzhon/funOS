@@ -139,8 +139,17 @@ desktop.
       reads `if (await confirmDialog(...))`.
 - [ ] **Dialogs — Open/Save and Properties.** Notepad's Open and Save As ask for
       a path as text. They want a real file picker built on Explorer's list.
-- [ ] **Drag and drop.** Files onto the desktop, between Explorer windows, onto
-      app windows.
+- [x] **Drag and drop.** Explorer items drag onto folders and onto the desktop
+      to move; real files dragged in from the host operating system are
+      imported. Getting here needed the desktop to stop being only a launcher:
+      it now shows `C:\Documents and Settings\User\Desktop` alongside the
+      shortcuts, which is what makes "drop a file on the desktop" mean anything.
+- [ ] **Drag out of the desktop into Explorer.** The desktop drags icons with
+      pointer events, to position them; Explorer uses HTML5 drag, to move files.
+      The two do not meet, so the desktop is a drop target and not a drag source.
+- [ ] **Binary files.** The file system holds strings, so imported files are read
+      as text — an image dropped in becomes mojibake. Needs `content` to accept
+      a `Blob`, which is the same change Paint needs.
 
 ## Phase 3 — applications
 

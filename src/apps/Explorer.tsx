@@ -1,4 +1,9 @@
-import { useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
+import {
+  useMemo,
+  useState,
+  type DragEvent as ReactDragEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
@@ -13,6 +18,7 @@ import {
   normalize,
 } from "../fs/path";
 import { MY_DOCUMENTS } from "../fs/seed";
+import { PATH_MIME } from "../fs/dnd";
 import { DriveIcon, FileIcon, FolderIcon, NotepadIcon } from "../icons";
 import styles from "./Explorer.module.css";
 
@@ -32,6 +38,7 @@ export function Explorer({ path }: Props) {
   const mkdir = useFsStore((s) => s.mkdir);
   const writeFile = useFsStore((s) => s.writeFile);
   const remove = useFsStore((s) => s.remove);
+  const move = useFsStore((s) => s.move);
   const rename = useFsStore((s) => s.rename);
   const uniquePath = useFsStore((s) => s.uniquePath);
   const openWindow = useWindowStore((s) => s.open);
@@ -49,6 +56,7 @@ export function Explorer({ path }: Props) {
 
   const [address, setAddress] = useState(() => display(current));
   const [selected, setSelected] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(ancestors(normalize(path ?? MY_DOCUMENTS)))
   );
@@ -181,6 +189,45 @@ export function Explorer({ path }: Props) {
     ]);
   };
 
+  /* ---- Drag and drop -----------------------------------------------------
+   * Explorer is both a source and a target. Dragging an item out sets the path
+   * on the dataTransfer; dropping onto a folder - or onto empty space, meaning
+   * the folder being viewed - moves it. Real files from the host operating
+   * system are imported instead.
+   */
+  const moveInto = (source: string, folder: string) => {
+    if (move(source, folder) === null) {
+      void errorDialog(
+        "Move",
+        `Cannot move '${basename(source)}' here: something with that name already exists, or that folder is inside the one being moved.`
+      );
+    }
+  };
+
+  const importFiles = (list: FileList, folder: string) => {
+    void (async () => {
+      for (const file of Array.from(list)) {
+        if (file.size > 1_000_000) {
+          void errorDialog("Copy", `${file.name} is too large to copy here.`);
+          continue;
+        }
+        writeFile(uniquePath(folder, file.name), await file.text());
+      }
+    })();
+  };
+
+  const acceptsDrag = (e: ReactDragEvent) =>
+    e.dataTransfer.types.includes(PATH_MIME) || e.dataTransfer.types.includes("Files");
+
+  const dropOn = (folder: string) => (e: ReactDragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropTarget(null);
+    const source = e.dataTransfer.getData(PATH_MIME);
+    if (source) moveInto(source, folder);
+    else if (e.dataTransfer.files.length) importFiles(e.dataTransfer.files, folder);
+  };
+
   const canBack = nav.index > 0;
   const canForward = nav.index < nav.stack.length - 1;
   const canUp = !isDriveRoot(current);
@@ -256,15 +303,45 @@ export function Explorer({ path }: Props) {
           />
         </div>
 
-        <div className={styles.list} onContextMenu={backgroundMenu} onMouseDown={() => setSelected(null)}>
+        <div
+          className={
+            dropTarget === current ? `${styles.list} ${styles.dropTarget}` : styles.list
+          }
+          onContextMenu={backgroundMenu}
+          onMouseDown={() => setSelected(null)}
+          onDragOver={(e) => {
+            if (!acceptsDrag(e)) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            setDropTarget(current);
+          }}
+          onDragLeave={() => setDropTarget(null)}
+          onDrop={dropOn(current)}
+        >
           {items.length === 0 && <div className={styles.empty}>This folder is empty.</div>}
           {items.map((entry) => (
             <button
               key={entry.path}
               type="button"
-              className={
-                selected === entry.path ? `${styles.item} ${styles.selected}` : styles.item
-              }
+              className={[
+                styles.item,
+                selected === entry.path ? styles.selected : "",
+                dropTarget === entry.path ? styles.dropTarget : "",
+              ].join(" ")}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData(PATH_MIME, entry.path);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                if (entry.kind !== "dir" || !acceptsDrag(e)) return;
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = "move";
+                setDropTarget(entry.path);
+              }}
+              onDragLeave={() => setDropTarget(null)}
+              onDrop={entry.kind === "dir" ? dropOn(entry.path) : undefined}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 setSelected(entry.path);

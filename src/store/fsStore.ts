@@ -47,6 +47,8 @@ type FsStore = {
   readFile: (path: string) => string | undefined;
   remove: (path: string) => boolean;
   rename: (path: string, nextName: string) => string | null;
+  /** Move an entry into `targetDir`, keeping its name. Returns the new path. */
+  move: (path: string, targetDir: string) => string | null;
 
   /** "New Folder", then "New Folder (2)" - the first free name in `dir`. */
   uniquePath: (dir: string, name: string) => string;
@@ -75,6 +77,43 @@ export function listEntries(entries: Record<string, FsEntry>, dir: string): FsEn
   return Object.values(entries)
     .filter((e) => e.path !== parent && dirname(e.path) === parent)
     .sort(sortEntries);
+}
+
+/* Rename and move are the same operation with a different destination, so they
+ * share one implementation. Doing them twice is how the two drift - one of them
+ * remembers to carry the children along and the other does not.
+ *
+ * Carrying the children *is* the operation: slice the old prefix off every key
+ * underneath and glue on the new one. That is correct rather than careful,
+ * which is the whole argument for the map being flat.
+ */
+function relocate(
+  set: (partial: { entries: Record<string, FsEntry> }) => void,
+  get: () => { entries: Record<string, FsEntry> },
+  from: string,
+  to: string
+): string | null {
+  const { entries } = get();
+  const entry = entries[from];
+  if (!entry || isDriveRoot(from)) return null;
+  if (to === from) return from;
+  if (to in entries) return null;
+
+  const now = Date.now();
+  const next: Record<string, FsEntry> = {};
+  for (const [key, value] of Object.entries(entries)) {
+    if (key === from) {
+      next[to] = { ...value, path: to, modified: now };
+    } else if (isInside(from, key)) {
+      const moved = to + key.slice(from.length);
+      next[moved] = { ...value, path: moved };
+    } else {
+      next[key] = value;
+    }
+  }
+  set({ entries: next });
+  persist(next);
+  return to;
 }
 
 const sortEntries = (a: FsEntry, b: FsEntry) => {
@@ -167,32 +206,23 @@ export const useFsStore = create<FsStore>((set, get) => ({
 
   rename: (path, nextName) => {
     const target = normalize(path);
+    if (!isValidName(nextName)) return null;
+    return relocate(set, get, target, join(dirname(target), nextName.trim()));
+  },
+
+  move: (path, targetDir) => {
+    const source = normalize(path);
+    const destination = join(normalize(targetDir), basename(source));
     const { entries } = get();
-    const entry = entries[target];
-    if (!entry || isDriveRoot(target) || !isValidName(nextName)) return null;
 
-    const destination = join(dirname(target), nextName.trim());
-    if (destination === target) return target;
-    if (destination in entries) return null;
+    const folder = entries[normalize(targetDir)];
+    if (!folder || folder.kind !== "dir") return null;
+    /* Dropping a folder into itself, or into one of its own descendants, would
+     * detach the whole subtree from the root: every key still exists, and none
+     * of them is reachable from C: any more. */
+    if (source === normalize(targetDir) || isInside(source, normalize(targetDir))) return null;
 
-    const now = Date.now();
-    const next: Record<string, FsEntry> = {};
-    for (const [key, value] of Object.entries(entries)) {
-      if (key === target) {
-        next[destination] = { ...value, path: destination, modified: now };
-      } else if (isInside(target, key)) {
-        /* Renaming a folder moves everything under it. Slicing the old prefix
-         * off each key is the whole implementation, and it is correct precisely
-         * because the map is flat. */
-        const moved = destination + key.slice(target.length);
-        next[moved] = { ...value, path: moved };
-      } else {
-        next[key] = value;
-      }
-    }
-    set({ entries: next });
-    persist(next);
-    return destination;
+    return relocate(set, get, source, destination);
   },
 
   uniquePath: (dir, name) => {

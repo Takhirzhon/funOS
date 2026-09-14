@@ -10,6 +10,15 @@
   overflow: hidden;
 }
 
+/* Something is being dragged over the desktop and will land here if dropped.
+ * An inset outline rather than a tint: tinting the wallpaper makes the whole
+ * screen flash, which is a lot of feedback for "yes, you may let go".
+ */
+.dropActive {
+  outline: 2px dotted rgba(255, 255, 255, 0.8);
+  outline-offset: -4px;
+}
+
 /* The marquee. XP draws a 1px dotted border with a translucent fill; the fill
  * is what makes it read as a selection rather than a stray rectangle.
  */

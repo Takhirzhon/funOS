@@ -183,6 +183,15 @@
   color: #fff;
 }
 
+/* The folder a drop would land in. Dotted rather than solid so it cannot be
+ * mistaken for the selection, which is the one thing on screen it sits next to.
+ */
+.dropTarget {
+  outline: 1px dotted #316ac5;
+  outline-offset: -1px;
+  background: rgba(49, 106, 197, 0.08);
+}
+
 .empty {
   grid-column: 1 / -1;
   padding: 12px;
