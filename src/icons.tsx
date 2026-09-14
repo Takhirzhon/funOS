@@ -213,6 +213,47 @@ export const ConsoleIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+export const MineIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <radialGradient id="ms-ball" cx="0.35" cy="0.3" r="0.8">
+        <stop offset="0" stopColor="#7a7a7a" />
+        <stop offset="0.55" stopColor="#2b2b2b" />
+        <stop offset="1" stopColor="#000000" />
+      </radialGradient>
+    </defs>
+    {/* the spikes first, so the ball covers where they meet */}
+    <path
+      d="M16 3v26M3 16h26M7 7l18 18M25 7L7 25"
+      stroke="#1a1a1a"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+    />
+    <circle cx="16" cy="16" r="8.5" fill="url(#ms-ball)" />
+    <ellipse cx="12.8" cy="12.6" rx="2.6" ry="1.8" fill="#fff" opacity="0.75" />
+  </svg>
+);
+
+export const CalculatorIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <rect x="6" y="3" width="20" height="26" rx="2" fill="#e9eef5" stroke="#6b7d8c" strokeWidth="0.9" />
+    <rect x="8.5" y="5.5" width="15" height="5" rx="0.5" fill="#9fd4a0" stroke="#5f8a60" strokeWidth="0.7" />
+    {/* four rows of keys: recognisable as a keypad at 16px, unreadable as
+        anything more detailed */}
+    <g fill="#7f8b98">
+      <rect x="8.5" y="13" width="3.4" height="3.2" rx="0.6" />
+      <rect x="13.3" y="13" width="3.4" height="3.2" rx="0.6" />
+      <rect x="18.1" y="13" width="3.4" height="3.2" rx="0.6" />
+      <rect x="8.5" y="17.6" width="3.4" height="3.2" rx="0.6" />
+      <rect x="13.3" y="17.6" width="3.4" height="3.2" rx="0.6" />
+      <rect x="18.1" y="17.6" width="3.4" height="3.2" rx="0.6" />
+      <rect x="8.5" y="22.2" width="3.4" height="3.2" rx="0.6" />
+      <rect x="13.3" y="22.2" width="3.4" height="3.2" rx="0.6" />
+    </g>
+    <rect x="18.1" y="22.2" width="3.4" height="3.2" rx="0.6" fill="#d9534f" />
+  </svg>
+);
+
 export const DriveIcon = ({ size = 32, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>

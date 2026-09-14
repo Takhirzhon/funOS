@@ -1,0 +1,77 @@
+.app {
+  height: 100%;
+  padding: 6px;
+  overflow: auto;
+  background: var(--luna-face);
+  font-size: 11px;
+  user-select: none;
+}
+
+/* The readout is right-aligned, sunken, and one line. Everything about it says
+ * "this is a display, not a field", which is why it is not an input.
+ */
+.display {
+  margin-bottom: 6px;
+  padding: 3px 5px;
+  background: #fff;
+  border: 1px solid #7f9db9;
+  box-shadow: inset 1px 1px #0002;
+  text-align: right;
+  font-size: 16px;
+  line-height: 1.3;
+  overflow: hidden;
+  white-space: nowrap;
+  /* A 20-digit result must not widen the window. */
+  text-overflow: ellipsis;
+}
+
+.memory {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  min-height: 16px;
+  color: #4a4a44;
+}
+
+.pad {
+  display: grid;
+  gap: 3px;
+}
+
+.standard {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.scientific {
+  grid-template-columns: repeat(8, 1fr);
+}
+
+.key {
+  all: unset;
+  box-sizing: border-box;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  cursor: default;
+  color: #000;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 45%, #dcd8c4 100%);
+  border: 1px solid #9a9684;
+  border-radius: 3px;
+}
+
+.key:hover {
+  background: linear-gradient(to bottom, #ffffff 0%, #f5f2e6 45%, #e6e2d0 100%);
+}
+
+.key:active {
+  background: linear-gradient(to bottom, #d8d4c2 0%, #ece9d8 100%);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* The three coloured groups Calculator has always had: red for clearing, blue
+ * for memory, and maroon for the operators.
+ */
+.clear { color: #c00000; }
+.mem { color: #0000a0; }
+.op { color: #800000; }
