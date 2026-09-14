@@ -24,6 +24,28 @@ npm run dev
 
 Then open <http://localhost:5173>.
 
+### Why `typescript` in package.json is an alias
+
+TypeScript 7 is the native compiler, and it dropped the JavaScript API that
+every type-aware lint rule is built on. typescript-eslint refuses to load
+against it outright — `require('typescript')` returning 7.x throws before ESLint
+starts. So the two roles are split, which is what the 7.0 release notes call
+running side by side:
+
+```jsonc
+"@typescript/native": "npm:typescript@~7.0.2",        // provides `tsc` — type checking
+"typescript":         "npm:@typescript/typescript6@^6.0.2" // provides the 6.0 API — linting
+```
+
+`npx tsc` is 7.0 and is what `npm run build` type-checks with; anything that
+imports `typescript` as a library gets the 6.0 API and keeps working. Both
+compile the same source with the same `tsconfig`, so this is not two versions
+of the language, only two consumers of one.
+
+Drop the alias and go back to a plain `typescript` entry once typescript-eslint
+ships support for 7.x ([issue #10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)).
+`npm view typescript-eslint@latest peerDependencies` is the whole check.
+
 ## What's working today
 
 - Desktop wallpaper (Bliss-inspired SVG)

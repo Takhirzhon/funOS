@@ -13,10 +13,6 @@
 #     caught nginx:1.27-alpine going stale. Node majors are ignored: the major
 #     is coupled to NODE_VERSION in ci.yml and is a deliberate change, not a
 #     Monday PR.
-#
-# Both `ignore` blocks below exist for the same reason and should be read the
-# same way: they are not "never update this", they are "this update is blocked
-# on something outside the lockfile, so an automatic PR can only ever be red".
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -37,23 +33,6 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
-    ignore:
-      # typescript majors. Not a preference — typescript-eslint pins a hard
-      # upper bound on the TypeScript it will parse, and 8.70.0 (its latest
-      # release on 2026-09-14) still says `>=4.8.4 <6.1.0`. PR #4 bumped
-      # typescript to 7.0.2 and `npm ci` failed ERESOLVE before a single file
-      # was compiled, taking Frontend, Build production image and Dependency
-      # CVE scan down with it — the last two because the Dockerfile runs
-      # `npm ci` too. Rebasing does not help: the conflict is in the registry,
-      # not in the branch.
-      #
-      # Lift this the week typescript-eslint ships a release whose peer range
-      # admits the next major, and do the bump by hand together with it —
-      # `npm view typescript-eslint@latest peerDependencies` is the whole
-      # check. Minors and patches of typescript still arrive in the group
-      # above, so this does not go stale silently.
-      - dependency-name: typescript
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /deploy
