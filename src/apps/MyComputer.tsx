@@ -1,44 +1,80 @@
-import { MyComputerIcon } from "../icons";
+import { useMemo, useState } from "react";
+import { useFsStore } from "../store/fsStore";
+import { useWindowStore } from "../store/windowStore";
+import { errorDialog } from "../store/dialogStore";
+import { DRIVE } from "../fs/path";
+import { DriveIcon } from "../icons";
+import styles from "./MyComputer.module.css";
 
+/* Only C: has a file system behind it. The other two are here because My
+ * Computer with one drive in it looks like a mistake, and because a CD drive
+ * that says "insert a disc" is more honest than pretending it is not there.
+ */
 const drives = [
-  { label: "Local Disk (C:)", type: "Local Disk", size: "40.0 GB", free: "12.4 GB" },
-  { label: "DVD Drive (D:)", type: "CD Drive", size: "—", free: "—" },
-  { label: "Removable Disk (E:)", type: "Removable", size: "—", free: "—" },
+  { letter: DRIVE, label: "Local Disk", kind: "Local Disk", mounted: true },
+  { letter: "D:", label: "CD Drive", kind: "CD Drive", mounted: false },
+  { letter: "E:", label: "Removable Disk", kind: "Removable Disk", mounted: false },
 ];
 
 export function MyComputer() {
+  const entries = useFsStore((s) => s.entries);
+  const open = useWindowStore((s) => s.open);
+  const [selected, setSelected] = useState<string | null>(null);
+
+  /* Size on disk, invented from the only thing that is real: how much text the
+   * file system is actually holding. It goes up when you save something, which
+   * is a small joke that costs nothing and is better than a hardcoded 40.0 GB.
+   */
+  const used = useMemo(
+    () => Object.values(entries).reduce((total, e) => total + e.content.length, 0),
+    [entries]
+  );
+
+  const openDrive = (letter: string, mounted: boolean) => {
+    if (!mounted) {
+      void errorDialog(
+        `${letter}\\ is not accessible`,
+        "The device is not ready.\n\nInsert a disc and try again."
+      );
+      return;
+    }
+    open("explorer", {
+      title: `Local Disk (${letter})`,
+      bounds: { width: 660, height: 460 },
+      props: { path: letter },
+    });
+  };
+
   return (
-    <div style={{ padding: 12, height: "100%", overflow: "auto", background: "#fff" }}>
-      <h3 style={{ margin: "0 0 8px 0", fontSize: 14, fontWeight: "bold" }}>
-        Hard Disk Drives
-      </h3>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-        {drives.map((d) => (
-          <div
-            key={d.label}
-            style={{
-              width: 130,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 11,
-              textAlign: "center",
+    <div className={styles.app} onMouseDown={() => setSelected(null)}>
+      <h3 className={styles.heading}>Hard Disk Drives</h3>
+      <div className={styles.grid}>
+        {drives.map((drive) => (
+          <button
+            key={drive.letter}
+            type="button"
+            className={
+              selected === drive.letter ? `${styles.drive} ${styles.selected}` : styles.drive
+            }
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              setSelected(drive.letter);
             }}
+            onDoubleClick={() => openDrive(drive.letter, drive.mounted)}
           >
-            <MyComputerIcon size={48} />
-            <div>{d.label}</div>
-            <div style={{ color: "#555", fontSize: 10 }}>
-              {d.size} / {d.free} free
-            </div>
-          </div>
+            <DriveIcon size={48} />
+            <span className={styles.label}>{`${drive.label} (${drive.letter})`}</span>
+            <span className={styles.detail}>
+              {drive.mounted ? `${(used / 1024).toFixed(1)} KB used` : drive.kind}
+            </span>
+          </button>
         ))}
       </div>
-      <hr style={{ margin: "16px 0", border: "none", borderTop: "1px solid #ccc" }} />
-      <div style={{ fontSize: 11, color: "#333" }}>
-        Type the path of a folder, and Windows will open it for you. (Just kidding —
-        the file system isn't wired up yet.)
-      </div>
+
+      <p className={styles.hint}>
+        Double-click Local Disk (C:) to browse the file system. It lives in IndexedDB, so
+        anything you save is still here tomorrow.
+      </p>
     </div>
   );
 }

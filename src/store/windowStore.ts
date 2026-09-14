@@ -35,6 +35,8 @@ type Store = {
   close: (id: string) => void;
   focus: (id: string) => void;
   setBounds: (id: string, bounds: Partial<Bounds>) => void;
+  /** An app renaming its own window - Notepad following the file it has open. */
+  setTitle: (id: string, title: string) => void;
   toggleMaximize: (id: string) => void;
   minimize: (id: string) => void;
   minimizeAll: () => void;
@@ -103,6 +105,16 @@ export const useWindowStore = create<Store>((set, get) => ({
         w.id === id ? { ...w, bounds: { ...w.bounds, ...bounds } } : w
       ),
     })),
+
+  setTitle: (id, title) =>
+    set((s) => {
+      /* Bail out when nothing changed. An app that sets its caption from an
+       * effect on every render would otherwise loop: new state object, new
+       * render, new set. */
+      const current = s.windows.find((w) => w.id === id);
+      if (!current || current.title === title) return s;
+      return { windows: s.windows.map((w) => (w.id === id ? { ...w, title } : w)) };
+    }),
 
   toggleMaximize: (id) =>
     set((s) => ({

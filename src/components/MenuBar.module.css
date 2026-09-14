@@ -1,0 +1,78 @@
+/* An application menu bar - File, Edit, Help.
+ *
+ * Lifted out of Notepad so Explorer and everything after it get the same one.
+ * It is deliberately not the desktop's ContextMenu: a menu bar stays anchored
+ * to its window, tracks which title is open, and has to survive the window
+ * being dragged, none of which the global menu does.
+ */
+
+.bar {
+  flex: none;
+  display: flex;
+  height: 20px;
+  background: var(--luna-face);
+  border-bottom: 1px solid #d5d2c4;
+  font-size: 11px;
+  user-select: none;
+}
+
+/* The dropdown is a sibling of the title button, not a child of it. A <button>
+ * inside a <button> is invalid HTML, and the browser silently reparents it,
+ * which puts the menu somewhere nobody asked for.
+ */
+.titleWrap {
+  position: relative;
+  display: flex;
+}
+
+.title {
+  all: unset;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  cursor: default;
+  color: #000;
+}
+
+.title:hover {
+  background: #dfeafb;
+}
+
+.title.open {
+  background: #316ac5;
+  color: #fff;
+}
+
+.dropdown {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  min-width: 160px;
+  padding: 2px;
+  background: #fff;
+  border: 1px solid #aca899;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.35);
+  color: #000;
+  z-index: 100;
+}
+
+.item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 20px;
+  padding: 0 18px 0 22px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.item:hover:not(:disabled) {
+  background: #316ac5;
+  color: #fff;
+}
+
+.item:disabled {
+  color: #aca899;
+}

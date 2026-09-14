@@ -1,9 +1,16 @@
 import type { ComponentType, CSSProperties } from "react";
 import { Notepad } from "./Notepad";
 import { MyComputer } from "./MyComputer";
+import { Explorer } from "./Explorer";
 import { About } from "./About";
 import { RecycleBin } from "./RecycleBin";
-import { MyComputerIcon, NotepadIcon, RecycleBinIcon, InfoIcon } from "../icons";
+import {
+  DocumentsIcon,
+  InfoIcon,
+  MyComputerIcon,
+  NotepadIcon,
+  RecycleBinIcon,
+} from "../icons";
 
 export type IconComponent = ComponentType<{
   size?: number;
@@ -37,6 +44,14 @@ export const apps = {
     component: MyComputer as ComponentType<Record<string, unknown>>,
     icon: MyComputerIcon,
     defaultSize: { width: 560, height: 400 },
+    onDesktop: true,
+  },
+  explorer: {
+    title: "My Documents",
+    label: "My Documents",
+    component: Explorer as ComponentType<Record<string, unknown>>,
+    icon: DocumentsIcon,
+    defaultSize: { width: 660, height: 460 },
     onDesktop: true,
   },
   recycleBin: {

@@ -1,0 +1,217 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+  font-size: 11px;
+}
+
+/* ---- Toolbars -------------------------------------------------------------
+ * Two bars, each with the raised grip on its left edge, because that is how XP
+ * says "this row is draggable" even when it is not.
+ */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-bottom: 1px solid #d5d2c4;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 45%, #e3dfcb 100%);
+}
+
+.grip {
+  flex: none;
+  width: 4px;
+  height: 18px;
+  margin-right: 2px;
+  border-left: 1px solid #fff;
+  border-right: 1px solid #b9b5a2;
+}
+
+.toolButton {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: default;
+  color: #000;
+}
+
+.toolButton:hover:not(:disabled) {
+  border-color: #b6c8e8;
+  background: linear-gradient(to bottom, #fdfefe 0%, #dfeafb 100%);
+}
+
+.toolButton:active:not(:disabled) {
+  border-color: #8aa5cc;
+  background: linear-gradient(to bottom, #cddcf2 0%, #e6eefb 100%);
+}
+
+.toolButton:disabled {
+  color: #a09e94;
+}
+
+.addressLabel {
+  flex: none;
+  color: #5a5a52;
+  padding: 0 4px;
+}
+
+.address {
+  flex: 1;
+  min-width: 0;
+  height: 21px;
+  font-size: 11px;
+  padding: 0 4px;
+}
+
+/* ---- Panes ---------------------------------------------------------------- */
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.tree {
+  width: 180px;
+  flex: none;
+  overflow: auto;
+  background: #fff;
+  border-right: 1px solid #d5d2c4;
+  padding: 4px 0;
+}
+
+/* One row of the tree: the expander, then the label button. The row owns the
+ * hover and selection background so that both halves highlight together.
+ */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding-right: 6px;
+  white-space: nowrap;
+}
+
+.row:hover {
+  background: #e4eefb;
+}
+
+.row.current {
+  background: #316ac5;
+  color: #fff;
+}
+
+.nodeLabel {
+  all: unset;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  cursor: default;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The expander. XP draws a boxed +/- joined to the tree by hairlines; the box
+ * alone is enough to read, and it stays legible at 11px where the hairlines do
+ * not. */
+.twisty {
+  all: unset;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  line-height: 1;
+  color: #45484d;
+  border: 1px solid #9a9a9a;
+  background: #fff;
+  cursor: default;
+}
+
+.twistySpacer {
+  flex: none;
+  width: 12px;
+  margin-left: 2px;
+}
+
+.list {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: #fff;
+  padding: 4px;
+  align-content: start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 88px);
+  gap: 2px;
+}
+
+.item {
+  all: unset;
+  box-sizing: border-box;
+  width: 88px;
+  padding: 4px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+  cursor: default;
+}
+
+.itemLabel {
+  max-width: 84px;
+  padding: 1px 3px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.item.selected .itemLabel {
+  background: #316ac5;
+  color: #fff;
+}
+
+.empty {
+  grid-column: 1 / -1;
+  padding: 12px;
+  color: #7a7a72;
+}
+
+/* ---- Status bar ----------------------------------------------------------- */
+
+.status {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  height: 20px;
+  padding: 0 2px 2px;
+  background: var(--luna-face);
+  border-top: 1px solid #fff;
+}
+
+.statusField {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  color: #333;
+  border: 1px solid #d5d2c4;
+  border-top-color: #b9b5a2;
+  border-left-color: #b9b5a2;
+}
+
+.statusField:first-child {
+  flex: 1;
+  min-width: 0;
+}

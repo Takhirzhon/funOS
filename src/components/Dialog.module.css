@@ -1,0 +1,60 @@
+/* The modal layer.
+ *
+ * XP does not dim the screen behind a dialog - that is a much later Windows,
+ * and a web habit. What it does do is make everything else stop responding,
+ * which is what this backdrop is for: it is invisible and it swallows clicks.
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30000;
+  display: grid;
+  place-items: center;
+}
+
+.dialog {
+  min-width: 320px;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 5px 16px rgba(0, 0, 0, 0.5);
+}
+
+.body {
+  display: flex;
+  gap: 12px;
+  padding: 16px 14px 10px;
+  align-items: flex-start;
+}
+
+.icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  /* Messages contain paths, and a path is exactly the kind of long unbroken
+   * string that pushes a dialog off the side of the screen. */
+  overflow-wrap: anywhere;
+}
+
+.field {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 6px 14px 14px;
+}
+
+.buttons button {
+  min-width: 75px;
+  height: 23px;
+}

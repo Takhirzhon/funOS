@@ -126,6 +126,40 @@ export const FolderIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+/* The generic document. Deliberately plainer than NotepadIcon: in a file list
+ * the point is to say "this is a file and it is not a folder", and anything
+ * with a recognisable silhouette competes with the names next to it.
+ */
+export const FileIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="fl-page" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stopColor="#ffffff" />
+        <stop offset="1" stopColor="#e3e8ed" />
+      </linearGradient>
+    </defs>
+    <path d="M7 3h12l6 6v20H7z" fill="url(#fl-page)" stroke="#8794a1" strokeWidth="0.9" />
+    <path d="M19 3v6h6" fill="#cdd7e0" stroke="#8794a1" strokeWidth="0.9" />
+    <path d="M10 14h12M10 18h12M10 22h8" stroke="#aab6c2" strokeWidth="1" strokeLinecap="round" />
+  </svg>
+);
+
+export const DriveIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="dr-body" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#f6f6f1" />
+        <stop offset="0.5" stopColor="#dcd9c8" />
+        <stop offset="1" stopColor="#b4b1a1" />
+      </linearGradient>
+    </defs>
+    <path d="M4 12h24v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="url(#dr-body)" stroke="#7a776a" strokeWidth="0.9" />
+    <path d="M6 6h20l2 6H4z" fill="#eceadb" stroke="#7a776a" strokeWidth="0.9" />
+    <rect x="7" y="16" width="13" height="2.4" rx="1.2" fill="#b9b6a6" />
+    <circle cx="24.5" cy="17.2" r="1.5" fill="#5fb84e" />
+  </svg>
+);
+
 export const InfoIcon = ({ size = 32, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>

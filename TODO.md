@@ -100,9 +100,14 @@ The "cheap copy" complaint is almost entirely this phase.
 Without these it is a themed page with four dialogs on it. With them it is a
 desktop.
 
-- [ ] **Virtual file system.** Paths, folders, files, persistence in IndexedDB.
-      Everything below depends on it, which is why it is first in this phase and
-      why it is worth designing rather than growing.
+- [x] **Virtual file system.** `src/fs/` and `store/fsStore.ts`. Paths are
+      canonical with forward slashes internally and backslashes only where a
+      person sees them. Entries are a **flat map keyed by path**, not a tree:
+      rename, move and recursive delete are the operations a tree of objects
+      gets wrong, and against a flat map they are all key rewrites. Persisted to
+      IndexedDB as one blob, debounced, degrading to "no persistence" rather
+      than refusing to boot. Hydration replaces the seed wholesale — merging
+      would resurrect every seeded file the moment someone deleted one.
 - [x] **Context menus.** Desktop, icon, taskbar button and title bar, with
       submenus, viewport flipping and Escape. One menu globally rather than one
       per component: two open at once is a bug you only see in a screenshot, and
@@ -110,12 +115,22 @@ desktop.
       nothing behind them yet are disabled rather than omitted — Cut, Copy,
       Rename, Properties — for the same reason the Start menu keeps its greyed
       rows. Arrange Icons By works.
-- [ ] **File Explorer.** Tree on the left, list on the right, address bar,
-      back/forward, view modes.
+- [x] **File Explorer.** Folder tree, item list, address bar you can type a path
+      into, Back/Forward/Up, New Folder, New Text Document, Rename, Delete, and
+      a status bar. History is a stack and a cursor, so navigating from the
+      middle truncates what was ahead of it. Double-clicking a file opens it in
+      Notepad.
+- [ ] **Explorer view modes.** Only the icon view exists; Details, List and
+      Thumbnails do not.
 - [ ] **Window manager.** Snapping, cascade/tile, Alt+Tab, Alt+F4, double-click
       to maximize (already works), keyboard focus that follows the active window.
-- [ ] **Dialogs.** Properties, Open/Save, confirm, error — with the XP icons and
-      the beep.
+- [x] **Dialogs — prompt, confirm, error.** Real windows in the desktop rather
+      than `prompt()`/`confirm()`/`alert()`, which cannot be styled, drop out of
+      the top of the viewport, and block the main thread so every animation
+      stops while they are up. Resolved through a promise, so calling code still
+      reads `if (await confirmDialog(...))`.
+- [ ] **Dialogs — Open/Save and Properties.** Notepad's Open and Save As ask for
+      a path as text. They want a real file picker built on Explorer's list.
 - [ ] **Drag and drop.** Files onto the desktop, between Explorer windows, onto
       app windows.
 
@@ -123,7 +138,10 @@ desktop.
 
 Ordered by ratio of "makes the place feel alive" to effort.
 
-- [ ] **Notepad** — exists; wire it to the VFS instead of one localStorage key.
+- [x] **Notepad** — reads and writes the VFS. New, Open, Save, Save As, a dirty
+      marker in the caption, and a prompt before discarding unsaved changes.
+      The window caption is set through the store, so the title bar and the task
+      button cannot disagree about which file is open.
 - [ ] **File Explorer** — see Phase 2.
 - [ ] **Command Prompt** — `dir`, `cd`, `type`, `echo`, `cls`. Reads the VFS.
 - [ ] **Paint** — canvas, the tool palette, save to the VFS as PNG.

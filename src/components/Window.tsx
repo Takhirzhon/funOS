@@ -106,7 +106,9 @@ export function Window({ window: w }: Props) {
           </div>
         </div>
         <div className={`window-body ${styles.body}`}>
-          <Body {...(w.props ?? {})} />
+          {/* windowId lets an app talk about its own window - Notepad renames
+              the caption to whatever file it has open. */}
+          <Body {...(w.props ?? {})} windowId={w.id} />
         </div>
       </div>
     </Rnd>

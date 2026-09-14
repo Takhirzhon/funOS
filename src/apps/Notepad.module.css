@@ -1,0 +1,44 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+}
+
+.editor {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 3px 4px;
+  border: none;
+  outline: none;
+  resize: none;
+  width: 100%;
+  background: #fff;
+  /* Notepad is a fixed-width editor and always has been. Lucida Console is what
+   * XP shipped with; the rest is the fallback chain for machines that do not
+   * have it. */
+  font: 12px "Lucida Console", Consolas, "DejaVu Sans Mono", monospace;
+  white-space: pre;
+  overflow: auto;
+}
+
+.status {
+  flex: none;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px;
+  border-top: 1px solid #d5d2c4;
+  background: var(--luna-face);
+  font-size: 10px;
+  color: #333;
+}
+
+.status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

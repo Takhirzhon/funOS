@@ -1,201 +1,165 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useFsStore } from "../store/fsStore";
+import { useWindowStore } from "../store/windowStore";
+import { confirmDialog, errorDialog, promptDialog } from "../store/dialogStore";
+import { basename, dirname, display, extname, join, normalize } from "../fs/path";
+import { MY_DOCUMENTS } from "../fs/seed";
+import { MenuBar } from "../components/MenuBar";
+import styles from "./Notepad.module.css";
 
-const STORAGE_KEY = "funos.notepad.body";
+type Props = {
+  /** Set when Explorer launches it. Absent means a new, unsaved document. */
+  path?: string;
+  /** The window this instance lives in, so the caption can follow the file. */
+  windowId?: string;
+};
 
-export function Notepad() {
-  const [text, setText] = useState<string>(() => {
-    return localStorage.getItem(STORAGE_KEY) ?? "";
-  });
-  const [savedAt, setSavedAt] = useState<number | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
+export function Notepad({ path, windowId }: Props) {
+  const readFile = useFsStore((s) => s.readFile);
+  const writeFile = useFsStore((s) => s.writeFile);
+  const exists = useFsStore((s) => s.exists);
+  const setTitle = useWindowStore((s) => s.setTitle);
 
+  const initial = useMemo(() => (path ? (readFile(path) ?? "") : ""), [path, readFile]);
+
+  const [file, setFile] = useState<string | null>(path ? normalize(path) : null);
+  const [text, setText] = useState(initial);
+  const [savedText, setSavedText] = useState(initial);
+
+  const dirty = text !== savedText;
+  const name = file ? basename(file) : "Untitled";
+
+  /* The caption belongs to the window, not to the app, so the taskbar button
+   * and the title bar agree - and so "Save As" renames both at once.
+   */
   useEffect(() => {
-    const id = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY, text);
-      setSavedAt(Date.now());
-    }, 400);
-    return () => clearTimeout(id);
-  }, [text]);
+    if (windowId) setTitle(windowId, `${dirty ? "*" : ""}${name} - Notepad`);
+  }, [windowId, name, dirty, setTitle]);
 
-  const newDoc = () => {
-    if (text && !confirm("Discard current text?")) return;
+  const save = (target: string | null = file): boolean => {
+    if (!target) return false;
+    if (!writeFile(target, text)) {
+      void errorDialog("Notepad", `Cannot save ${display(target)}.\n\nThe folder does not exist.`);
+      return false;
+    }
+    setFile(target);
+    setSavedText(text);
+    return true;
+  };
+
+  const saveAs = async () => {
+    const folder = file ? dirname(file) : MY_DOCUMENTS;
+    const entered = await promptDialog("Save As", `Save in ${display(folder)}:`, name, "Save");
+    if (entered === null) return false;
+
+    const withExt = extname(entered) ? entered.trim() : `${entered.trim()}.txt`;
+    const target = join(folder, withExt);
+
+    if (target !== file && exists(target)) {
+      const ok = await confirmDialog(
+        "Save As",
+        `${basename(target)} already exists.\nDo you want to replace it?`
+      );
+      if (!ok) return false;
+    }
+    return save(target);
+  };
+
+  /* Returns false when the user cancelled, so the caller can abandon whatever
+   * it was about to do. This is the whole reason New and Open ask first. */
+  const confirmDiscard = async (): Promise<boolean> => {
+    if (!dirty) return true;
+    const keep = await confirmDialog(
+      "Notepad",
+      `The text in the ${name} file has changed.\n\nDo you want to save the changes?`
+    );
+    if (!keep) return true;
+    return file ? save() : await saveAs();
+  };
+
+  const newDoc = async () => {
+    if (!(await confirmDiscard())) return;
+    setFile(null);
     setText("");
+    setSavedText("");
   };
 
-  const saveAs = () => {
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "untitled.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const openDoc = async () => {
+    if (!(await confirmDiscard())) return;
+    const entered = await promptDialog(
+      "Open",
+      "Type the full path of the file to open:",
+      file ?? `${display(MY_DOCUMENTS)}\\readme.txt`,
+      "Open"
+    );
+    if (entered === null) return;
 
-  const openFile = () => fileInput.current?.click();
+    const target = normalize(entered);
+    const content = readFile(target);
+    if (content === undefined) {
+      void errorDialog("Open", `${display(target)}\n\nFile not found.`);
+      return;
+    }
+    setFile(target);
+    setText(content);
+    setSavedText(content);
+  };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div className={styles.app}>
       <MenuBar
-        items={[
+        menus={[
           {
             label: "File",
-            children: [
-              { label: "New", onClick: newDoc },
-              { label: "Open...", onClick: openFile },
-              { label: "Save As...", onClick: saveAs },
+            items: [
+              { label: "New", onClick: () => void newDoc() },
+              { label: "Open...", onClick: () => void openDoc() },
+              { label: "Save", onClick: () => void (file ? save() : saveAs()) },
+              { label: "Save As...", onClick: () => void saveAs() },
             ],
           },
           {
             label: "Edit",
-            children: [
-              { label: "Select All", onClick: () => document.execCommand("selectAll") },
+            items: [
+              {
+                label: "Select All",
+                onClick: () => {
+                  const area = document.activeElement;
+                  if (area instanceof HTMLTextAreaElement) area.select();
+                },
+              },
+              { label: "Time/Date", onClick: () => setText((t) => t + new Date().toLocaleString()) },
             ],
           },
           {
             label: "Help",
-            children: [
-              { label: "About Notepad", onClick: () => alert("funOS Notepad\nA Notepad clone, built with React.") },
+            items: [
+              {
+                label: "About Notepad",
+                onClick: () =>
+                  void errorDialog(
+                    "About Notepad",
+                    "funOS Notepad\n\nReads and writes the virtual file system, which lives in IndexedDB and survives a reload."
+                  ),
+              },
             ],
           },
         ]}
       />
+
       <textarea
+        className={styles.editor}
         value={text}
         onChange={(e) => setText(e.target.value)}
         spellCheck={false}
-        style={{
-          flex: 1,
-          margin: 0,
-          padding: 4,
-          border: "none",
-          outline: "none",
-          resize: "none",
-          font: "12px Lucida Console, Consolas, monospace",
-          width: "100%",
-          background: "#fff",
-        }}
       />
-      <div
-        style={{
-          height: 18,
-          borderTop: "1px solid #aca899",
-          background: "#ece9d8",
-          fontSize: 10,
-          padding: "0 6px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          color: "#333",
-        }}
-      >
-        <span>{text.length} chars</span>
-        <span>{savedAt ? "Auto-saved" : "Not saved"}</span>
+
+      <div className={styles.status}>
+        <span>{file ? display(file) : "Untitled"}</span>
+        <span>
+          {text.length} chars{dirty ? " — unsaved" : ""}
+        </span>
       </div>
-
-      <input
-        type="file"
-        accept=".txt,text/plain"
-        ref={fileInput}
-        style={{ display: "none" }}
-        onChange={async (e) => {
-          const f = e.target.files?.[0];
-          if (!f) return;
-          setText(await f.text());
-          e.target.value = "";
-        }}
-      />
-    </div>
-  );
-}
-
-type MenuItem = { label: string; onClick: () => void };
-type Menu = { label: string; children: MenuItem[] };
-
-function MenuBar({ items }: { items: Menu[] }) {
-  const [open, setOpen] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = () => setOpen(null);
-    window.addEventListener("mousedown", close);
-    return () => window.removeEventListener("mousedown", close);
-  }, [open]);
-
-  return (
-    <div
-      style={{
-        background: "#ece9d8",
-        borderBottom: "1px solid #aca899",
-        display: "flex",
-        height: 20,
-        fontSize: 11,
-        flexShrink: 0,
-      }}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      {items.map((m) => (
-        <div key={m.label} style={{ position: "relative" }}>
-          <button
-            type="button"
-            onClick={() => setOpen(open === m.label ? null : m.label)}
-            style={{
-              all: "unset",
-              padding: "0 8px",
-              height: "100%",
-              cursor: "default",
-              background: open === m.label ? "#316ac5" : "transparent",
-              color: open === m.label ? "#fff" : "#000",
-            }}
-          >
-            {m.label}
-          </button>
-          {open === m.label && (
-            <div
-              style={{
-                position: "absolute",
-                top: 20,
-                left: 0,
-                background: "#fff",
-                border: "1px solid #888",
-                boxShadow: "2px 2px 4px rgba(0,0,0,0.3)",
-                minWidth: 140,
-                padding: "2px 0",
-                zIndex: 100,
-              }}
-            >
-              {m.children.map((c) => (
-                <button
-                  key={c.label}
-                  type="button"
-                  onClick={() => {
-                    c.onClick();
-                    setOpen(null);
-                  }}
-                  style={{
-                    all: "unset",
-                    display: "block",
-                    width: "100%",
-                    boxSizing: "border-box",
-                    padding: "3px 18px",
-                    cursor: "default",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#316ac5";
-                    e.currentTarget.style.color = "#fff";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "#000";
-                  }}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
     </div>
   );
 }

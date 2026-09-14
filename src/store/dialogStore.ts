@@ -1,0 +1,78 @@
+import { create } from "zustand";
+
+/* Modal dialogs, as a promise.
+ *
+ * The browser already has prompt(), confirm() and alert(), and they are the one
+ * thing that cannot be made to look like anything: a Chrome dialog dropping out
+ * of the top of the viewport instantly breaks the illusion that this is a
+ * machine. They also block the main thread, which stops every animation on the
+ * desktop while they are up.
+ *
+ * So: one dialog at a time, held in a store, resolved through a promise so
+ * calling code still reads like `if (await confirmDialog(...))`.
+ */
+
+export type DialogRequest =
+  | { kind: "prompt"; title: string; label: string; value: string; okLabel: string }
+  | { kind: "confirm"; title: string; message: string }
+  | { kind: "error"; title: string; message: string };
+
+type DialogStore = {
+  request: DialogRequest | null;
+  /* Increments on every ask, and is the React key of the dialog body.
+   *
+   * Without it, two dialogs that happen to match - renaming one file and then
+   * another, both "Rename" prompts - reuse the same element, and the input box
+   * still holds the first file's name because its state never remounted.
+   */
+  seq: number;
+  /** Resolver for the dialog currently on screen. */
+  resolve: ((value: string | boolean | null) => void) | null;
+  close: (value: string | boolean | null) => void;
+  ask: (request: DialogRequest) => Promise<string | boolean | null>;
+};
+
+export const useDialogStore = create<DialogStore>((set, get) => ({
+  request: null,
+  seq: 0,
+  resolve: null,
+
+  ask: (request) =>
+    new Promise((resolve) => {
+      /* One at a time. If something opens a dialog while another is up, the
+       * first is answered as cancelled rather than left hanging - a promise
+       * nobody ever resolves is a window that never closes. */
+      const previous = get().resolve;
+      if (previous) previous(null);
+      set((s) => ({ request, resolve, seq: s.seq + 1 }));
+    }),
+
+  close: (value) => {
+    const { resolve } = get();
+    set({ request: null, resolve: null });
+    resolve?.(value);
+  },
+}));
+
+export const promptDialog = (
+  title: string,
+  label: string,
+  value = "",
+  okLabel = "OK"
+): Promise<string | null> =>
+  useDialogStore
+    .getState()
+    .ask({ kind: "prompt", title, label, value, okLabel })
+    .then((result) => (typeof result === "string" ? result : null));
+
+export const confirmDialog = (title: string, message: string): Promise<boolean> =>
+  useDialogStore
+    .getState()
+    .ask({ kind: "confirm", title, message })
+    .then((result) => result === true);
+
+export const errorDialog = (title: string, message: string): Promise<void> =>
+  useDialogStore
+    .getState()
+    .ask({ kind: "error", title, message })
+    .then(() => undefined);
