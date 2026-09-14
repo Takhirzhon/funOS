@@ -343,6 +343,16 @@ export const VolumeIcon = ({ size = 16, style, className }: IconProps) => (
   </svg>
 );
 
+export const VolumeMuteIcon = ({ size = 16, style, className }: IconProps) => (
+  <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
+    <rect x="1" y="1" width="14" height="14" rx="2" fill="#1666bd" stroke="#0c4d8a" strokeWidth="0.8" />
+    <path d="M3.5 6.5h2L8 4v8L5.5 9.5h-2z" fill="#fff" />
+    {/* The red bar, not a missing speaker: the icon has to stay the same shape
+        so the tray does not reflow when sound is switched off. */}
+    <path d="M10 5.6l4 4.8M14 5.6l-4 4.8" stroke="#ff5a4a" strokeWidth="1.6" strokeLinecap="round" />
+  </svg>
+);
+
 export const NetworkIcon = ({ size = 16, style, className }: IconProps) => (
   <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
     <rect x="0.5" y="8" width="7" height="5" rx="1" fill="#d8dde3" stroke="#54646f" strokeWidth="0.8" />

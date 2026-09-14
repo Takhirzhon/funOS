@@ -1,6 +1,8 @@
 import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
+import { useSoundStore } from "../store/soundStore";
+import { showBalloon } from "../store/balloonStore";
 import { windowSystemMenu } from "./windowSystemMenu";
 import { apps, type AppId } from "../apps/registry";
 import { StartButton } from "./StartButton";
@@ -12,6 +14,7 @@ import {
   ShieldIcon,
   ShowDesktopIcon,
   VolumeIcon,
+  VolumeMuteIcon,
 } from "../icons";
 import styles from "./Taskbar.module.css";
 
@@ -23,6 +26,9 @@ export function Taskbar() {
   const cascade = useWindowStore((s) => s.cascade);
   const tile = useWindowStore((s) => s.tile);
   const openMenu = useMenuStore((s) => s.open);
+  const soundOn = useSoundStore((s) => s.enabled);
+  const toggleSound = useSoundStore((s) => s.toggle);
+  const play = useSoundStore((s) => s.play);
   const [startOpen, setStartOpen] = useState(false);
 
   /* The taskbar's own menu. Everything here acts on every window at once,
@@ -130,9 +136,26 @@ export function Taskbar() {
             <span className={styles.trayIcon} title="Local Area Connection">
               <NetworkIcon />
             </span>
-            <span className={styles.trayIcon} title="Volume">
-              <VolumeIcon />
-            </span>
+            <button
+              type="button"
+              className={styles.trayIcon}
+              title={soundOn ? "Volume - click to mute" : "Volume - click to unmute"}
+              onClick={() => {
+                toggleSound();
+                /* Played after the toggle, so switching sound *on* is
+                 * immediately audible - which is the only way to tell that it
+                 * worked. */
+                if (!soundOn) setTimeout(() => play("ding"), 0);
+                showBalloon(
+                  soundOn ? "Sound is off" : "Sound is on",
+                  soundOn
+                    ? "Click the speaker again to turn it back on."
+                    : "Sounds are synthesized, not sampled - there is no audio file in this build."
+                );
+              }}
+            >
+              {soundOn ? <VolumeIcon /> : <VolumeMuteIcon />}
+            </button>
           </div>
           <Clock />
         </div>

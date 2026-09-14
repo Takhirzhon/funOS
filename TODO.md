@@ -48,13 +48,10 @@ Ordered by ratio of "makes the place feel alive" to effort.
 
 ## The details nobody asks for and everybody notices
 
-- [ ] **Sounds.** Startup chime, ding on error, the click. Muted by default —
-      autoplay policy blocks it anyway, so it needs a first-gesture unlock.
 - [ ] **Themes.** Luna Blue, Olive Green, Silver. The palette is already in
       custom properties in one block of `index.css`, so this is an override
       rather than a rewrite.
 - [ ] **Screensavers.** Pipes, 3D Maze, Starfield.
-- [ ] **Balloon tips** from the tray.
 
 ---
 

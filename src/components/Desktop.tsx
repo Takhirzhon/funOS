@@ -24,6 +24,7 @@ import { useMenuStore } from "../store/menuStore";
 import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
 import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
+import { showBalloon } from "../store/balloonStore";
 import { deletePaths } from "../fs/trash";
 import { useShellShortcuts } from "../hooks/useShellShortcuts";
 import { DESKTOP_DIR } from "../fs/seed";
@@ -84,6 +85,21 @@ export function Desktop() {
   const [drag, setDrag] = useState<Drag | null>(null);
   const [marquee, setMarquee] = useState<Marquee | null>(null);
   const [dropActive, setDropActive] = useState(false);
+
+  /* The welcome balloon, once per log-in. XP popped one out of the tray a few
+   * seconds after the desktop appeared, and the delay is the whole effect: it
+   * arrives after you have started looking around, not on top of the first
+   * frame. */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      showBalloon(
+        "Welcome to funOS",
+        "Right-click the desktop, try Start > All Programs, and drop a file from your real computer onto this one.",
+        "info"
+      );
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useLayoutEffect(() => {
     const el = fieldRef.current;

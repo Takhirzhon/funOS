@@ -4,6 +4,7 @@ import { Window } from "./components/Window";
 import { Taskbar } from "./components/Taskbar";
 import { ContextMenu } from "./components/ContextMenu";
 import { Dialog } from "./components/Dialog";
+import { Balloon } from "./components/Balloon";
 import { TaskSwitcher } from "./components/TaskSwitcher";
 import { BootScreen, GoodbyeScreen, LoginScreen, TurnOffDialog } from "./boot/Session";
 import { useWindowStore } from "./store/windowStore";
@@ -34,6 +35,7 @@ export default function App() {
       {/* Above even the context menu: a modal dialog is the one thing that
           should win against everything else on screen. */}
       <Dialog />
+      <Balloon />
       {turningOff && <TurnOffDialog />}
     </>
   );

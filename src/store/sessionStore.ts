@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { playSound } from "./soundStore";
 
 /* The machine every screen before the desktop belongs to.
  *
@@ -60,13 +61,22 @@ export const useSessionStore = create<SessionStore>((set) => ({
     set({ phase: "login" });
   },
 
-  logIn: () => set({ phase: "desktop", turningOff: false }),
+  /* Clicking the user tile is the first gesture on the page, which is exactly
+   * when a browser will let an AudioContext start - so the startup chime can
+   * only ever play here, and here is where it belongs anyway. */
+  logIn: () => {
+    playSound("startup");
+    set({ phase: "desktop", turningOff: false });
+  },
   logOff: () => set({ phase: "login", turningOff: false }),
 
   askTurnOff: () => set({ turningOff: true }),
   cancelTurnOff: () => set({ turningOff: false }),
 
-  turnOff: () => set({ phase: "goodbye", turningOff: false }),
+  turnOff: () => {
+    playSound("shutdown");
+    set({ phase: "goodbye", turningOff: false });
+  },
 
   /* Restart replays the boot screen, so it has to clear the once-per-tab flag
    * as well as the phase - otherwise "Restart" would drop straight to the login
