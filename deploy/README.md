@@ -46,7 +46,9 @@ the shared-VPS conventions — no published ports, one route file in
 ## Before the first deploy: check the names are free
 
 funOS takes the apex, `khirokhito.tech`. The deployment guide still lists that as
-Oqu's — stale; Oqu was moved off it, and the apex is free as of 2026-09-14.
+Oqu's — stale. Checked on the box on 2026-09-14, before installing: the apex
+appears in no route file. Oqu answers on the bare IP (``Host(`187.127.82.45`)``),
+and the four subdomains in use are `arc.`, `taza.`, `tender.` and `s3.`.
 
 Names are global on this box and a collision is silent, not an error: two routers
 matching the same host means Traefik picks by priority and the loser disappears
@@ -90,13 +92,16 @@ dig +short khirokhito.tech
 export GIT_SHA=$(git rev-parse HEAD)
 docker compose -f deploy/docker-compose.yml up -d --build
 
-# 4. Publish the route
+# 4. Publish the route. Dropping the file in is enough: the proxy runs with
+#    --providers.file.watch=true and picked this up in under 8 seconds, with a
+#    certificate, on 2026-09-14. Do NOT force-recreate traefik here "to be
+#    sure" - it is the shared proxy, and restarting it to install a new app
+#    interrupts the four that were already running.
 install -m 644 deploy/funos.yml /opt/traefik/dynamic/funos.yml
-docker compose -f /opt/traefik/docker-compose.yml up -d --force-recreate traefik
 
-# 5. Verify - check the Traefik log for the certificate, not just the browser
-docker compose -f /opt/traefik/docker-compose.yml logs --tail=30 traefik
-curl -I https://khirokhito.tech
+# 5. Verify. A 200 over HTTP/2 means the certificate issued; there is no need
+#    to read the Traefik log unless it does not.
+curl -sI https://khirokhito.tech | head -1
 curl -s https://khirokhito.tech/health
 
 # 6. Record what is live, so the first timer tick does not redeploy it
@@ -135,6 +140,10 @@ Not a *secret* — a health URL is public and secrets are write-only, so you cou
 never read it back to check. Until this exists the job prints "skipping deploy
 verification" and passes; once it exists, a push to main that the box fails to
 deploy turns the pipeline red.
+
+Set on 2026-09-14, once `/health` answered. `verify-deploy` is live from that
+point on, so a red one means the box did not take the commit — not that the
+commit is bad.
 
 ## Day to day
 
