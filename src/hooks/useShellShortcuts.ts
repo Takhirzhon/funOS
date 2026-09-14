@@ -1,0 +1,84 @@
+import { useEffect, useRef } from "react";
+import { useClipboardStore } from "../store/clipboardStore";
+import { useDialogStore } from "../store/dialogStore";
+import { useMenuStore } from "../store/menuStore";
+import { pasteInto } from "../fs/clipboard";
+import { deletePath } from "../fs/trash";
+
+type Options = {
+  /* Whether this surface currently owns the keyboard.
+   *
+   * This is the whole problem the hook exists to solve. The desktop and every
+   * Explorer window would each like to answer Ctrl+C, and a listener per
+   * surface means every one of them answers at once. Exactly one is allowed to
+   * be active, and the caller decides which - the desktop when no window has
+   * focus, an Explorer window when it is the focused one.
+   */
+  active: boolean;
+  /** The path the shortcuts act on, or null when nothing is selected. */
+  selected: string | null;
+  /** Where Paste puts things. */
+  folder: string;
+  /** Called after a successful delete, so the caller can clear its selection. */
+  onDeleted?: (path: string) => void;
+};
+
+export function useShellShortcuts({ active, selected, folder, onDeleted }: Options) {
+  /* The listener is installed once per activation and reads everything else
+   * through a ref. Putting `selected` in the dependency array would tear the
+   * listener down and build it up again on every click.
+   */
+  const latest = useRef({ selected, folder, onDeleted });
+  useEffect(() => {
+    latest.current = { selected, folder, onDeleted };
+  }, [selected, folder, onDeleted]);
+
+  useEffect(() => {
+    if (!active) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      /* Three things that are not a shell shortcut even when they look like
+       * one: typing into a field, a modal dialog waiting for an answer, and an
+       * open context menu. Ctrl+C in a rename box must copy the text. */
+      const el = document.activeElement;
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return;
+      if (useDialogStore.getState().request) return;
+      if (useMenuStore.getState().items) return;
+
+      const { selected: path, folder: target, onDeleted: done } = latest.current;
+      const clipboard = useClipboardStore.getState();
+
+      if (e.ctrlKey && !e.altKey) {
+        const key = e.key.toLowerCase();
+        if (key === "x" && path) {
+          e.preventDefault();
+          clipboard.cut(path);
+          return;
+        }
+        if (key === "c" && path) {
+          e.preventDefault();
+          clipboard.copy(path);
+          return;
+        }
+        if (key === "v" && clipboard.path) {
+          e.preventDefault();
+          pasteInto(target);
+          return;
+        }
+        return;
+      }
+
+      if (e.key === "Delete" && path) {
+        e.preventDefault();
+        /* Shift+Delete skips the Recycle Bin, which is the one keyboard
+         * shortcut in Windows that people know and expect to be destructive. */
+        void deletePath(path, e.shiftKey).then((deleted) => {
+          if (deleted) done?.(path);
+        });
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [active]);
+}

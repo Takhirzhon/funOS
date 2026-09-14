@@ -21,9 +21,11 @@ import {
   type Pos,
 } from "../store/desktopStore";
 import { useMenuStore } from "../store/menuStore";
-import { confirmDialog, errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
+import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
 import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
+import { deletePath } from "../fs/trash";
+import { useShellShortcuts } from "../hooks/useShellShortcuts";
 import { DESKTOP_DIR } from "../fs/seed";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
@@ -59,9 +61,10 @@ function AppGlyph({ appId }: { appId: AppId }) {
 
 export function Desktop() {
   const open = useWindowStore((s) => s.open);
+  const blurWindows = useWindowStore((s) => s.blur);
+  const focusedWindow = useWindowStore((s) => s.focusedId);
   const entries = useFsStore((s) => s.entries);
   const move = useFsStore((s) => s.move);
-  const remove = useFsStore((s) => s.remove);
   const rename = useFsStore((s) => s.rename);
   const uniquePath = useFsStore((s) => s.uniquePath);
   const positions = useDesktopStore((s) => s.positions);
@@ -72,6 +75,7 @@ export function Desktop() {
   const openMenu = useMenuStore((s) => s.open);
   const setHoverPath = useDndStore((s) => s.setHoverPath);
   const clipboardPath = useClipboardStore((s) => s.path);
+  const clipboardMode = useClipboardStore((s) => s.mode);
   const cutToClipboard = useClipboardStore((s) => s.cut);
   const copyToClipboard = useClipboardStore((s) => s.copy);
 
@@ -213,6 +217,16 @@ export function Desktop() {
     };
   }, [select, setPosition, setHoverPath]);
 
+  /* The desktop owns the clipboard keys whenever no window is focused, which
+   * is exactly the state clicking it produces. */
+  const selectedFile = selection.find((id) => id.startsWith("C:")) ?? null;
+  useShellShortcuts({
+    active: focusedWindow === null,
+    selected: selectedFile,
+    folder: DESKTOP_DIR,
+    onDeleted: () => select([]),
+  });
+
   const launch = (appId: AppId) =>
     open(appId, { title: apps[appId].title, bounds: apps[appId].defaultSize });
 
@@ -234,6 +248,7 @@ export function Desktop() {
 
   const beginDrag = (id: string) => (e: ReactPointerEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    blurWindows();
     if (e.button !== 0) return;
     const rect = fieldRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -250,6 +265,7 @@ export function Desktop() {
   };
 
   const beginMarquee = (e: ReactPointerEvent<HTMLDivElement>) => {
+    blurWindows();
     if (e.button !== 0) return;
     const rect = fieldRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -357,15 +373,7 @@ export function Desktop() {
       {
         kind: "item",
         label: "Delete",
-        onClick: () => {
-          void (async () => {
-            const ok = await confirmDialog(
-              "Confirm Delete",
-              `Are you sure you want to delete '${item.label}'?`
-            );
-            if (ok) remove(item.entry.path);
-          })();
-        },
+        onClick: () => void deletePath(item.entry.path),
       },
       { kind: "separator" },
       {
@@ -437,6 +445,7 @@ export function Desktop() {
               x={pos.x}
               y={pos.y}
               dragging={isDragging}
+              cut={clipboardMode === "cut" && clipboardPath === item.id}
               onPointerDown={beginDrag(item.id)}
               onContextMenu={itemMenu(item)}
               onOpen={() => openItem(item)}

@@ -34,6 +34,8 @@ type Store = {
   ) => string;
   close: (id: string) => void;
   focus: (id: string) => void;
+  /** Nothing is focused - what clicking the desktop does. */
+  blur: () => void;
   setBounds: (id: string, bounds: Partial<Bounds>) => void;
   /** An app renaming its own window - Notepad following the file it has open. */
   setTitle: (id: string, title: string) => void;
@@ -102,6 +104,11 @@ export const useWindowStore = create<Store>((set, get) => ({
         ),
       };
     }),
+
+  /* Clicking the desktop really does deactivate the window in Windows: its
+   * title bar goes grey, and the keyboard belongs to the desktop again. That
+   * second half is what the clipboard shortcuts hang off. */
+  blur: () => set((s) => (s.focusedId === null ? s : { focusedId: null })),
 
   setBounds: (id, bounds) =>
     set((s) => ({

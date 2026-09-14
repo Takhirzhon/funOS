@@ -58,6 +58,15 @@
     drop-shadow(0 0 2px rgba(49, 106, 197, 0.8));
 }
 
+/* Cut, but not yet pasted. Windows ghosts the source rather than removing it,
+ * because the move has not happened - pressing Cut and then Escape has to leave
+ * the file exactly where it was. The icon fades; the label does not, or it
+ * becomes unreadable against a light wallpaper.
+ */
+.cut .glyph {
+  opacity: 0.4;
+}
+
 .label {
   position: relative;
   color: #fff;

@@ -26,15 +26,17 @@ Merging to main deploys, so nothing here counts as done until it is on
 Small leftovers from the parts that are otherwise finished. Each one is a place
 where the shape exists and the behaviour does not.
 
-- [ ] **Keyboard shortcuts for the clipboard.** Cut, Copy and Paste work from
-      the context menus and only from there. Ctrl+X/C/V need a focus owner to
-      hang off — the desktop and each Explorer window have to agree on who is
-      listening, which is the actual work.
-- [ ] **A cut item should look cut.** Windows dims the source until the paste
-      happens. The clipboard store already holds the mode, so this is a class,
-      but it needs to reach both the desktop icon and the Explorer row.
-- [ ] **Delete should go to the Recycle Bin.** It is permanent, and the Recycle
-      Bin is still a placeholder window with nothing behind it.
+- [ ] **Multi-select.** Everything that acts on a selection acts on one item.
+      The marquee already selects several on the desktop and then only the first
+      can be cut, copied or deleted. The clipboard holds one path; it wants a
+      list, and so do `deletePath` and the Properties dialog.
+- [ ] **The Recycle Bin icon should show whether it is full.** XP draws two
+      icons and swaps them. The registry holds one icon per app, so this needs
+      the icon to be a function of state rather than a constant — which is also
+      what a drive icon showing a disc would need.
+- [ ] **Hidden files.** `C:\RECYCLER` is a normal visible folder in Explorer,
+      because there is no hidden flag. Recycling something and then browsing to
+      the bin by hand shows the machinery.
 
 ## Applications
 

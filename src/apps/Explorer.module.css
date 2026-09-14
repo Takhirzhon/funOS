@@ -340,6 +340,14 @@
   background: rgba(49, 106, 197, 0.08);
 }
 
+/* Cut, but not yet pasted. The move has not happened - pressing Cut and then
+ * Escape leaves the file where it was - so the row is ghosted rather than
+ * removed, which is what Windows does and what makes the state legible.
+ */
+.cut {
+  opacity: 0.45;
+}
+
 .empty {
   padding: 12px;
   color: #7a7a72;

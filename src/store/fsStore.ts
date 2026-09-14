@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { idbGet, idbSet } from "../fs/idb";
-import { buildSeed } from "../fs/seed";
+import { RECYCLE_BIN, buildSeed } from "../fs/seed";
 import {
   basename,
   dirname,
@@ -36,6 +36,12 @@ export type FsEntry = {
   bytes?: Uint8Array;
   /** MIME type, binary files only. */
   mime?: string;
+  /* Where this came from, set only on the top entry of something in the Recycle
+   * Bin. Children of a recycled folder do not carry one - restoring the folder
+   * brings them with it, and a per-child path would be a second copy of the
+   * same fact, free to disagree with the first.
+   */
+  restorePath?: string;
   created: number;
   modified: number;
 };
@@ -92,6 +98,13 @@ type FsStore = {
   move: (path: string, targetDir: string) => string | null;
   /** Duplicate an entry into `targetDir`, renaming if the name is taken. */
   copy: (path: string, targetDir: string) => string | null;
+
+  /** Move into the Recycle Bin, remembering where it came from. */
+  recycle: (path: string) => string | null;
+  /** Put a recycled entry back where it was. */
+  restore: (path: string) => string | null;
+  /** Delete everything in the Recycle Bin, permanently. */
+  emptyBin: () => void;
 
   /** "New Folder", then "New Folder (2)" - the first free name in `dir`. */
   uniquePath: (dir: string, name: string) => string;
@@ -336,6 +349,70 @@ export const useFsStore = create<FsStore>((set, get) => ({
     set({ entries: next });
     persist(next);
     return destination;
+  },
+
+  /* Recycling is a move plus one remembered fact. It is deliberately not a
+   * separate storage area: a bin that holds copies would double the disk cost
+   * of every deletion and would need its own rename, listing and size logic.
+   */
+  recycle: (path) => {
+    const source = normalize(path);
+    const { entries, uniquePath } = get();
+    const entry = entries[source];
+    if (!entry || isDriveRoot(source)) return null;
+    /* Recycling something already in the bin would be a no-op that quietly
+     * rewrote its restorePath to a path inside the bin - so it could never be
+     * restored again. */
+    if (source === RECYCLE_BIN || isInside(RECYCLE_BIN, source)) return null;
+
+    const destination = relocate(set, get, source, uniquePath(RECYCLE_BIN, basename(source)));
+    if (destination === null) return null;
+
+    const next = {
+      ...get().entries,
+      [destination]: { ...get().entries[destination], restorePath: source },
+    };
+    set({ entries: next });
+    persist(next);
+    return destination;
+  },
+
+  restore: (path) => {
+    const source = normalize(path);
+    const { entries, uniquePath } = get();
+    const entry = entries[source];
+    if (!entry?.restorePath) return null;
+
+    const parent = dirname(entry.restorePath);
+    if (entries[parent]?.kind !== "dir") return null;
+
+    /* Something may have taken the name back while this sat in the bin, so the
+     * restore gets a free one rather than overwriting whatever is there now. */
+    const destination = relocate(
+      set,
+      get,
+      source,
+      uniquePath(parent, basename(entry.restorePath))
+    );
+    if (destination === null) return null;
+
+    const restored = { ...get().entries[destination] };
+    delete restored.restorePath;
+    const next = { ...get().entries, [destination]: restored };
+    set({ entries: next });
+    persist(next);
+    return destination;
+  },
+
+  emptyBin: () => {
+    const { entries } = get();
+    const next: Record<string, FsEntry> = {};
+    for (const [key, value] of Object.entries(entries)) {
+      if (isInside(RECYCLE_BIN, key)) continue;
+      next[key] = value;
+    }
+    set({ entries: next });
+    persist(next);
   },
 
   uniquePath: (dir, name) => {

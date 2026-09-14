@@ -19,6 +19,11 @@ export const HOME = USER;
 export const DESKTOP_DIR = `${USER}/Desktop`;
 export const MY_DOCUMENTS = `${USER}/My Documents`;
 
+/* XP really did call it RECYCLER, and really did hide it at the root of the
+ * drive. Explorer shows it like any other folder here, which is a small
+ * inaccuracy traded for not needing a hidden-file flag yet. */
+export const RECYCLE_BIN = `${DRIVE}/RECYCLER`;
+
 const DIRS = [
   DRIVE,
   `${DRIVE}/Documents and Settings`,
@@ -27,6 +32,7 @@ const DIRS = [
   MY_DOCUMENTS,
   `${MY_DOCUMENTS}/My Pictures`,
   `${MY_DOCUMENTS}/My Music`,
+  RECYCLE_BIN,
   `${DRIVE}/Program Files`,
   `${DRIVE}/Program Files/funOS`,
   `${DRIVE}/WINDOWS`,

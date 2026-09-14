@@ -7,9 +7,12 @@ import {
 import { blobUrlFor, isBinary, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { useMenuStore } from "../store/menuStore";
 import { useDndStore } from "../store/dndStore";
-import { confirmDialog, errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
+import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
 import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
+import { deletePath } from "../fs/trash";
+import { useShellShortcuts } from "../hooks/useShellShortcuts";
+import { useWindowStore } from "../store/windowStore";
 import {
   ancestors,
   basename,
@@ -28,7 +31,7 @@ import { MenuBar } from "../components/MenuBar";
 import { DriveIcon, FolderIcon } from "../icons";
 import styles from "./Explorer.module.css";
 
-type Props = { path?: string };
+type Props = { path?: string; windowId?: string };
 
 type ViewMode = "thumbnails" | "icons" | "list" | "details";
 
@@ -54,11 +57,10 @@ const dateLabel = (ms: number) =>
     minute: "2-digit",
   });
 
-export function Explorer({ path }: Props) {
+export function Explorer({ path, windowId }: Props) {
   const entries = useFsStore((s) => s.entries);
   const mkdir = useFsStore((s) => s.mkdir);
   const writeFile = useFsStore((s) => s.writeFile);
-  const remove = useFsStore((s) => s.remove);
   const move = useFsStore((s) => s.move);
   const rename = useFsStore((s) => s.rename);
   const uniquePath = useFsStore((s) => s.uniquePath);
@@ -68,6 +70,8 @@ export function Explorer({ path }: Props) {
    * learns about one. */
   const hoverPath = useDndStore((s) => s.hoverPath);
   const clipboardPath = useClipboardStore((s) => s.path);
+  const clipboardMode = useClipboardStore((s) => s.mode);
+  const focusedWindow = useWindowStore((s) => s.focusedId);
   const cutToClipboard = useClipboardStore((s) => s.cut);
   const copyToClipboard = useClipboardStore((s) => s.copy);
 
@@ -154,15 +158,20 @@ export function Explorer({ path }: Props) {
   };
 
   const deleteEntry = async (entry: FsEntry) => {
-    const what = entry.kind === "dir" ? "folder and everything in it" : "file";
-    const ok = await confirmDialog(
-      "Confirm Delete",
-      `Are you sure you want to delete this ${what}?\n\n${basename(entry.path)}`
-    );
-    if (!ok) return;
-    remove(entry.path);
-    if (selected === entry.path) setSelected(null);
+    /* Recycles rather than removes, and asks the question in one shared place,
+     * so the desktop and Explorer cannot end up wording it differently or
+     * disagreeing about what Delete means. */
+    if (await deletePath(entry.path)) {
+      if (selected === entry.path) setSelected(null);
+    }
   };
+
+  useShellShortcuts({
+    active: windowId !== undefined && focusedWindow === windowId,
+    selected,
+    folder: current,
+    onDeleted: () => setSelected(null),
+  });
 
   const backgroundMenu = (e: ReactMouseEvent) => {
     e.preventDefault();
@@ -300,6 +309,7 @@ export function Explorer({ path }: Props) {
       base,
       selected === entry.path ? styles.selected : "",
       isDropTarget(entry.path) ? styles.dropTarget : "",
+      clipboardMode === "cut" && clipboardPath === entry.path ? styles.cut : "",
     ].join(" ");
 
   const canBack = nav.index > 0;
