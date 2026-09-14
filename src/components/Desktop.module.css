@@ -1,18 +1,22 @@
 /* The icon field.
  *
- * Column-major flow, because that is how Windows fills a desktop: down the left
- * edge first, then a new column. `grid-auto-flow: column` with a fixed row
- * height is the direct expression of that, and it means the layout reflows
- * correctly when the window gets shorter instead of overflowing behind the
- * taskbar.
+ * A positioning context rather than a grid: icons carry their own coordinates
+ * now, because a desktop you cannot rearrange is a menu. The lattice still
+ * exists - it lives in desktopStore's CELL_W/CELL_H and is applied on drop.
  */
 .field {
-  padding: 8px 4px;
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(auto-fill, 84px);
-  grid-auto-columns: 80px;
-  justify-content: start;
-  align-content: start;
-  height: calc(100% - var(--taskbar-height));
+  position: absolute;
+  inset: 0 0 var(--taskbar-height) 0;
+  overflow: hidden;
+}
+
+/* The marquee. XP draws a 1px dotted border with a translucent fill; the fill
+ * is what makes it read as a selection rather than a stray rectangle.
+ */
+.marquee {
+  position: absolute;
+  border: 1px dotted #ffffff;
+  background: rgba(49, 106, 197, 0.28);
+  pointer-events: none;
+  z-index: 10;
 }

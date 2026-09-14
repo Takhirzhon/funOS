@@ -74,6 +74,82 @@
   flex: none;
 }
 
+/* ---- Open and minimize --------------------------------------------------
+ * Animated on .window, never on the react-rnd wrapper: the wrapper's transform
+ * is how react-rnd positions the window, so animating it there would send the
+ * window flying to the top-left corner mid-gesture.
+ *
+ * transform-origin at the bottom-left is the cheap stand-in for XP's genie:
+ * the window collapses toward the corner the taskbar is in, which is the part
+ * of that animation the eye actually reads.
+ */
+.opening {
+  animation: window-open 150ms ease-out;
+}
+
+.minimizing {
+  animation: window-minimize 150ms ease-in forwards;
+}
+
+.opening,
+.minimizing {
+  transform-origin: 0 100%;
+}
+
+@keyframes window-open {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes window-minimize {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.25) translateY(30%);
+  }
+}
+
+/* The minimized window is invisible but still laid out, so the wrapper's drop
+ * shadow would otherwise sit on the desktop as a floating grey rectangle with
+ * nothing casting it. Last in the file on purpose: it has the same specificity
+ * as .focused.shadowWrap and needs to win.
+ */
+.shadowWrap {
+  transition: box-shadow 120ms ease;
+}
+
+.shadowWrap.hidden {
+  box-shadow: none;
+}
+
+/* Someone who has asked the operating system to stop animating things did not
+ * mean "except this website".
+ *
+ * Note that `.minimizing` cannot simply lose its animation here: the animation
+ * is what leaves the window hidden, so switching it off would make minimize
+ * stop working rather than stop moving. It gets the end state immediately
+ * instead.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .opening {
+    animation: none;
+  }
+
+  .minimizing {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 .body {
   flex: 1;
   margin: 0;

@@ -1,30 +1,45 @@
-import type { ReactNode } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import styles from "./DesktopIcon.module.css";
 
 type Props = {
   label: string;
   icon: ReactNode;
   selected: boolean;
-  onSelect: () => void;
+  /** Absolute position within the icon field, in pixels. */
+  x: number;
+  y: number;
+  dragging: boolean;
+  onPointerDown: (e: ReactPointerEvent<HTMLButtonElement>) => void;
   onOpen: () => void;
 };
 
-/* Selection is a prop, not local state.
+/* Selection and position are props, not local state.
  *
- * It used to be `useState` per icon, cleared on blur, which meant two icons
- * could both look selected (blur does not fire when the click lands on the
- * desktop) and the desktop had no way to clear them. Exactly one thing is
- * selected at a time, so exactly one place should know which.
+ * Selection used to be `useState` per icon, cleared on blur - which meant two
+ * icons could both look selected (blur does not fire when the click lands on
+ * the desktop) and the desktop had no way to clear them. Exactly one thing owns
+ * the selection now, and the same goes for where each icon sits.
  */
-export function DesktopIcon({ label, icon, selected, onSelect, onOpen }: Props) {
+export function DesktopIcon({
+  label,
+  icon,
+  selected,
+  x,
+  y,
+  dragging,
+  onPointerDown,
+  onOpen,
+}: Props) {
+  const classes = [styles.icon];
+  if (selected) classes.push(styles.selected);
+  if (dragging) classes.push(styles.dragging);
+
   return (
     <button
       type="button"
-      className={selected ? `${styles.icon} ${styles.selected}` : styles.icon}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        onSelect();
-      }}
+      className={classes.join(" ")}
+      style={{ transform: `translate(${x}px, ${y}px)` }}
+      onPointerDown={onPointerDown}
       onDoubleClick={(e) => {
         e.stopPropagation();
         onOpen();

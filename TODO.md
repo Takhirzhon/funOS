@@ -81,11 +81,18 @@ The "cheap copy" complaint is almost entirely this phase.
 - [x] **A real wallpaper.** Still SVG — a photograph does not fit the budget —
       but a reconstruction with haze, layered ridges and blurred cumulus rather
       than three flat gradients.
-- [ ] **Desktop icon interaction.** Drag to reposition, rubber-band selection,
-      arrange-by.
+- [x] **Desktop icon interaction.** Drag to reposition with snap-to-lattice,
+      marquee selection, and positions that survive a reload. The field stopped
+      being a CSS grid to get there — icons carry their own coordinates now, and
+      the lattice is applied on drop.
+- [x] **Window animations.** Minimize and restore no longer teleport. The
+      window stays mounted and swaps between two animation classes, which is
+      also what makes minimize preserve the app's state instead of throwing it
+      away — the old code unmounted on the frame the flag flipped.
+- [ ] **Arrange icons by name / auto-arrange.** `resetPositions()` exists in the
+      store; it needs the context menu in Phase 2 before anyone can call it.
 - [ ] **All Programs flyout.** The button is there and disabled; the flyout is
       not built.
-- [ ] **Window animations.** Minimize and restore still teleport.
 
 ## Phase 2 — the parts that make it an OS
 

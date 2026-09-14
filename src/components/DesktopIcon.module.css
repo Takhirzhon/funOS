@@ -1,6 +1,13 @@
+/* Absolutely positioned, driven by `transform` rather than `left`/`top`.
+ * Dragging updates this on every pointer move, and transform is the one
+ * property a browser can change without laying the page out again.
+ */
 .icon {
   all: unset;
   box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 76px;
   cursor: default;
   display: flex;
@@ -9,6 +16,15 @@
   gap: 3px;
   padding: 3px 0 4px;
   text-align: center;
+  touch-action: none;
+}
+
+/* The icon being dragged is translucent and rides above the others - Windows
+ * drags a ghost, and the ghost is what tells you the drop has not happened yet.
+ */
+.dragging {
+  opacity: 0.65;
+  z-index: 5;
 }
 
 .glyph {
