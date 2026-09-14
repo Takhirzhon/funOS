@@ -40,6 +40,10 @@ type Store = {
   toggleMaximize: (id: string) => void;
   minimize: (id: string) => void;
   minimizeAll: () => void;
+  /** Overlapping, offset down-right from the top-left. */
+  cascade: () => void;
+  /** Every non-minimized window given an equal share of the desktop. */
+  tile: (orientation: "horizontal" | "vertical") => void;
   restore: (id: string) => void;
   toggleFromTaskbar: (id: string) => void;
 };
@@ -159,6 +163,70 @@ export const useWindowStore = create<Store>((set, get) => ({
       windows: s.windows.map((w) => ({ ...w, minimized: true })),
       focusedId: null,
     })),
+
+  /* Cascade and Tile both act on the windows that are actually on screen.
+   * Including minimized ones would "arrange" windows nobody can see and, worse,
+   * silently un-minimize them - which is not what either command does.
+   */
+  cascade: () =>
+    set((s) => {
+      const visible = s.windows.filter((w) => !w.minimized);
+      const width = Math.max(360, Math.round(window.innerWidth * 0.55));
+      const height = Math.max(240, Math.round((window.innerHeight - TASKBAR_HEIGHT) * 0.62));
+      return {
+        windows: s.windows.map((w) => {
+          const index = visible.indexOf(w);
+          if (index === -1) return w;
+          const offset = index * 26;
+          return {
+            ...w,
+            maximized: false,
+            prevBounds: undefined,
+            bounds: {
+              /* Wrap before the stack marches off the bottom right. Eight is
+               * about where XP gives up too. */
+              x: 12 + (offset % (Math.max(1, window.innerWidth - width - 24) || 1)),
+              y: 12 + (offset % Math.max(1, window.innerHeight - TASKBAR_HEIGHT - height - 24)),
+              width,
+              height,
+            },
+          };
+        }),
+      };
+    }),
+
+  tile: (orientation) =>
+    set((s) => {
+      const visible = s.windows.filter((w) => !w.minimized);
+      if (visible.length === 0) return s;
+
+      const area = { width: window.innerWidth, height: window.innerHeight - TASKBAR_HEIGHT };
+      /* "Tile Horizontally" in Windows means the windows are stacked in
+       * horizontal bands, not laid out in a horizontal row. It reads backwards
+       * and it is what the menu item does. */
+      const columns = orientation === "vertical" ? visible.length : 1;
+      const rows = orientation === "vertical" ? 1 : visible.length;
+      const cellWidth = Math.floor(area.width / columns);
+      const cellHeight = Math.floor(area.height / rows);
+
+      return {
+        windows: s.windows.map((w) => {
+          const index = visible.indexOf(w);
+          if (index === -1) return w;
+          return {
+            ...w,
+            maximized: false,
+            prevBounds: undefined,
+            bounds: {
+              x: (index % columns) * cellWidth,
+              y: Math.floor(index / columns) * cellHeight,
+              width: cellWidth,
+              height: cellHeight,
+            },
+          };
+        }),
+      };
+    }),
 
   restore: (id) => get().focus(id),
 

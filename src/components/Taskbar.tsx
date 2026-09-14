@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
 import { windowSystemMenu } from "./windowSystemMenu";
@@ -20,8 +20,37 @@ export function Taskbar() {
   const focusedId = useWindowStore((s) => s.focusedId);
   const toggleFromTaskbar = useWindowStore((s) => s.toggleFromTaskbar);
   const minimizeAll = useWindowStore((s) => s.minimizeAll);
+  const cascade = useWindowStore((s) => s.cascade);
+  const tile = useWindowStore((s) => s.tile);
   const openMenu = useMenuStore((s) => s.open);
   const [startOpen, setStartOpen] = useState(false);
+
+  /* The taskbar's own menu. Everything here acts on every window at once,
+   * which is exactly what distinguishes it from the task button's menu. */
+  const barMenu = (e: ReactMouseEvent) => {
+    e.preventDefault();
+    const none = windows.length === 0;
+    openMenu(e.clientX, e.clientY, [
+      { kind: "item", label: "Cascade Windows", disabled: none, onClick: cascade },
+      {
+        kind: "item",
+        label: "Tile Windows Horizontally",
+        disabled: none,
+        onClick: () => tile("horizontal"),
+      },
+      {
+        kind: "item",
+        label: "Tile Windows Vertically",
+        disabled: none,
+        onClick: () => tile("vertical"),
+      },
+      { kind: "separator" },
+      { kind: "item", label: "Show the Desktop", disabled: none, onClick: minimizeAll },
+      { kind: "separator" },
+      { kind: "item", label: "Task Manager", disabled: true },
+      { kind: "item", label: "Properties", disabled: true },
+    ]);
+  };
 
   useEffect(() => {
     if (!startOpen) return;
@@ -33,7 +62,11 @@ export function Taskbar() {
   return (
     <>
       {startOpen && <StartMenu onClose={() => setStartOpen(false)} />}
-      <div className={styles.bar} onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        className={styles.bar}
+        onMouseDown={(e) => e.stopPropagation()}
+        onContextMenu={barMenu}
+      >
         <StartButton open={startOpen} onClick={() => setStartOpen((v) => !v)} />
 
         {/* Quick Launch. XP shipped with it enabled and with exactly these two
@@ -72,6 +105,7 @@ export function Taskbar() {
                 onClick={() => toggleFromTaskbar(w.id)}
                 onContextMenu={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   openMenu(e.clientX, e.clientY, windowSystemMenu(w));
                 }}
                 title={w.title}

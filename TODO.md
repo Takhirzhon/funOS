@@ -122,8 +122,16 @@ desktop.
       Notepad.
 - [ ] **Explorer view modes.** Only the icon view exists; Details, List and
       Thumbnails do not.
-- [ ] **Window manager.** Snapping, cascade/tile, Alt+Tab, Alt+F4, double-click
-      to maximize (already works), keyboard focus that follows the active window.
+- [x] **Window manager.** Edge snapping on drop, Cascade and Tile from the
+      taskbar's own context menu, and an Alt+Tab switcher with the XP icon
+      strip. MRU order comes free from `zIndex`, since focusing raises.
+
+      One thing to know before filing a bug: **on Windows, Alt+Tab and Alt+F4
+      never reach the page.** The host window manager claims both before the
+      browser sees them, and `preventDefault` cannot take them back. Both are
+      wired up regardless — they work on some Linux desktops and in kiosk mode,
+      and cost nothing when they do not. The shortcut that always arrives is
+      `Ctrl+Alt+Left/Right`, which nothing else has claimed.
 - [x] **Dialogs — prompt, confirm, error.** Real windows in the desktop rather
       than `prompt()`/`confirm()`/`alert()`, which cannot be styled, drop out of
       the top of the viewport, and block the main thread so every animation

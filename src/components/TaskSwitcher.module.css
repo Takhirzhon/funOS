@@ -1,0 +1,51 @@
+/* The Alt+Tab box. XP's is a flat grey panel with a row of 32px icons, a hard
+ * selection rectangle around the current one, and the window's title beneath -
+ * not a preview grid, which is Vista and later.
+ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 25000;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.panel {
+  min-width: 200px;
+  max-width: 80vw;
+  padding: 12px 12px 8px;
+  background: #ece9d8;
+  border: 1px solid #6b6a5e;
+  box-shadow: 4px 5px 16px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.icons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.slot {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 2px solid transparent;
+}
+
+.slot.active {
+  border-color: #316ac5;
+  background: #cddcf2;
+}
+
+.caption {
+  font-size: 11px;
+  height: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

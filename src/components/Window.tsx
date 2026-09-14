@@ -1,5 +1,5 @@
 import { Rnd } from "react-rnd";
-import { useWindowStore, type WindowState } from "../store/windowStore";
+import { TASKBAR_HEIGHT, useWindowStore, type WindowState } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
 import { windowSystemMenu } from "./windowSystemMenu";
 import { apps } from "../apps/registry";
@@ -9,6 +9,29 @@ type Props = { window: WindowState };
 
 const MIN_W = 240;
 const MIN_H = 160;
+
+/* How close to an edge a window has to be dropped before it lines up with it.
+ * Applied on drop rather than continuously during the drag: a window that jumps
+ * while you are still holding it feels like it is fighting you, and XP never
+ * did that. Twelve pixels is close enough to be deliberate and far enough to
+ * hit without aiming.
+ */
+const SNAP = 12;
+
+function snapToEdges(x: number, y: number, width: number, height: number) {
+  const right = window.innerWidth;
+  const bottom = window.innerHeight - TASKBAR_HEIGHT;
+
+  let nextX = x;
+  if (Math.abs(x) <= SNAP) nextX = 0;
+  else if (Math.abs(x + width - right) <= SNAP) nextX = right - width;
+
+  let nextY = y;
+  if (Math.abs(y) <= SNAP) nextY = 0;
+  else if (Math.abs(y + height - bottom) <= SNAP) nextY = bottom - height;
+
+  return { x: nextX, y: nextY };
+}
 
 export function Window({ window: w }: Props) {
   const focus = useWindowStore((s) => s.focus);
@@ -50,7 +73,7 @@ export function Window({ window: w }: Props) {
       enableResizing={!w.maximized}
       onDragStart={() => focus(w.id)}
       onMouseDown={() => focus(w.id)}
-      onDragStop={(_, d) => setBounds(w.id, { x: d.x, y: d.y })}
+      onDragStop={(_, d) => setBounds(w.id, snapToEdges(d.x, d.y, w.bounds.width, w.bounds.height))}
       onResizeStop={(_, __, ref, ___, position) => {
         setBounds(w.id, {
           width: parseInt(ref.style.width, 10),
