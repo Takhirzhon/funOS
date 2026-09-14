@@ -213,6 +213,21 @@ export const ConsoleIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+export const CardsIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    {/* Two cards, fanned. One card reads as a document; the fan is what says
+        "playing cards" at any size. */}
+    <g transform="rotate(-14 14 18)">
+      <rect x="4" y="7" width="16" height="21" rx="2" fill="#fff" stroke="#5a5a5a" strokeWidth="0.9" />
+      <path d="M12 12.5c1.6-2.4 4.6-1.4 4.6 1 0 2.6-3.4 4.6-4.6 6-1.2-1.4-4.6-3.4-4.6-6 0-2.4 3-3.4 4.6-1z" fill="#c00000" />
+    </g>
+    <g transform="rotate(10 20 18)">
+      <rect x="13" y="6" width="16" height="21" rx="2" fill="#fff" stroke="#5a5a5a" strokeWidth="0.9" />
+      <path d="M21 10.5c1.6 2 4.4 3.8 4.4 6.1 0 1.7-1.4 2.6-2.7 2.1-.7-.3-1.2-.9-1.4-1.6-.2.8.1 2 .9 3.1h-2.4c.8-1.1 1.1-2.3.9-3.1-.2.7-.7 1.3-1.4 1.6-1.3.5-2.7-.4-2.7-2.1 0-2.3 2.8-4.1 4.4-6.1z" fill="#000" />
+    </g>
+  </svg>
+);
+
 export const MineIcon = ({ size = 32, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>

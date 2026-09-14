@@ -2,6 +2,7 @@ import { lazy, type ComponentType, type CSSProperties } from "react";
 import { RecycleBinAppIcon } from "./appIcons";
 import {
   CalculatorIcon,
+  CardsIcon,
   ConsoleIcon,
   MineIcon,
   DocumentsIcon,
@@ -112,6 +113,14 @@ export const apps = {
     component: app(() => import("./Minesweeper"), "Minesweeper"),
     icon: MineIcon,
     defaultSize: { width: 340, height: 420 },
+    onDesktop: false,
+  },
+  solitaire: {
+    title: "Solitaire",
+    label: "Solitaire",
+    component: app(() => import("./Solitaire"), "Solitaire"),
+    icon: CardsIcon,
+    defaultSize: { width: 700, height: 520 },
     onDesktop: false,
   },
   calculator: {

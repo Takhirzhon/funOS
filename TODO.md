@@ -39,7 +39,6 @@ where the shape exists and the behaviour does not.
 
 Ordered by ratio of "makes the place feel alive" to effort.
 
-- [ ] **Solitaire** — the card flip animation is the whole point.
 - [ ] **Internet Explorer** — an iframe shell with the XP toolbar. Most sites
       refuse to be framed; pick ones that allow it and say so honestly rather
       than shipping a window that is blank for unexplained reasons.

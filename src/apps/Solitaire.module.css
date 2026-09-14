@@ -1,0 +1,161 @@
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #008000;
+  font-size: 11px;
+  user-select: none;
+}
+
+.table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+}
+
+.top {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.columns {
+  display: flex;
+  gap: 10px;
+}
+
+/* A tableau pile is a stack of overlapping cards, so it is a positioning
+ * context with each card pushed down by its index. The pile keeps a minimum
+ * height so an empty column is still a drop target you can see.
+ */
+.pile {
+  position: relative;
+  width: 71px;
+  min-height: 96px;
+}
+
+.card,
+.slot {
+  width: 71px;
+  height: 96px;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+/* An empty space: the outline of a card, not a card. */
+.slot {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.card {
+  position: absolute;
+  left: 0;
+  background: #fff;
+  border: 1px solid #4a4a4a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  cursor: default;
+  /* Cards are flipped by rotating them, so both faces have to be positioned in
+   * the same box and only one of them visible at a time. */
+  transform-style: preserve-3d;
+}
+
+.static {
+  position: relative;
+}
+
+.face,
+.back {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.face {
+  background: #fff;
+  padding: 3px 4px;
+  font-weight: bold;
+  line-height: 1.05;
+}
+
+/* The back pattern, which is the one part of a card you look at most of the
+ * game. Two crossed gradients get the blue lattice at a fraction of the cost
+ * of a bitmap.
+ */
+.back {
+  transform: rotateY(180deg);
+  background-color: #2b5fb0;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 6px);
+  border: 3px solid #fff;
+  border-radius: 5px;
+}
+
+.down {
+  transform: rotateY(180deg);
+}
+
+/* The flip. 260ms is slow enough to read as a card turning over and fast
+ * enough that dealing seven of them is not a wait.
+ */
+.flip {
+  transition: transform 260ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip {
+    transition: none;
+  }
+}
+
+.red { color: #c00000; }
+.black { color: #000000; }
+
+.corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.pip {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.selected {
+  outline: 2px solid #ffd700;
+  outline-offset: -2px;
+}
+
+.status {
+  flex: none;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px;
+  background: var(--luna-face);
+  border-top: 1px solid #d5d2c4;
+  font-size: 10px;
+  color: #333;
+}
+
+.win {
+  margin-left: 8px;
+  font-weight: bold;
+  color: #006000;
+}
