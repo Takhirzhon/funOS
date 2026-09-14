@@ -162,6 +162,15 @@ jobs:
         #           stopped being measured by anything at all, so one of them
         #           could quietly pull in a 300KB dependency and no gate would
         #           notice. Measured 4KB today; 48KB is generous on purpose.
+        #   maze  - the 3D Maze screensaver, exempted from the line above and
+        #           given its own. It is three.js, it is 126KB gzipped, and
+        #           that is the price of real 3D rather than a flat imitation
+        #           of it. Raising the general budget to 140 to accommodate one
+        #           chunk would have stopped it catching anything at all, which
+        #           is the whole failure mode this guard exists to avoid. It is
+        #           downloaded only by somebody who has picked that screensaver,
+        #           so first paint never sees it - but it still gets a ceiling,
+        #           or three.js growing a third would go unremarked.
         #   first - what a visitor downloads before anything renders: the entry
         #           JS, the entry CSS and the wallpaper. Worth stating plainly,
         #           because the wallpaper is 184KB and is therefore larger than
@@ -188,12 +197,16 @@ jobs:
           # next person hunting through nine files to find out who grew.
           chunk=0
           chunk_name="(none)"
+          maze=0
           for file in dist/assets/*.js; do
-            case "$(basename "$file")" in index-*) continue ;; esac
+            name=$(basename "$file")
+            case "$name" in index-*) continue ;; esac
             size=$(( $(gzip -9 -c "$file" | wc -c) / 1024 ))
+            # The one exemption, measured separately rather than skipped.
+            case "$name" in Maze3D-*) maze=$size; continue ;; esac
             if [ "$size" -gt "$chunk" ]; then
               chunk=$size
-              chunk_name=$(basename "$file")
+              chunk_name=$name
             fi
           done
 
@@ -202,6 +215,7 @@ jobs:
           echo "entry js     (gz): ${js}KB / 120KB"
           echo "entry css    (gz): ${css}KB / 64KB"
           echo "largest app  (gz): ${chunk}KB / 48KB  (${chunk_name})"
+          echo "3D Maze      (gz): ${maze}KB / 160KB  (three.js, loaded on demand)"
           echo "first paint  (gz): ${first}KB / 400KB  (js + css + wallpaper)"
           echo "--- context, not gated ---"
           echo "all assets excl. maps: ${total}KB"
@@ -217,6 +231,10 @@ jobs:
           fi
           if [ "$chunk" -gt 48 ]; then
             echo "::error::${chunk_name} is ${chunk}KB gzipped, over the 48KB per-app budget"
+            fail=1
+          fi
+          if [ "$maze" -gt 160 ]; then
+            echo "::error::the 3D Maze chunk is ${maze}KB gzipped, over 160KB - three.js grew, or something else landed in it"
             fail=1
           fi
           if [ "$first" -gt 400 ]; then

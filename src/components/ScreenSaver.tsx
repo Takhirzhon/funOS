@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useThemeStore, type Saver } from "../store/themeStore";
 import { useSessionStore } from "../store/sessionStore";
 import styles from "./ScreenSaver.module.css";
 
 /* Three screensavers on one canvas, and the idle timer that starts them.
  *
- * 3D Maze is on the roadmap and is not here: it needs a raycaster and a texture
- * set, and a flat approximation of it would be a different program wearing its
- * name. Mystify takes its place - also an XP screensaver, also unmistakable,
- * and honestly buildable in thirty lines.
+ * Three of them are a 2D canvas and share one animation loop. 3D Maze is not:
+ * it is WebGL, it is three.js, and it is ~150KB gzipped - so it lives behind a
+ * lazy import and is downloaded only by someone who has actually chosen it.
+ * Nothing else here pays for it.
  */
 
 type Draw = (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => void;
@@ -153,7 +153,11 @@ const mystify: Draw = (ctx, w, h, t) => {
   });
 };
 
-const DRAWERS: Record<Exclude<Saver, "none">, Draw> = {
+/* Loaded on selection, not on load. This one import is the reason three.js
+ * never touches the entry bundle. */
+const Maze3D = lazy(async () => ({ default: (await import("./savers/Maze3D")).Maze3D }));
+
+const DRAWERS: Record<Exclude<Saver, "none" | "maze">, Draw> = {
   starfield,
   pipes: pipesDraw,
   mystify,
@@ -166,7 +170,8 @@ export function SaverCanvas({ saver, className }: { saver: Saver; className?: st
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx || saver === "none") return;
+    /* The 3D saver renders itself; this effect is only for the 2D three. */
+    if (!canvas || !ctx || saver === "none" || saver === "maze") return;
 
     /* Sized from the element rather than from the window: the same component
      * runs full screen and inside a 150px preview. */
@@ -194,6 +199,15 @@ export function SaverCanvas({ saver, className }: { saver: Saver; className?: st
   }, [saver]);
 
   if (saver === "none") return <div className={className} style={{ background: "#000" }} />;
+  if (saver === "maze") {
+    return (
+      /* Black while three.js arrives, which on a screensaver is indistinguishable
+       * from the screensaver having just started. */
+      <Suspense fallback={<div className={className} style={{ background: "#000" }} />}>
+        <Maze3D className={className} />
+      </Suspense>
+    );
+  }
   return <canvas ref={ref} className={className} />;
 }
 

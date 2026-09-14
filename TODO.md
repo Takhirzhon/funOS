@@ -49,9 +49,6 @@ Ordered by ratio of "makes the place feel alive" to effort.
 
 ## The details nobody asks for and everybody notices
 
-- [ ] **3D Maze.** The other two screensavers shipped; this one needs a
-      raycaster and a texture set, and a flat approximation would be a
-      different program wearing its name. Mystify stands in for now.
 
 ---
 
@@ -70,10 +67,11 @@ made rather than a thing that happened. Four of them:
 
 | | now | ceiling | what it catches |
 |---|---|---|---|
-| entry JS | 91KB | 120KB | a heavy library imported by the shell |
-| entry CSS | 40KB | 64KB | a second UI kit next to xp.css |
+| entry JS | 97KB | 120KB | a heavy library imported by the shell |
+| entry CSS | 42KB | 64KB | a second UI kit next to xp.css |
 | largest app chunk | 3KB | 48KB | one app pulling in something enormous |
-| first paint | 315KB | 400KB | the total a visitor waits for |
+| 3D Maze chunk | 126KB | 160KB | three.js, exempted and watched separately |
+| first paint | 323KB | 400KB | the total a visitor waits for |
 
 The entry is structural now: every app is a lazy import, so adding
 applications does not grow it. Add them to `apps/registry.ts` with
