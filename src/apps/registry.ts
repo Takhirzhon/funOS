@@ -1,12 +1,4 @@
-import type { ComponentType, CSSProperties } from "react";
-import { Notepad } from "./Notepad";
-import { MyComputer } from "./MyComputer";
-import { Explorer } from "./Explorer";
-import { ImageViewer } from "./ImageViewer";
-import { CommandPrompt } from "./CommandPrompt";
-import { Paint } from "./Paint";
-import { About } from "./About";
-import { RecycleBin } from "./RecycleBin";
+import { lazy, type ComponentType, type CSSProperties } from "react";
 import { RecycleBinAppIcon } from "./appIcons";
 import {
   ConsoleIcon,
@@ -24,12 +16,30 @@ export type IconComponent = ComponentType<{
   className?: string;
 }>;
 
+export type AppComponent = ComponentType<Record<string, unknown>>;
+
+/* Every app is code-split.
+ *
+ * The entry bundle is capped at 120KB gzipped by CI and the applications are
+ * what fill it - Paint alone is a canvas, a tool box and a palette that nobody
+ * who only wants to read a text file should have to download. Splitting here
+ * and nowhere else works because this file is the only thing that names an
+ * app's component: the desktop, the taskbar and the Start menu all reach it
+ * through this table, and none of them ever did more than render it.
+ *
+ * The wrapper exists because `lazy` wants a module with a default export and
+ * these are all named ones - writing that reshaping out at each call site is
+ * the kind of noise that gets copied wrong on the fifth app.
+ */
+const app = (load: () => Promise<Record<string, unknown>>, name: string): AppComponent =>
+  lazy(async () => ({ default: (await load())[name] as AppComponent }));
+
 type AppDef = {
   /** Window caption. */
   title: string;
   /** Shorter name for the desktop and the Start menu, where the caption is too long. */
   label: string;
-  component: ComponentType<Record<string, unknown>>;
+  component: AppComponent;
   icon: IconComponent;
   defaultSize: { width: number; height: number };
   /** Whether it gets a desktop icon. Everything appears in the Start menu. */
@@ -47,7 +57,7 @@ export const apps = {
   myComputer: {
     title: "My Computer",
     label: "My Computer",
-    component: MyComputer as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./MyComputer"), "MyComputer"),
     icon: MyComputerIcon,
     defaultSize: { width: 560, height: 400 },
     onDesktop: true,
@@ -55,7 +65,7 @@ export const apps = {
   explorer: {
     title: "My Documents",
     label: "My Documents",
-    component: Explorer as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./Explorer"), "Explorer"),
     icon: DocumentsIcon,
     defaultSize: { width: 660, height: 460 },
     onDesktop: true,
@@ -65,7 +75,7 @@ export const apps = {
   imageViewer: {
     title: "Windows Picture Viewer",
     label: "Picture Viewer",
-    component: ImageViewer as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./ImageViewer"), "ImageViewer"),
     icon: PictureIcon,
     defaultSize: { width: 620, height: 480 },
     onDesktop: false,
@@ -73,7 +83,7 @@ export const apps = {
   recycleBin: {
     title: "Recycle Bin",
     label: "Recycle Bin",
-    component: RecycleBin as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./RecycleBin"), "RecycleBin"),
     icon: RecycleBinAppIcon,
     defaultSize: { width: 480, height: 340 },
     onDesktop: true,
@@ -81,7 +91,7 @@ export const apps = {
   paint: {
     title: "untitled - Paint",
     label: "Paint",
-    component: Paint as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./Paint"), "Paint"),
     icon: PaintIcon,
     defaultSize: { width: 720, height: 560 },
     onDesktop: false,
@@ -89,7 +99,7 @@ export const apps = {
   commandPrompt: {
     title: "Command Prompt",
     label: "Command Prompt",
-    component: CommandPrompt as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./CommandPrompt"), "CommandPrompt"),
     icon: ConsoleIcon,
     defaultSize: { width: 620, height: 380 },
     onDesktop: false,
@@ -97,7 +107,7 @@ export const apps = {
   notepad: {
     title: "Untitled - Notepad",
     label: "Notepad",
-    component: Notepad as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./Notepad"), "Notepad"),
     icon: NotepadIcon,
     defaultSize: { width: 520, height: 380 },
     onDesktop: true,
@@ -105,7 +115,7 @@ export const apps = {
   about: {
     title: "About funOS",
     label: "About funOS",
-    component: About as ComponentType<Record<string, unknown>>,
+    component: app(() => import("./About"), "About"),
     icon: InfoIcon,
     defaultSize: { width: 420, height: 300 },
     onDesktop: true,

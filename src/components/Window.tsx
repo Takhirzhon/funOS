@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Rnd } from "react-rnd";
 import { TASKBAR_HEIGHT, useWindowStore, type WindowState } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
@@ -129,9 +130,17 @@ export function Window({ window: w }: Props) {
           </div>
         </div>
         <div className={`window-body ${styles.body}`}>
-          {/* windowId lets an app talk about its own window - Notepad renames
-              the caption to whatever file it has open. */}
-          <Body {...(w.props ?? {})} windowId={w.id} />
+          {/* Every app is a lazy import, so opening one can take a moment on a
+              cold cache. The fallback is deliberately the empty window rather
+              than a spinner: the frame, the caption and the task button are
+              already there, which is what "the program is starting" looks
+              like on a desktop. A spinner inside a window that already exists
+              reads as an error. */}
+          <Suspense fallback={<div className={styles.loading} />}>
+            {/* windowId lets an app talk about its own window - Notepad renames
+                the caption to whatever file it has open. */}
+            <Body {...(w.props ?? {})} windowId={w.id} />
+          </Suspense>
         </div>
       </div>
     </Rnd>

@@ -160,3 +160,11 @@
   flex-direction: column;
   background: var(--luna-face);
 }
+
+/* The gap while a lazily-imported app arrives. Same beige as a window body, so
+ * the window simply looks empty for a moment instead of flashing white.
+ */
+.loading {
+  flex: 1;
+  background: var(--luna-face);
+}

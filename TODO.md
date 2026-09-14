@@ -72,12 +72,11 @@ back. Both are wired up anyway — they work on some Linux desktops and in kiosk
 mode, and cost nothing when they do not. The shortcut that always arrives is
 `Ctrl+Alt+Left/Right`. Worth knowing before this gets filed as a bug.
 
-**The bundle budget is close, and it is now the binding constraint.** CI fails
-the build over 120KB of gzipped entry JS; Paint and the Command Prompt took it
-to **103KB**. Roughly two more applications fit. `apps/registry.ts` is the
-place to split: every app is reached through one lookup, so making `component`
-a `lazy()` import is a change to that file, plus a Suspense boundary in
-`components/Window.tsx`, and nothing else.
+**The bundle budget has room again, and it is worth keeping.** CI fails the
+build over 120KB of gzipped entry JS and 64KB of CSS. Every app is now a lazy
+import, which took the entry from 103KB to **91KB** and put each application in
+its own chunk. Keep new apps out of the entry: add them to `apps/registry.ts`
+with `app(() => import("./Thing"), "Thing")` and they stay out by construction.
 
 **The desktop and Explorer drag differently, on purpose.** The desktop uses
 pointer events, because it is moving an icon to a *position*; Explorer uses
