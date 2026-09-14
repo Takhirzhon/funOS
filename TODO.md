@@ -11,201 +11,82 @@ something.
 *look*: it targets Windows 10/11 chrome. Where this list says "like daedalOS" it
 means the capability, never the styling.
 
-Checked items are done and live on <https://khirokhito.tech>. Merging to main
-deploys, so nothing here is "done" until it is on that URL.
+This file lists what is **not** done. Finished work is deleted from it rather
+than ticked off — the commit log is the record of what was built and why, and a
+roadmap that is nine-tenths checkboxes stops being read. What survives below the
+list is the handful of decisions and constraints that are still binding.
+
+Merging to main deploys, so nothing here counts as done until it is on
+<https://khirokhito.tech>.
 
 ---
 
-## Phase 0 — the foundation everything else inherits
+## Unfinished shell work
 
-Doing this first because every item in later phases is cheaper afterwards and
-more expensive if skipped. Right now each component carries its own inline
-`style={{...}}` object, so there is no such thing as "the taskbar colour" — there
-are four spellings of it in three files.
+Small leftovers from the parts that are otherwise finished. Each one is a place
+where the shape exists and the behaviour does not.
 
-- [x] **Fix the font.** The single most visible defect, and worse than it
-      looked: `xp.css` sets `body{font-family:Arial}` — which beats `:root` — and
-      points every *control* (`button`, `input`, `select`, `.status-bar-field`,
-      `ul.tree-view`) at **"Pixelated MS Sans Serif"**, the Windows *95/98*
-      bitmap face. So the shell was Arial and the widgets were 1998. XP is
-      Tahoma 8pt (11px) throughout. Tahoma is not redistributable, so it is a
-      stack — local Tahoma, then Verdana, then DejaVu Sans — rather than a
-      ~100KB webfont against a 120KB budget. Captions stay Trebuchet MS, which
-      xp.css gets right except that it declares no fallback at all, so a machine
-      without Trebuchet was rendering every title bar in the default serif.
-- [x] **Move styling out of JSX.** Shell components now have `*.module.css` and
-      the Luna palette lives in custom properties in `index.css`. Phase 4's
-      theme switcher is now an override of that one block. The four *apps* still
-      style inline; they get done as each is rewritten against the VFS.
-- [x] **Luna scrollbars.** `xp.css` ships Windows *98* scrollbars — grey, square,
-      with a dithered trough. Replaced with Luna's blue gradient thumb, plus
-      `scrollbar-color` so Firefox at least gets the palette.
-- [x] **One source of truth per app.** `apps/registry.ts` now owns the icon and
-      the short label, so the desktop, the task button and the Start menu cannot
-      disagree about what an app is called or looks like. The icon set is inline
-      SVG on purpose: an authentic raster set at 16/32/48px is several hundred
-      KB before it draws anything, and the entry budget is 120KB.
+- [ ] **All Programs flyout.** The Start menu button is there and disabled.
+- [ ] **Open/Save dialogs.** Notepad's Open and Save As ask for a path as text,
+      which works and is not what anyone expects. They want a real file picker
+      built on Explorer's list — the same component, in a dialog.
+- [ ] **Properties dialog.** Every context menu has a greyed Properties row
+      waiting for it.
+- [ ] **Binary round-trip.** The file system can hold bytes and nothing *writes*
+      them except the importer. Paint is what exercises the other direction.
 
-## Phase 1 — Luna chrome
-
-The "cheap copy" complaint is almost entirely this phase.
-
-- [x] **Taskbar.** Eleven-stop gradient, the 1px top highlight, grips between
-      sections, task buttons that show the app's icon and are genuinely sunken
-      when active.
-- [x] **Start button.** Was a `clipPath: polygon()` trapezoid — the wrong shape,
-      and clip-path was cutting off the gloss and the shadow with it. Now a
-      rounded cap flush with the left screen edge, over the right green, with a
-      pressed state.
-- [x] **System tray.** Recessed band in its own blue with the bevel on its left
-      edge, three notification icons, and the clock inside it rather than
-      painting a second gradient that left a seam.
-- [x] **Quick Launch.** Show Desktop works; the IE button is disabled until
-      there is a browser to launch.
-- [x] **Window chrome — inactive state.** xp.css has no concept of an unfocused
-      window, which is why the old code reached for `saturate(0.4)` over the
-      active gradient and bleached the caption and the close button along with
-      it. Now a real Luna inactive caption, plus a drop shadow that says which
-      window is on top — on the react-rnd wrapper, because xp.css builds the
-      entire blue frame out of stacked `inset` shadows and an outer shadow on
-      the same element deletes it.
-- [x] **Start menu.** Header with the user tile, gold hairlines, two columns,
-      the places list, the footer with Log Off / Turn Off Computer. Entries with
-      nothing behind them render disabled rather than being omitted — the shape
-      of the menu is half of what makes it recognisable, and a greyed row is an
-      honest "not built yet".
-- [x] **Desktop icon look.** Drop shadow, double text shadow so labels survive a
-      light wallpaper, and selection that follows the icon's silhouette instead
-      of boxing it. Selection state lifted out of the icons: it was `useState`
-      per icon cleared on blur, so two icons could both look selected.
-- [x] **A real wallpaper.** The actual Bliss photograph, 1920x1080 WebP at 188KB,
-      with the SVG reconstruction still layered underneath it — so the desktop
-      is never a white rectangle while 188KB downloads, and never one at all on
-      a browser without WebP. See *Assets* below for the licence, which is not
-      what the wallpaper sites imply.
-- [x] **Desktop icon interaction.** Drag to reposition with snap-to-lattice,
-      marquee selection, and positions that survive a reload. The field stopped
-      being a CSS grid to get there — icons carry their own coordinates now, and
-      the lattice is applied on drop.
-- [x] **Window animations.** Minimize and restore no longer teleport. The
-      window stays mounted and swaps between two animation classes, which is
-      also what makes minimize preserve the app's state instead of throwing it
-      away — the old code unmounted on the frame the flag flipped.
-- [x] **Arrange icons by name / auto-arrange.** In the desktop context menu.
-- [ ] **All Programs flyout.** The button is there and disabled; the flyout is
-      not built.
-
-## Phase 2 — the parts that make it an OS
-
-Without these it is a themed page with four dialogs on it. With them it is a
-desktop.
-
-- [x] **Virtual file system.** `src/fs/` and `store/fsStore.ts`. Paths are
-      canonical with forward slashes internally and backslashes only where a
-      person sees them. Entries are a **flat map keyed by path**, not a tree:
-      rename, move and recursive delete are the operations a tree of objects
-      gets wrong, and against a flat map they are all key rewrites. Persisted to
-      IndexedDB as one blob, debounced, degrading to "no persistence" rather
-      than refusing to boot. Hydration replaces the seed wholesale — merging
-      would resurrect every seeded file the moment someone deleted one.
-- [x] **Context menus.** Desktop, icon, taskbar button and title bar, with
-      submenus, viewport flipping and Escape. One menu globally rather than one
-      per component: two open at once is a bug you only see in a screenshot, and
-      every local copy has to re-solve dismissal and edge flipping. Rows with
-      nothing behind them yet are disabled rather than omitted — Cut, Copy,
-      Rename, Properties — for the same reason the Start menu keeps its greyed
-      rows. Arrange Icons By works.
-- [x] **File Explorer.** Folder tree, item list, address bar you can type a path
-      into, Back/Forward/Up, New Folder, New Text Document, Rename, Delete, and
-      a status bar. History is a stack and a cursor, so navigating from the
-      middle truncates what was ahead of it. Double-clicking a file opens it in
-      Notepad.
-- [x] **Explorer view modes.** Thumbnails, Icons, List and Details, from the
-      View menu or by cycling the toolbar button. Three of the four are pure CSS
-      on one container — only Details needs different markup, because it needs
-      cells. Its header row is `position: sticky`, so scrolling a long folder
-      does not scroll the column names away.
-- [x] **Window manager.** Edge snapping on drop, Cascade and Tile from the
-      taskbar's own context menu, and an Alt+Tab switcher with the XP icon
-      strip. MRU order comes free from `zIndex`, since focusing raises.
-
-      One thing to know before filing a bug: **on Windows, Alt+Tab and Alt+F4
-      never reach the page.** The host window manager claims both before the
-      browser sees them, and `preventDefault` cannot take them back. Both are
-      wired up regardless — they work on some Linux desktops and in kiosk mode,
-      and cost nothing when they do not. The shortcut that always arrives is
-      `Ctrl+Alt+Left/Right`, which nothing else has claimed.
-- [x] **Dialogs — prompt, confirm, error.** Real windows in the desktop rather
-      than `prompt()`/`confirm()`/`alert()`, which cannot be styled, drop out of
-      the top of the viewport, and block the main thread so every animation
-      stops while they are up. Resolved through a promise, so calling code still
-      reads `if (await confirmDialog(...))`.
-- [ ] **Dialogs — Open/Save and Properties.** Notepad's Open and Save As ask for
-      a path as text. They want a real file picker built on Explorer's list.
-- [x] **Drag and drop.** Explorer items drag onto folders and onto the desktop
-      to move; real files dragged in from the host operating system are
-      imported. Getting here needed the desktop to stop being only a launcher:
-      it now shows `C:\Documents and Settings\User\Desktop` alongside the
-      shortcuts, which is what makes "drop a file on the desktop" mean anything.
-- [x] **Drag out of the desktop into Explorer.** The two drag systems still do
-      not see each other and neither was converted - the desktop would lose free
-      positioning, or Explorer would lose the ability to accept files from the
-      host OS. Instead a pointer drag that leaves the desktop asks
-      `document.elementFromPoint` what is underneath and looks for a
-      `data-drop-path` attribute; anything that wants dropped files advertises
-      itself with one. The dragged icon needs `pointer-events: none` or it is
-      the only thing hit-testing ever finds — it sits under the cursor for the
-      whole gesture.
-- [x] **Binary files.** `FsEntry` grew `bytes` and `mime`, and the *presence* of
-      `bytes` is what makes a file binary — there is no `encoding` field that
-      can get out of step with the data. Added alongside `content` rather than
-      replacing it with a `string | Blob` union: the file system is live and
-      holding real files, so an additive field needs no migration where a union
-      would need migration code testable only against data I do not have.
-      `Uint8Array` rather than `Blob`, because reading a Blob is asynchronous
-      and every caller from Notepad to the thumbnail grid reads during render.
-
-      Dropped images open in a small picture viewer — a binary file that nothing
-      can open is not a feature. Notepad refuses them by name instead of filling
-      itself with mojibake, which reads as a corrupt file rather than as the
-      wrong program.
-- [ ] **Binary round-trip.** Nothing *writes* bytes yet except the importer.
-      Paint is what exercises the other direction.
-
-## Phase 3 — applications
+## Applications
 
 Ordered by ratio of "makes the place feel alive" to effort.
 
-- [x] **Notepad** — reads and writes the VFS. New, Open, Save, Save As, a dirty
-      marker in the caption, and a prompt before discarding unsaved changes.
-      The window caption is set through the store, so the title bar and the task
-      button cannot disagree about which file is open.
-- [x] **File Explorer** — see Phase 2.
-- [x] **Picture Viewer** — opens what the importer brings in. Fit-to-window and
-      actual size, on the grey surround every picture viewer has, because a
-      white one makes every light image look like it has no edges.
-- [ ] **Command Prompt** — `dir`, `cd`, `type`, `echo`, `cls`. Reads the VFS.
+- [ ] **Command Prompt** — `dir`, `cd`, `type`, `echo`, `cls`. Reads the VFS, so
+      it is mostly a parser and a scrollback.
 - [ ] **Paint** — canvas, the tool palette, save to the VFS as PNG.
 - [ ] **Minesweeper** — small, self-contained, and instantly recognisable.
 - [ ] **Solitaire** — the card flip animation is the whole point.
 - [ ] **Calculator** — Standard and Scientific.
 - [ ] **Internet Explorer** — an iframe shell with the XP toolbar. Most sites
-      refuse to be framed; pick ones that allow it and say so honestly.
+      refuse to be framed; pick ones that allow it and say so honestly rather
+      than shipping a window that is blank for unexplained reasons.
 - [ ] **Media Player** — audio from the VFS, with the visualiser.
 - [ ] **Control Panel** — Display Properties first, so the wallpaper and the
       theme become user-changeable.
 
-## Phase 4 — the details nobody asks for and everybody notices
+## The details nobody asks for and everybody notices
 
 - [ ] **Boot splash and login screen.** The progress bar, then the blue user-tile
       screen.
 - [ ] **Sounds.** Startup chime, ding on error, the click. Muted by default —
       autoplay policy blocks it anyway, so it needs a first-gesture unlock.
-- [ ] **Themes.** Luna Blue, Olive Green, Silver. Cheap once Phase 0 puts the
-      palette in custom properties, absurd before that.
+- [ ] **Themes.** Luna Blue, Olive Green, Silver. The palette is already in
+      custom properties in one block of `index.css`, so this is an override
+      rather than a rewrite.
 - [ ] **Screensavers.** Pipes, 3D Maze, Starfield.
 - [ ] **Balloon tips** from the tray.
 - [ ] **Shutdown.** The dimmed overlay and the three-button dialog.
+
+---
+
+## Constraints that are still binding
+
+**Alt+Tab and Alt+F4 never reach the page on Windows.** The host window manager
+claims both before the browser sees them, and `preventDefault` cannot take them
+back. Both are wired up anyway — they work on some Linux desktops and in kiosk
+mode, and cost nothing when they do not. The shortcut that always arrives is
+`Ctrl+Alt+Left/Right`. Worth knowing before this gets filed as a bug.
+
+**The bundle budget is close.** CI fails the build over 120KB of gzipped entry
+JS and 64KB of CSS; the last measurement was 100KB and 45KB. Paint, with a
+canvas and a palette, is the app likely to cross it. `apps/registry.ts` is the
+right place to start splitting — every app is already reached through one
+lookup, so lazy-loading them is a change to that file and nothing else.
+
+**The desktop and Explorer drag differently, on purpose.** The desktop uses
+pointer events, because it is moving an icon to a *position*; Explorer uses
+HTML5 drag and drop, because it is moving a file into a *folder* and has to
+accept files from the host OS. They meet through a `data-drop-path` attribute
+and `document.elementFromPoint`. Converting either one to the other loses
+something real — check `store/dndStore.ts` before trying.
 
 ---
 
@@ -227,17 +108,15 @@ the layer underneath: deleting one line in `index.css` reverts it.
 **The icons stay ours.** Drawn as SVG to the XP grammar — one light source at
 the upper left, a single outline, soft gradients per surface. Partly the same
 licence question, mostly the budget: an authentic raster set at 16/32/48px is
-several hundred KB before it draws anything, and the entry bundle is capped at
-120KB. `apps/registry.ts` owns the mapping, so swapping the source later does
-not touch a single call site.
+several hundred KB before it draws anything. `apps/registry.ts` owns the
+mapping, so swapping the source later does not touch a single call site.
 
 ---
 
 ## Ground rules
 
-- CI gates every merge: `tsc -b`, eslint, the Vite build, a 120KB gzipped entry
-  budget and a 64KB CSS budget. The budgets are real constraints on this list —
-  a bitmap icon set blows through them, an SVG sprite does not.
+- CI gates every merge: `tsc -b`, eslint, the Vite build, the two size budgets,
+  a gitleaks scan, and a real build of the production image with a smoke test.
 - Merging to main deploys within ~90 seconds. There is no staging.
-- Each phase should leave the site in a shippable state. No branch that takes
+- Each change should leave the site in a shippable state. No branch that takes
   the desktop apart for a week.
