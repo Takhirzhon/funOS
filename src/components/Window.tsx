@@ -1,5 +1,7 @@
 import { Rnd } from "react-rnd";
 import { useWindowStore, type WindowState } from "../store/windowStore";
+import { useMenuStore } from "../store/menuStore";
+import { windowSystemMenu } from "./windowSystemMenu";
 import { apps } from "../apps/registry";
 import styles from "./Window.module.css";
 
@@ -15,6 +17,7 @@ export function Window({ window: w }: Props) {
   const toggleMaximize = useWindowStore((s) => s.toggleMaximize);
   const minimize = useWindowStore((s) => s.minimize);
   const focusedId = useWindowStore((s) => s.focusedId);
+  const openMenu = useMenuStore((s) => s.open);
 
   const app = apps[w.appId as keyof typeof apps];
   if (!app) return null;
@@ -72,6 +75,10 @@ export function Window({ window: w }: Props) {
         <div
           className={`title-bar ${styles.titleBar}`}
           onDoubleClick={() => toggleMaximize(w.id)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            openMenu(e.clientX, e.clientY, windowSystemMenu(w));
+          }}
         >
           <div className="title-bar-text">{w.title}</div>
           <div className="title-bar-controls">

@@ -2,6 +2,7 @@ import "./App.css";
 import { Desktop } from "./components/Desktop";
 import { Window } from "./components/Window";
 import { Taskbar } from "./components/Taskbar";
+import { ContextMenu } from "./components/ContextMenu";
 import { useWindowStore } from "./store/windowStore";
 
 export default function App() {
@@ -16,6 +17,9 @@ export default function App() {
         ))}
       </div>
       <Taskbar />
+      {/* Last, and mounted once: the context menu has to draw over every window
+          and over the taskbar, and there should only ever be one of it. */}
+      <ContextMenu />
     </>
   );
 }

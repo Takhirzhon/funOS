@@ -1,0 +1,76 @@
+/* The XP context menu.
+ *
+ * Two details do most of the work and both are easy to leave out: the icon
+ * gutter down the left, which is why every label lines up whether or not it has
+ * an icon, and the fact that the highlight is a full-width blue bar rather than
+ * a rounded pill.
+ */
+
+.menu {
+  position: fixed;
+  z-index: 20000;
+  min-width: 150px;
+  padding: 2px;
+  background: #fff;
+  border: 1px solid #aca899;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.35);
+  font-size: 11px;
+  color: #000;
+  user-select: none;
+}
+
+.item {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 20px;
+  padding: 0 18px 0 6px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.item:hover:not(.disabled),
+.item.hovered:not(.disabled) {
+  background: #316ac5;
+  color: #fff;
+}
+
+.disabled {
+  color: #aca899;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+/* The icon gutter. Fixed width whether or not this row has an icon - that is
+ * the whole point of it. */
+.gutter {
+  flex: none;
+  width: 18px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrow {
+  flex: none;
+  font-size: 8px;
+  opacity: 0.8;
+  margin-left: 8px;
+}
+
+.separator {
+  height: 1px;
+  margin: 3px 2px 3px 24px;
+  background: #d8d5cc;
+}

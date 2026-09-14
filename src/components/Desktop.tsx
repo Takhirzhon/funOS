@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useWindowStore } from "../store/windowStore";
@@ -17,6 +18,7 @@ import {
   useDesktopStore,
   type Pos,
 } from "../store/desktopStore";
+import { useMenuStore } from "../store/menuStore";
 import styles from "./Desktop.module.css";
 
 /* The hit box of one icon: narrower than a grid cell, because the gap between
@@ -43,6 +45,8 @@ export function Desktop() {
   const selection = useDesktopStore((s) => s.selection);
   const select = useDesktopStore((s) => s.select);
   const setPosition = useDesktopStore((s) => s.setPosition);
+  const resetPositions = useDesktopStore((s) => s.resetPositions);
+  const openMenu = useMenuStore((s) => s.open);
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState(8);
@@ -179,9 +183,73 @@ export function Desktop() {
     select([]);
   };
 
+  const launch = (id: AppId) =>
+    open(id, { title: apps[id].title, bounds: apps[id].defaultSize });
+
+  /* Arrange Icons By > Name. Writes the sorted order back as real positions
+   * rather than sorting the render list, so the next drag starts from where the
+   * icons visibly are.
+   */
+  const arrangeByName = () => {
+    [...desktopApps]
+      .sort((a, b) => apps[a].label.localeCompare(apps[b].label))
+      .forEach((id, index) => setPosition(id, defaultPosition(index, rows)));
+  };
+
+  const desktopMenu = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    select([]);
+    openMenu(e.clientX, e.clientY, [
+      {
+        kind: "item",
+        label: "Arrange Icons By",
+        submenu: [
+          { kind: "item", label: "Name", onClick: arrangeByName },
+          /* "Auto Arrange" drops every stored position, which puts the field
+           * back on the default column-major layout - which is exactly what
+           * auto-arrange means. */
+          { kind: "item", label: "Auto Arrange", onClick: resetPositions },
+        ],
+      },
+      /* Refresh has nothing to re-read yet - there is no file system behind the
+       * desktop - so it does the only part of its job that applies. It becomes
+       * real in Phase 2. */
+      { kind: "item", label: "Refresh", onClick: () => select([]) },
+      { kind: "separator" },
+      { kind: "item", label: "Paste", disabled: true },
+      { kind: "item", label: "Paste Shortcut", disabled: true },
+      { kind: "separator" },
+      { kind: "item", label: "New", disabled: true },
+      { kind: "separator" },
+      { kind: "item", label: "Properties", disabled: true },
+    ]);
+  };
+
+  const iconMenu = (id: AppId) => (e: ReactMouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    select([id]);
+    openMenu(e.clientX, e.clientY, [
+      { kind: "item", label: "Open", bold: true, onClick: () => launch(id) },
+      { kind: "separator" },
+      { kind: "item", label: "Cut", disabled: true },
+      { kind: "item", label: "Copy", disabled: true },
+      { kind: "separator" },
+      { kind: "item", label: "Delete", disabled: true },
+      { kind: "item", label: "Rename", disabled: true },
+      { kind: "separator" },
+      { kind: "item", label: "Properties", disabled: true },
+    ]);
+  };
+
   return (
     <div className="desktop">
-      <div ref={fieldRef} className={styles.field} onPointerDown={beginMarquee}>
+      <div
+        ref={fieldRef}
+        className={styles.field}
+        onPointerDown={beginMarquee}
+        onContextMenu={desktopMenu}
+      >
         {desktopApps.map((id) => {
           const app = apps[id];
           const Icon = app.icon;
@@ -197,7 +265,8 @@ export function Desktop() {
               y={pos.y}
               dragging={isDragging}
               onPointerDown={beginDrag(id)}
-              onOpen={() => open(id, { title: app.title, bounds: app.defaultSize })}
+              onContextMenu={iconMenu(id)}
+              onOpen={() => launch(id)}
             />
           );
         })}

@@ -89,8 +89,7 @@ The "cheap copy" complaint is almost entirely this phase.
       window stays mounted and swaps between two animation classes, which is
       also what makes minimize preserve the app's state instead of throwing it
       away — the old code unmounted on the frame the flag flipped.
-- [ ] **Arrange icons by name / auto-arrange.** `resetPositions()` exists in the
-      store; it needs the context menu in Phase 2 before anyone can call it.
+- [x] **Arrange icons by name / auto-arrange.** In the desktop context menu.
 - [ ] **All Programs flyout.** The button is there and disabled; the flyout is
       not built.
 
@@ -102,9 +101,13 @@ desktop.
 - [ ] **Virtual file system.** Paths, folders, files, persistence in IndexedDB.
       Everything below depends on it, which is why it is first in this phase and
       why it is worth designing rather than growing.
-- [ ] **Context menus.** Right-click on the desktop, on an icon, on a taskbar
-      button, on a window title bar. Nothing in funOS responds to right-click
-      today, and it is the first thing anyone tries.
+- [x] **Context menus.** Desktop, icon, taskbar button and title bar, with
+      submenus, viewport flipping and Escape. One menu globally rather than one
+      per component: two open at once is a bug you only see in a screenshot, and
+      every local copy has to re-solve dismissal and edge flipping. Rows with
+      nothing behind them yet are disabled rather than omitted — Cut, Copy,
+      Rename, Properties — for the same reason the Start menu keeps its greyed
+      rows. Arrange Icons By works.
 - [ ] **File Explorer.** Tree on the left, list on the right, address bar,
       back/forward, view modes.
 - [ ] **Window manager.** Snapping, cascade/tile, Alt+Tab, Alt+F4, double-click

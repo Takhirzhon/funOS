@@ -1,4 +1,8 @@
-import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import type {
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+} from "react";
 import styles from "./DesktopIcon.module.css";
 
 type Props = {
@@ -10,6 +14,7 @@ type Props = {
   y: number;
   dragging: boolean;
   onPointerDown: (e: ReactPointerEvent<HTMLButtonElement>) => void;
+  onContextMenu: (e: ReactMouseEvent<HTMLButtonElement>) => void;
   onOpen: () => void;
 };
 
@@ -28,6 +33,7 @@ export function DesktopIcon({
   y,
   dragging,
   onPointerDown,
+  onContextMenu,
   onOpen,
 }: Props) {
   const classes = [styles.icon];
@@ -40,6 +46,7 @@ export function DesktopIcon({
       className={classes.join(" ")}
       style={{ transform: `translate(${x}px, ${y}px)` }}
       onPointerDown={onPointerDown}
+      onContextMenu={onContextMenu}
       onDoubleClick={(e) => {
         e.stopPropagation();
         onOpen();

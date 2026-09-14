@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWindowStore } from "../store/windowStore";
+import { useMenuStore } from "../store/menuStore";
+import { windowSystemMenu } from "./windowSystemMenu";
 import { apps, type AppId } from "../apps/registry";
 import { StartButton } from "./StartButton";
 import { StartMenu } from "./StartMenu";
@@ -18,6 +20,7 @@ export function Taskbar() {
   const focusedId = useWindowStore((s) => s.focusedId);
   const toggleFromTaskbar = useWindowStore((s) => s.toggleFromTaskbar);
   const minimizeAll = useWindowStore((s) => s.minimizeAll);
+  const openMenu = useMenuStore((s) => s.open);
   const [startOpen, setStartOpen] = useState(false);
 
   useEffect(() => {
@@ -67,6 +70,10 @@ export function Taskbar() {
                 key={w.id}
                 type="button"
                 onClick={() => toggleFromTaskbar(w.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  openMenu(e.clientX, e.clientY, windowSystemMenu(w));
+                }}
                 title={w.title}
                 className={active ? `${styles.task} ${styles.active}` : styles.task}
               >
