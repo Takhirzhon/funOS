@@ -24,7 +24,7 @@ import { useMenuStore } from "../store/menuStore";
 import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
 import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
-import { deletePath } from "../fs/trash";
+import { deletePaths } from "../fs/trash";
 import { useShellShortcuts } from "../hooks/useShellShortcuts";
 import { DESKTOP_DIR } from "../fs/seed";
 import { importFiles } from "../fs/import";
@@ -74,7 +74,7 @@ export function Desktop() {
   const resetPositions = useDesktopStore((s) => s.resetPositions);
   const openMenu = useMenuStore((s) => s.open);
   const setHoverPath = useDndStore((s) => s.setHoverPath);
-  const clipboardPath = useClipboardStore((s) => s.path);
+  const clipboardPaths = useClipboardStore((s) => s.paths);
   const clipboardMode = useClipboardStore((s) => s.mode);
   const cutToClipboard = useClipboardStore((s) => s.cut);
   const copyToClipboard = useClipboardStore((s) => s.copy);
@@ -219,13 +219,18 @@ export function Desktop() {
 
   /* The desktop owns the clipboard keys whenever no window is focused, which
    * is exactly the state clicking it produces. */
-  const selectedFile = selection.find((id) => id.startsWith("C:")) ?? null;
+  /* Only the file part of the selection: an application shortcut has no path,
+   * so Cut, Copy and Delete have nothing to act on for it. */
+  const selectedFiles = selection.filter((id) => id.startsWith("C:"));
   useShellShortcuts({
     active: focusedWindow === null,
-    selected: selectedFile,
+    selected: selectedFiles,
     folder: DESKTOP_DIR,
-    onDeleted: () => select([]),
+    onDeleted: (paths) => select(selection.filter((id) => !paths.includes(id))),
   });
+
+  const targetsFor = (path: string) =>
+    selection.includes(path) ? selection.filter((id) => id.startsWith("C:")) : [path];
 
   const launch = (appId: AppId) =>
     open(appId, { title: apps[appId].title, bounds: apps[appId].defaultSize });
@@ -261,7 +266,13 @@ export function Desktop() {
       moved: false,
     };
     setDrag(dragRef.current);
-    select([id]);
+    /* Ctrl adds to the selection; anything else starts a new one. Dragging a
+     * member of a multiple selection must not collapse it to one icon. */
+    if (e.ctrlKey) {
+      select(selection.includes(id) ? selection.filter((s) => s !== id) : [...selection, id]);
+    } else if (!selection.includes(id)) {
+      select([id]);
+    }
   };
 
   const beginMarquee = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -310,7 +321,7 @@ export function Desktop() {
       {
         kind: "item",
         label: "Paste",
-        disabled: clipboardPath === null,
+        disabled: clipboardPaths.length === 0,
         onClick: () => pasteInto(DESKTOP_DIR),
       },
       { kind: "separator" },
@@ -323,7 +334,7 @@ export function Desktop() {
       {
         kind: "item",
         label: "Properties",
-        onClick: () => void propertiesDialog(DESKTOP_DIR, "Desktop"),
+        onClick: () => void propertiesDialog([DESKTOP_DIR], "Desktop"),
       },
     ]);
   };
@@ -331,7 +342,7 @@ export function Desktop() {
   const itemMenu = (item: Item) => (e: ReactMouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    select([item.id]);
+    if (!selection.includes(item.id)) select([item.id]);
 
     if (item.kind === "app") {
       openMenu(e.clientX, e.clientY, [
@@ -348,12 +359,12 @@ export function Desktop() {
     openMenu(e.clientX, e.clientY, [
       { kind: "item", label: "Open", bold: true, onClick: () => openItem(item) },
       { kind: "separator" },
-      { kind: "item", label: "Cut", onClick: () => cutToClipboard(item.entry.path) },
-      { kind: "item", label: "Copy", onClick: () => copyToClipboard(item.entry.path) },
+      { kind: "item", label: "Cut", onClick: () => cutToClipboard(targetsFor(item.entry.path)) },
+      { kind: "item", label: "Copy", onClick: () => copyToClipboard(targetsFor(item.entry.path)) },
       {
         kind: "item",
         label: "Paste",
-        disabled: clipboardPath === null || item.entry.kind !== "dir",
+        disabled: clipboardPaths.length === 0 || item.entry.kind !== "dir",
         onClick: () => pasteInto(item.entry.path),
       },
       { kind: "separator" },
@@ -373,13 +384,13 @@ export function Desktop() {
       {
         kind: "item",
         label: "Delete",
-        onClick: () => void deletePath(item.entry.path),
+        onClick: () => void deletePaths(targetsFor(item.entry.path)),
       },
       { kind: "separator" },
       {
         kind: "item",
         label: "Properties",
-        onClick: () => void propertiesDialog(item.entry.path, item.label),
+        onClick: () => void propertiesDialog(targetsFor(item.entry.path), item.label),
       },
     ]);
   };
@@ -445,7 +456,7 @@ export function Desktop() {
               x={pos.x}
               y={pos.y}
               dragging={isDragging}
-              cut={clipboardMode === "cut" && clipboardPath === item.id}
+              cut={clipboardMode === "cut" && clipboardPaths.includes(item.id)}
               onPointerDown={beginDrag(item.id)}
               onContextMenu={itemMenu(item)}
               onOpen={() => openItem(item)}

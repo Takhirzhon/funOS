@@ -5,13 +5,13 @@ import { Explorer } from "./Explorer";
 import { ImageViewer } from "./ImageViewer";
 import { About } from "./About";
 import { RecycleBin } from "./RecycleBin";
+import { RecycleBinAppIcon } from "./appIcons";
 import {
   DocumentsIcon,
   InfoIcon,
   MyComputerIcon,
   NotepadIcon,
   PictureIcon,
-  RecycleBinIcon,
 } from "../icons";
 
 export type IconComponent = ComponentType<{
@@ -70,7 +70,7 @@ export const apps = {
     title: "Recycle Bin",
     label: "Recycle Bin",
     component: RecycleBin as ComponentType<Record<string, unknown>>,
-    icon: RecycleBinIcon,
+    icon: RecycleBinAppIcon,
     defaultSize: { width: 480, height: 340 },
     onDesktop: true,
   },

@@ -1,5 +1,6 @@
 import {
   useMemo,
+  useRef,
   useState,
   type DragEvent as ReactDragEvent,
   type MouseEvent as ReactMouseEvent,
@@ -10,7 +11,7 @@ import { useDndStore } from "../store/dndStore";
 import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
 import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
-import { deletePath } from "../fs/trash";
+import { deletePaths } from "../fs/trash";
 import { useShellShortcuts } from "../hooks/useShellShortcuts";
 import { useWindowStore } from "../store/windowStore";
 import {
@@ -69,7 +70,7 @@ export function Explorer({ path, windowId }: Props) {
    * events never fire for a pointer drag, so this is the only way Explorer
    * learns about one. */
   const hoverPath = useDndStore((s) => s.hoverPath);
-  const clipboardPath = useClipboardStore((s) => s.path);
+  const clipboardPaths = useClipboardStore((s) => s.paths);
   const clipboardMode = useClipboardStore((s) => s.mode);
   const focusedWindow = useWindowStore((s) => s.focusedId);
   const cutToClipboard = useClipboardStore((s) => s.cut);
@@ -82,7 +83,10 @@ export function Explorer({ path, windowId }: Props) {
   const current = nav.stack[nav.index];
 
   const [address, setAddress] = useState(() => display(current));
-  const [selected, setSelected] = useState<string | null>(null);
+  /* A list. Plain click replaces it, Ctrl+click toggles one, Shift+click
+   * extends from the anchor - the three gestures every file list has. */
+  const [selected, setSelected] = useState<string[]>([]);
+  const anchor = useRef<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("icons");
   const [expanded, setExpanded] = useState<Set<string>>(
@@ -93,7 +97,7 @@ export function Explorer({ path, windowId }: Props) {
 
   const arriveAt = (target: string) => {
     setAddress(display(target));
-    setSelected(null);
+    setSelected([]);
     setExpanded((prev) => new Set([...prev, ...ancestors(target)]));
   };
 
@@ -154,28 +158,57 @@ export function Explorer({ path, windowId }: Props) {
       );
       return;
     }
-    setSelected(result);
+    setSelected([result]);
   };
 
-  const deleteEntry = async (entry: FsEntry) => {
-    /* Recycles rather than removes, and asks the question in one shared place,
-     * so the desktop and Explorer cannot end up wording it differently or
-     * disagreeing about what Delete means. */
-    if (await deletePath(entry.path)) {
-      if (selected === entry.path) setSelected(null);
+  /* The three click gestures of every file list.
+   *
+   * Shift extends from the anchor - the item the last plain click landed on -
+   * rather than from the previously selected item. Extending from "whatever was
+   * last touched" is the version that makes a shift-click after a ctrl-click
+   * select a range nobody asked for.
+   */
+  const selectOn = (e: ReactMouseEvent, path: string) => {
+    if (e.shiftKey && anchor.current) {
+      const from = items.findIndex((i) => i.path === anchor.current);
+      const to = items.findIndex((i) => i.path === path);
+      if (from !== -1 && to !== -1) {
+        const [lo, hi] = from < to ? [from, to] : [to, from];
+        setSelected(items.slice(lo, hi + 1).map((i) => i.path));
+        return;
+      }
     }
+    if (e.ctrlKey) {
+      anchor.current = path;
+      setSelected((prev) =>
+        prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
+      );
+      return;
+    }
+    anchor.current = path;
+    setSelected([path]);
+  };
+
+  /* Acts on the whole selection when the clicked item is part of it, and on
+   * just that item when it is not - which is what right-clicking outside a
+   * selection means everywhere else. */
+  const targetsFor = (path: string) => (selected.includes(path) ? selected : [path]);
+
+  const deleteEntry = async (entry: FsEntry) => {
+    const deleted = await deletePaths(targetsFor(entry.path));
+    if (deleted.length) setSelected((prev) => prev.filter((p) => !deleted.includes(p)));
   };
 
   useShellShortcuts({
     active: windowId !== undefined && focusedWindow === windowId,
     selected,
     folder: current,
-    onDeleted: () => setSelected(null),
+    onDeleted: (paths) => setSelected((prev) => prev.filter((p) => !paths.includes(p))),
   });
 
   const backgroundMenu = (e: ReactMouseEvent) => {
     e.preventDefault();
-    setSelected(null);
+    setSelected([]);
     openMenu(e.clientX, e.clientY, [
       {
         kind: "item",
@@ -200,14 +233,14 @@ export function Explorer({ path, windowId }: Props) {
       {
         kind: "item",
         label: "Paste",
-        disabled: clipboardPath === null,
+        disabled: clipboardPaths.length === 0,
         onClick: () => pasteInto(current),
       },
       { kind: "separator" },
       {
         kind: "item",
         label: "Properties",
-        onClick: () => void propertiesDialog(current, basename(current)),
+        onClick: () => void propertiesDialog([current], basename(current)),
       },
     ]);
   };
@@ -215,17 +248,17 @@ export function Explorer({ path, windowId }: Props) {
   const itemMenu = (entry: FsEntry) => (e: ReactMouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setSelected(entry.path);
+    if (!selected.includes(entry.path)) setSelected([entry.path]);
     openMenu(e.clientX, e.clientY, [
       { kind: "item", label: "Open", bold: true, onClick: () => openEntry(entry) },
       { kind: "separator" },
-      { kind: "item", label: "Cut", onClick: () => cutToClipboard(entry.path) },
-      { kind: "item", label: "Copy", onClick: () => copyToClipboard(entry.path) },
+      { kind: "item", label: "Cut", onClick: () => cutToClipboard(targetsFor(entry.path)) },
+      { kind: "item", label: "Copy", onClick: () => copyToClipboard(targetsFor(entry.path)) },
       {
         kind: "item",
         label: "Paste",
         /* Only meaningful on a folder - pasting "into" a file is not a thing. */
-        disabled: clipboardPath === null || entry.kind !== "dir",
+        disabled: clipboardPaths.length === 0 || entry.kind !== "dir",
         onClick: () => pasteInto(entry.path),
       },
       { kind: "separator" },
@@ -235,7 +268,7 @@ export function Explorer({ path, windowId }: Props) {
       {
         kind: "item",
         label: "Properties",
-        onClick: () => void propertiesDialog(entry.path, basename(entry.path)),
+        onClick: () => void propertiesDialog(targetsFor(entry.path), basename(entry.path)),
       },
     ]);
   };
@@ -297,7 +330,7 @@ export function Explorer({ path, windowId }: Props) {
     type: "button" as const,
     onMouseDown: (e: ReactMouseEvent) => {
       e.stopPropagation();
-      setSelected(entry.path);
+      selectOn(e, entry.path);
     },
     onDoubleClick: () => openEntry(entry),
     onContextMenu: itemMenu(entry),
@@ -307,9 +340,9 @@ export function Explorer({ path, windowId }: Props) {
   const stateClasses = (entry: FsEntry, base: string) =>
     [
       base,
-      selected === entry.path ? styles.selected : "",
+      selected.includes(entry.path) ? styles.selected : "",
       isDropTarget(entry.path) ? styles.dropTarget : "",
-      clipboardMode === "cut" && clipboardPath === entry.path ? styles.cut : "",
+      clipboardMode === "cut" && clipboardPaths.includes(entry.path) ? styles.cut : "",
     ].join(" ");
 
   const canBack = nav.index > 0;
@@ -414,7 +447,7 @@ export function Explorer({ path, windowId }: Props) {
             isDropTarget(current) ? styles.dropTarget : "",
           ].join(" ")}
           onContextMenu={backgroundMenu}
-          onMouseDown={() => setSelected(null)}
+          onMouseDown={() => setSelected([])}
           onDragOver={dragOver(current)}
           onDragLeave={() => setDropTarget(null)}
           onDrop={dropOn(current)}
@@ -462,7 +495,8 @@ export function Explorer({ path, windowId }: Props) {
       <div className={styles.status}>
         <div className={styles.statusField}>
           {items.length} object{items.length === 1 ? "" : "s"}
-          {selected ? ` — ${basename(selected)} selected` : ""}
+          {selected.length === 1 ? ` — ${basename(selected[0])} selected` : ""}
+          {selected.length > 1 ? ` — ${selected.length} selected` : ""}
         </div>
         <div className={styles.statusField}>My Computer</div>
       </div>

@@ -16,7 +16,7 @@ export type DialogRequest =
   | { kind: "prompt"; title: string; label: string; value: string; okLabel: string }
   | { kind: "confirm"; title: string; message: string }
   | { kind: "error"; title: string; message: string }
-  | { kind: "properties"; title: string; path: string }
+  | { kind: "properties"; title: string; paths: string[] }
   /* The file picker. `mode` decides the button label and whether an existing
    * name is a warning ("replace?") or the whole point. */
   | {
@@ -81,10 +81,16 @@ export const confirmDialog = (title: string, message: string): Promise<boolean> 
     .ask({ kind: "confirm", title, message })
     .then((result) => result === true);
 
-export const propertiesDialog = (path: string, name: string): Promise<void> =>
+export const propertiesDialog = (paths: string[], name: string): Promise<void> =>
   useDialogStore
     .getState()
-    .ask({ kind: "properties", title: `${name} Properties`, path })
+    .ask({
+      kind: "properties",
+      /* Windows titles a multiple selection by its count, not by the first
+       * item - naming one of five is worse than naming none. */
+      title: paths.length === 1 ? `${name} Properties` : `${paths.length} items Properties`,
+      paths,
+    })
     .then(() => undefined);
 
 /** Resolves to a canonical path, or null if the picker was cancelled. */

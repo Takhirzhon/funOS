@@ -3,7 +3,7 @@ import { useClipboardStore } from "../store/clipboardStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useMenuStore } from "../store/menuStore";
 import { pasteInto } from "../fs/clipboard";
-import { deletePath } from "../fs/trash";
+import { deletePaths } from "../fs/trash";
 
 type Options = {
   /* Whether this surface currently owns the keyboard.
@@ -15,12 +15,12 @@ type Options = {
    * focus, an Explorer window when it is the focused one.
    */
   active: boolean;
-  /** The path the shortcuts act on, or null when nothing is selected. */
-  selected: string | null;
+  /** The paths the shortcuts act on. Empty when nothing is selected. */
+  selected: string[];
   /** Where Paste puts things. */
   folder: string;
   /** Called after a successful delete, so the caller can clear its selection. */
-  onDeleted?: (path: string) => void;
+  onDeleted?: (paths: string[]) => void;
 };
 
 export function useShellShortcuts({ active, selected, folder, onDeleted }: Options) {
@@ -45,22 +45,22 @@ export function useShellShortcuts({ active, selected, folder, onDeleted }: Optio
       if (useDialogStore.getState().request) return;
       if (useMenuStore.getState().items) return;
 
-      const { selected: path, folder: target, onDeleted: done } = latest.current;
+      const { selected: paths, folder: target, onDeleted: done } = latest.current;
       const clipboard = useClipboardStore.getState();
 
       if (e.ctrlKey && !e.altKey) {
         const key = e.key.toLowerCase();
-        if (key === "x" && path) {
+        if (key === "x" && paths.length) {
           e.preventDefault();
-          clipboard.cut(path);
+          clipboard.cut(paths);
           return;
         }
-        if (key === "c" && path) {
+        if (key === "c" && paths.length) {
           e.preventDefault();
-          clipboard.copy(path);
+          clipboard.copy(paths);
           return;
         }
-        if (key === "v" && clipboard.path) {
+        if (key === "v" && clipboard.paths.length) {
           e.preventDefault();
           pasteInto(target);
           return;
@@ -68,12 +68,12 @@ export function useShellShortcuts({ active, selected, folder, onDeleted }: Optio
         return;
       }
 
-      if (e.key === "Delete" && path) {
+      if (e.key === "Delete" && paths.length) {
         e.preventDefault();
         /* Shift+Delete skips the Recycle Bin, which is the one keyboard
          * shortcut in Windows that people know and expect to be destructive. */
-        void deletePath(path, e.shiftKey).then((deleted) => {
-          if (deleted) done?.(path);
+        void deletePaths(paths, e.shiftKey).then((deleted) => {
+          if (deleted.length) done?.(deleted);
         });
       }
     };

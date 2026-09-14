@@ -16,7 +16,9 @@ export function RecycleBin() {
   const openMenu = useMenuStore((s) => s.open);
   const [selected, setSelected] = useState<string | null>(null);
 
-  const items = useMemo(() => listEntries(entries, RECYCLE_BIN), [entries]);
+  /* The one listing that asks for hidden entries: the bin's own contents are
+   * hidden from Explorer, and this window exists to show them. */
+  const items = useMemo(() => listEntries(entries, RECYCLE_BIN, true), [entries]);
 
   const restoreOne = (path: string) => {
     const result = restore(path);
@@ -64,7 +66,7 @@ export function RecycleBin() {
       {
         kind: "item",
         label: "Properties",
-        onClick: () => void propertiesDialog(path, basename(path)),
+        onClick: () => void propertiesDialog([path], basename(path)),
       },
     ]);
   };

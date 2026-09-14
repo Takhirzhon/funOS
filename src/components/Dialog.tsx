@@ -145,34 +145,42 @@ function Properties({
   close: (value: string | boolean | null) => void;
 }) {
   const entries = useFsStore((s) => s.entries);
-  const entry = entries[request.path];
+  const targets = request.paths.map((p) => entries[p]).filter(Boolean);
 
   /* A folder's size is everything under it, which is the number Windows shows
-   * and the only one anybody wants from this dialog. */
-  const folderStats = useMemo(() => {
-    if (!entry || entry.kind !== "dir") return null;
-    const prefix = `${entry.path}/`;
+   * and the only one anybody opens this dialog to find. Computed for the whole
+   * selection at once, so a mixed selection of files and folders adds up. */
+  const stats = useMemo(() => {
     let bytes = 0;
     let files = 0;
     let folders = 0;
-    for (const other of Object.values(entries)) {
-      if (!other.path.startsWith(prefix)) continue;
-      if (other.kind === "dir") folders += 1;
-      else {
+    for (const entry of targets) {
+      if (entry.kind === "dir") {
+        folders += 1;
+        const prefix = `${entry.path}/`;
+        for (const other of Object.values(entries)) {
+          if (!other.path.startsWith(prefix)) continue;
+          if (other.kind === "dir") folders += 1;
+          else {
+            files += 1;
+            bytes += entryBytes(other);
+          }
+        }
+      } else {
         files += 1;
-        bytes += entryBytes(other);
+        bytes += entryBytes(entry);
       }
     }
     return { bytes, files, folders };
-  }, [entries, entry]);
+  }, [entries, targets]);
 
-  if (!entry) {
+  if (targets.length === 0) {
     return (
       <div className={`window ${styles.dialog}`}>
         <TitleBar title={request.title} onClose={() => close(null)} />
         <div className="window-body" style={{ margin: 0 }}>
           <div className={styles.body}>
-            <div className={styles.text}>{display(request.path)} no longer exists.</div>
+            <div className={styles.text}>These items no longer exist.</div>
           </div>
           <div className={styles.buttons}>
             <button type="button" onClick={() => close(null)} autoFocus>
@@ -184,23 +192,29 @@ function Properties({
     );
   }
 
-  const rows: [string, string][] = [
-    ["Type of file:", entryType(entry)],
-    ["Location:", display(dirname(entry.path))],
-    [
-      "Size:",
-      entry.kind === "dir"
-        ? formatBytes(folderStats?.bytes ?? 0)
-        : formatBytes(entryBytes(entry)),
-    ],
-  ];
+  const single = targets.length === 1 ? targets[0] : null;
 
-  if (entry.kind === "dir" && folderStats) {
-    rows.push(["Contains:", `${folderStats.files} Files, ${folderStats.folders} Folders`]);
+  const rows: [string, string][] = single
+    ? [
+        ["Type of file:", entryType(single)],
+        ["Location:", display(dirname(single.path))],
+        ["Size:", formatBytes(single.kind === "dir" ? stats.bytes : entryBytes(single))],
+      ]
+    : [
+        ["Type:", "Multiple types"],
+        ["Location:", display(dirname(targets[0].path))],
+        ["Size:", formatBytes(stats.bytes)],
+      ];
+
+  if (single ? single.kind === "dir" : true) {
+    rows.push(["Contains:", `${stats.files} Files, ${stats.folders} Folders`]);
   }
-  if (entry.mime) rows.push(["Content type:", entry.mime]);
-  rows.push(["Created:", new Date(entry.created).toLocaleString()]);
-  rows.push(["Modified:", new Date(entry.modified).toLocaleString()]);
+  if (single?.mime) rows.push(["Content type:", single.mime]);
+  if (single?.restorePath) rows.push(["Origin:", display(single.restorePath)]);
+  if (single) {
+    rows.push(["Created:", new Date(single.created).toLocaleString()]);
+    rows.push(["Modified:", new Date(single.modified).toLocaleString()]);
+  }
 
   return (
     <div className={`window ${styles.dialog}`}>
@@ -208,8 +222,12 @@ function Properties({
 
       <div className="window-body" style={{ margin: 0 }}>
         <div className={styles.propsHead}>
-          {entryIcon(entry, 32)}
-          <span className={styles.propsName}>{basename(entry.path)}</span>
+          {entryIcon(targets[0], 32)}
+          <span className={styles.propsName}>
+            {single
+              ? basename(single.path)
+              : targets.map((t) => basename(t.path)).join(", ")}
+          </span>
         </div>
 
         <dl className={styles.propsList}>

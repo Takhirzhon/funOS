@@ -88,6 +88,30 @@ export const RecycleBinIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+/* The bin with something in it. Same silhouette as the empty one - it has to
+ * read as the same object - with crumpled paper above the rim, which is the
+ * only part of XP's full-bin icon anyone actually registers.
+ */
+export const RecycleBinFullIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="rbf-body" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stopColor="#e9f2f8" />
+        <stop offset="0.35" stopColor="#aec6d6" />
+        <stop offset="0.65" stopColor="#cfe0ea" />
+        <stop offset="1" stopColor="#8ea7b8" />
+      </linearGradient>
+    </defs>
+    {/* paper first, so the bin overlaps it and the sheets sit *inside* */}
+    <path d="M10.5 7.5 13 3.8l3.4 2.4L19 3l1.6 3.6 3-1.2-.8 3.4-11.8.9z" fill="#fdfdf7" stroke="#b9b6a6" strokeWidth="0.8" strokeLinejoin="round" />
+    <path d="M13.5 6.2l2.2 1.7M18 5.4l.9 2" stroke="#cfcdbd" strokeWidth="0.8" />
+    <path d="M8 10h16l-1.6 18.2a1.4 1.4 0 0 1-1.4 1.3H11a1.4 1.4 0 0 1-1.4-1.3z" fill="url(#rbf-body)" stroke="#5d7386" strokeWidth="0.9" />
+    <path d="M13 13.5 12.4 26M16 13.5V26M19 13.5l.6 12.5" stroke="#7e95a6" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+    <ellipse cx="16" cy="10" rx="8.6" ry="2.4" fill="#cfe0ea" stroke="#5d7386" strokeWidth="0.9" />
+    <path d="M16 15.6l2.2 3.8h-4.4z" fill="#3f8f32" opacity="0.85" />
+  </svg>
+);
+
 export const NotepadIcon = ({ size = 32, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>

@@ -128,10 +128,26 @@ const persist = (entries: Record<string, FsEntry>) => {
  * created. Subscribing to `entries` and calling this is the version that
  * actually updates.
  */
-export function listEntries(entries: Record<string, FsEntry>, dir: string): FsEntry[] {
+/* Hidden, by path rather than by a flag on the entry.
+ *
+ * There is no way to mark a file hidden from the UI, so a per-entry attribute
+ * would be a field nothing ever sets. What actually needs hiding is the
+ * machinery - the Recycle Bin's storage - and that lives at a known path. A
+ * rule also covers entries that were written to IndexedDB before this existed,
+ * where a flag would have needed a migration to reach them.
+ */
+export const isHiddenPath = (path: string): boolean =>
+  path === RECYCLE_BIN || isInside(RECYCLE_BIN, path);
+
+export function listEntries(
+  entries: Record<string, FsEntry>,
+  dir: string,
+  includeHidden = false
+): FsEntry[] {
   const parent = normalize(dir);
   return Object.values(entries)
     .filter((e) => e.path !== parent && dirname(e.path) === parent)
+    .filter((e) => includeHidden || !isHiddenPath(e.path))
     .sort(sortEntries);
 }
 

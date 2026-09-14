@@ -26,17 +26,14 @@ Merging to main deploys, so nothing here counts as done until it is on
 Small leftovers from the parts that are otherwise finished. Each one is a place
 where the shape exists and the behaviour does not.
 
-- [ ] **Multi-select.** Everything that acts on a selection acts on one item.
-      The marquee already selects several on the desktop and then only the first
-      can be cut, copied or deleted. The clipboard holds one path; it wants a
-      list, and so do `deletePath` and the Properties dialog.
-- [ ] **The Recycle Bin icon should show whether it is full.** XP draws two
-      icons and swaps them. The registry holds one icon per app, so this needs
-      the icon to be a function of state rather than a constant — which is also
-      what a drive icon showing a disc would need.
-- [ ] **Hidden files.** `C:\RECYCLER` is a normal visible folder in Explorer,
-      because there is no hidden flag. Recycling something and then browsing to
-      the bin by hand shows the machinery.
+- [ ] **Marquee selection inside Explorer.** The desktop has it; the file list
+      does not, so a range there needs Shift+click.
+- [ ] **A user-settable hidden attribute.** Hiding is a rule about known system
+      paths, which covers `C:\RECYCLER` and nothing else. A per-entry flag plus
+      a "Show hidden files" toggle is the real version.
+- [ ] **Drag a multiple selection.** Both drag systems move the one item the
+      gesture started on. The clipboard understands a list now; dragging does
+      not.
 
 ## Applications
 
