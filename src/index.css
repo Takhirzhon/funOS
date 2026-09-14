@@ -211,12 +211,24 @@ ul.tree-view,
 
 /* ---- Desktop --------------------------------------------------------------
  */
+/* Bliss, and the SVG reconstruction underneath it.
+ *
+ * Two layers, not one. The first listed paints on top, so the photograph covers
+ * the drawing - but until the 188KB download finishes, and on anything that
+ * cannot decode WebP, the 1.5KB SVG is already on screen. A desktop whose
+ * wallpaper is a white rectangle for the first second looks broken in a way
+ * that a slightly-wrong wallpaper does not.
+ *
+ * On the photograph itself: it is Charles O'Rear's, and Microsoft owns it. It
+ * is not public domain and not Creative Commons, whatever the wallpaper sites
+ * imply by hosting it. Used here knowingly on a hobby project; see TODO.md.
+ */
 .desktop {
   position: absolute;
   inset: 0;
-  background-image: url("./assets/wallpaper.svg");
-  background-size: cover;
-  background-position: center;
+  background-image: url("./assets/bliss.webp"), url("./assets/wallpaper.svg");
+  background-size: cover, cover;
+  background-position: center, center;
   overflow: hidden;
 }
 

@@ -78,9 +78,11 @@ The "cheap copy" complaint is almost entirely this phase.
       light wallpaper, and selection that follows the icon's silhouette instead
       of boxing it. Selection state lifted out of the icons: it was `useState`
       per icon cleared on blur, so two icons could both look selected.
-- [x] **A real wallpaper.** Still SVG — a photograph does not fit the budget —
-      but a reconstruction with haze, layered ridges and blurred cumulus rather
-      than three flat gradients.
+- [x] **A real wallpaper.** The actual Bliss photograph, 1920x1080 WebP at 188KB,
+      with the SVG reconstruction still layered underneath it — so the desktop
+      is never a white rectangle while 188KB downloads, and never one at all on
+      a browser without WebP. See *Assets* below for the licence, which is not
+      what the wallpaper sites imply.
 - [x] **Desktop icon interaction.** Drag to reposition with snap-to-lattice,
       marquee selection, and positions that survive a reload. The field stopped
       being a CSS grid to get there — icons carry their own coordinates now, and
@@ -148,21 +150,27 @@ Ordered by ratio of "makes the place feel alive" to effort.
 
 ---
 
-## Open question: assets
+## Assets: decided, and worth stating plainly
 
-Authentic fidelity wants the real Bliss photograph and the real Luna icon set,
-both Microsoft copyright. daedalOS ships Windows icons regardless. The options,
-in descending fidelity:
+**The wallpaper is the original.** `src/assets/bliss.webp` is the Bliss
+photograph, fetched from the Internet Archive copy, re-encoded to WebP at
+q86 — 188KB against the 369KB JPEG.
 
-1. Ship the originals, as daedalOS does. Highest fidelity, lowest effort,
-   someone else's copyright on a public site.
-2. Draw high-quality SVG lookalikes. Slower, ours, and honestly achievable —
-   the XP icon language is simple: soft gradients, a light source at the upper
-   left, a hard outline.
-3. Use an openly licensed XP-alike set and credit it.
+It is worth being accurate about the licence rather than repeating what the
+wallpaper sites imply by hosting it: Bliss was shot by Charles O'Rear in 1996
+and the rights were bought by Microsoft. It has never been released under
+Creative Commons and it is not public domain. Using it here is a considered
+choice on a hobby project with no commercial angle — the same one daedalOS
+makes — not a licence that permits it. If this ever becomes something that
+matters, `src/assets/wallpaper.svg` is still in the tree and still wired up as
+the layer underneath: deleting one line in `index.css` reverts it.
 
-Not decided. Phase 0's icon component should take a `name`, so the source can
-change later without touching call sites.
+**The icons stay ours.** Drawn as SVG to the XP grammar — one light source at
+the upper left, a single outline, soft gradients per surface. Partly the same
+licence question, mostly the budget: an authentic raster set at 16/32/48px is
+several hundred KB before it draws anything, and the entry bundle is capped at
+120KB. `apps/registry.ts` owns the mapping, so swapping the source later does
+not touch a single call site.
 
 ---
 
