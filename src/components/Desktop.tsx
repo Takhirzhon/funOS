@@ -21,14 +21,16 @@ import {
   type Pos,
 } from "../store/desktopStore";
 import { useMenuStore } from "../store/menuStore";
-import { confirmDialog, errorDialog, promptDialog } from "../store/dialogStore";
+import { confirmDialog, errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
+import { useClipboardStore } from "../store/clipboardStore";
+import { pasteInto } from "../fs/clipboard";
 import { DESKTOP_DIR } from "../fs/seed";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
 import { dropPathAt, useDndStore } from "../store/dndStore";
 import { PATH_MIME } from "../fs/dnd";
-import { basename, extname } from "../fs/path";
-import { FileIcon, FolderIcon, NotepadIcon } from "../icons";
+import { basename } from "../fs/path";
+import { entryIcon } from "../fs/icons";
 import styles from "./Desktop.module.css";
 
 const ICON_W = 76;
@@ -55,11 +57,6 @@ function AppGlyph({ appId }: { appId: AppId }) {
   return <Icon size={32} />;
 }
 
-const fileIcon = (entry: FsEntry) => {
-  if (entry.kind === "dir") return <FolderIcon size={32} />;
-  return extname(entry.path) === ".txt" ? <NotepadIcon size={32} /> : <FileIcon size={32} />;
-};
-
 export function Desktop() {
   const open = useWindowStore((s) => s.open);
   const entries = useFsStore((s) => s.entries);
@@ -74,6 +71,9 @@ export function Desktop() {
   const resetPositions = useDesktopStore((s) => s.resetPositions);
   const openMenu = useMenuStore((s) => s.open);
   const setHoverPath = useDndStore((s) => s.setHoverPath);
+  const clipboardPath = useClipboardStore((s) => s.path);
+  const cutToClipboard = useClipboardStore((s) => s.cut);
+  const copyToClipboard = useClipboardStore((s) => s.copy);
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState(8);
@@ -291,7 +291,12 @@ export function Desktop() {
       },
       { kind: "item", label: "Refresh", onClick: () => select([]) },
       { kind: "separator" },
-      { kind: "item", label: "Paste", disabled: true },
+      {
+        kind: "item",
+        label: "Paste",
+        disabled: clipboardPath === null,
+        onClick: () => pasteInto(DESKTOP_DIR),
+      },
       { kind: "separator" },
       {
         kind: "item",
@@ -299,7 +304,11 @@ export function Desktop() {
         submenu: [{ kind: "item", label: "Folder", onClick: () => void newFolderHere() }],
       },
       { kind: "separator" },
-      { kind: "item", label: "Properties", disabled: true },
+      {
+        kind: "item",
+        label: "Properties",
+        onClick: () => void propertiesDialog(DESKTOP_DIR, "Desktop"),
+      },
     ]);
   };
 
@@ -322,6 +331,15 @@ export function Desktop() {
 
     openMenu(e.clientX, e.clientY, [
       { kind: "item", label: "Open", bold: true, onClick: () => openItem(item) },
+      { kind: "separator" },
+      { kind: "item", label: "Cut", onClick: () => cutToClipboard(item.entry.path) },
+      { kind: "item", label: "Copy", onClick: () => copyToClipboard(item.entry.path) },
+      {
+        kind: "item",
+        label: "Paste",
+        disabled: clipboardPath === null || item.entry.kind !== "dir",
+        onClick: () => pasteInto(item.entry.path),
+      },
       { kind: "separator" },
       {
         kind: "item",
@@ -350,7 +368,11 @@ export function Desktop() {
         },
       },
       { kind: "separator" },
-      { kind: "item", label: "Properties", disabled: true },
+      {
+        kind: "item",
+        label: "Properties",
+        onClick: () => void propertiesDialog(item.entry.path, item.label),
+      },
     ]);
   };
 
@@ -410,7 +432,7 @@ export function Desktop() {
               /* Branching on `kind` rather than on a hoisted icon component:
                  TypeScript narrows the union here, and cannot narrow it through
                  a variable assigned above the JSX. */
-              icon={item.kind === "app" ? <AppGlyph appId={item.appId} /> : fileIcon(item.entry)}
+              icon={item.kind === "app" ? <AppGlyph appId={item.appId} /> : entryIcon(item.entry, 32)}
               selected={selection.includes(item.id)}
               x={pos.x}
               y={pos.y}

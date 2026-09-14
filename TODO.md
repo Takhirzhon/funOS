@@ -26,14 +26,15 @@ Merging to main deploys, so nothing here counts as done until it is on
 Small leftovers from the parts that are otherwise finished. Each one is a place
 where the shape exists and the behaviour does not.
 
-- [ ] **All Programs flyout.** The Start menu button is there and disabled.
-- [ ] **Open/Save dialogs.** Notepad's Open and Save As ask for a path as text,
-      which works and is not what anyone expects. They want a real file picker
-      built on Explorer's list — the same component, in a dialog.
-- [ ] **Properties dialog.** Every context menu has a greyed Properties row
-      waiting for it.
-- [ ] **Binary round-trip.** The file system can hold bytes and nothing *writes*
-      them except the importer. Paint is what exercises the other direction.
+- [ ] **Keyboard shortcuts for the clipboard.** Cut, Copy and Paste work from
+      the context menus and only from there. Ctrl+X/C/V need a focus owner to
+      hang off — the desktop and each Explorer window have to agree on who is
+      listening, which is the actual work.
+- [ ] **A cut item should look cut.** Windows dims the source until the paste
+      happens. The clipboard store already holds the mode, so this is a class,
+      but it needs to reach both the desktop icon and the Explorer row.
+- [ ] **Delete should go to the Recycle Bin.** It is permanent, and the Recycle
+      Bin is still a placeholder window with nothing behind it.
 
 ## Applications
 

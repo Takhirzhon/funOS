@@ -90,6 +90,8 @@ type FsStore = {
   rename: (path: string, nextName: string) => string | null;
   /** Move an entry into `targetDir`, keeping its name. Returns the new path. */
   move: (path: string, targetDir: string) => string | null;
+  /** Duplicate an entry into `targetDir`, renaming if the name is taken. */
+  copy: (path: string, targetDir: string) => string | null;
 
   /** "New Folder", then "New Folder (2)" - the first free name in `dir`. */
   uniquePath: (dir: string, name: string) => string;
@@ -292,6 +294,48 @@ export const useFsStore = create<FsStore>((set, get) => ({
     if (source === normalize(targetDir) || isInside(source, normalize(targetDir))) return null;
 
     return relocate(set, get, source, destination);
+  },
+
+  copy: (path, targetDir) => {
+    const source = normalize(path);
+    const folder = normalize(targetDir);
+    const { entries, uniquePath } = get();
+
+    const entry = entries[source];
+    const parent = entries[folder];
+    if (!entry || !parent || parent.kind !== "dir") return null;
+    /* Copying a folder into itself would recurse until the map ran out of
+     * memory: every pass would find the copy it had just made. */
+    if (source === folder || isInside(source, folder)) return null;
+
+    /* Never silently overwrite. Pasting into the folder something already lives
+     * in is the common case, and "Copy (2)" is what Windows does with it. */
+    const destination = uniquePath(folder, basename(source));
+
+    const now = Date.now();
+    const next = { ...entries };
+    const clone = (from: string, to: string) => {
+      const original = entries[from];
+      next[to] = {
+        ...original,
+        path: to,
+        /* A fresh Uint8Array, not the same one. Sharing the buffer would mean
+         * editing one copy's bytes edited the other's - which nothing does
+         * today and everything would do the moment Paint can save. */
+        bytes: original.bytes ? new Uint8Array(original.bytes) : undefined,
+        created: now,
+        modified: now,
+      };
+    };
+
+    clone(source, destination);
+    for (const key of Object.keys(entries)) {
+      if (isInside(source, key)) clone(key, destination + key.slice(source.length));
+    }
+
+    set({ entries: next });
+    persist(next);
+    return destination;
   },
 
   uniquePath: (dir, name) => {

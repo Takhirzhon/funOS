@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useWindowStore } from "../store/windowStore";
-import { apps, type AppId } from "../apps/registry";
+import { apps, appIds, type AppId } from "../apps/registry";
 import {
   ControlPanelIcon,
   DocumentsIcon,
@@ -43,8 +43,13 @@ function AppGlyph({ id, size = 22 }: { id: AppId; size?: number }) {
   return <Icon size={size} />;
 }
 
+/* Everything in the registry, alphabetically. Sorted by the label people see
+ * rather than by the id, so "My Computer" files under M and not under "my". */
+const allPrograms = [...appIds].sort((a, b) => apps[a].label.localeCompare(apps[b].label));
+
 export function StartMenu({ onClose }: Props) {
   const open = useWindowStore((s) => s.open);
+  const [allOpen, setAllOpen] = useState(false);
 
   const launch = (appId: AppId) => {
     const app = apps[appId];
@@ -74,10 +79,36 @@ export function StartMenu({ onClose }: Props) {
           <div className={styles.sep} />
 
           <div className={styles.allPrograms}>
-            <button type="button" className={styles.allProgramsButton} disabled>
+            <button
+              type="button"
+              className={
+                allOpen
+                  ? `${styles.allProgramsButton} ${styles.allProgramsOpen}`
+                  : styles.allProgramsButton
+              }
+              onClick={() => setAllOpen((v) => !v)}
+              /* Opens on hover as well as on click, like the real one. It does
+               * not close on leave: the flyout is to the right, and the pointer
+               * has to cross the gap to reach it. */
+              onMouseEnter={() => setAllOpen(true)}
+            >
               All Programs
               <span className={styles.chevron}>▶</span>
             </button>
+
+            {allOpen && (
+              <div className={styles.flyout}>
+                <div className={styles.flyoutHeading}>Accessories</div>
+                {allPrograms.map((appId) => (
+                  <MenuItem
+                    key={appId}
+                    icon={<AppGlyph id={appId} size={20} />}
+                    label={apps[appId].label}
+                    onClick={() => launch(appId)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

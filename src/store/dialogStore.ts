@@ -15,7 +15,17 @@ import { create } from "zustand";
 export type DialogRequest =
   | { kind: "prompt"; title: string; label: string; value: string; okLabel: string }
   | { kind: "confirm"; title: string; message: string }
-  | { kind: "error"; title: string; message: string };
+  | { kind: "error"; title: string; message: string }
+  | { kind: "properties"; title: string; path: string }
+  /* The file picker. `mode` decides the button label and whether an existing
+   * name is a warning ("replace?") or the whole point. */
+  | {
+      kind: "file";
+      title: string;
+      mode: "open" | "save";
+      folder: string;
+      fileName: string;
+    };
 
 type DialogStore = {
   request: DialogRequest | null;
@@ -70,6 +80,29 @@ export const confirmDialog = (title: string, message: string): Promise<boolean> 
     .getState()
     .ask({ kind: "confirm", title, message })
     .then((result) => result === true);
+
+export const propertiesDialog = (path: string, name: string): Promise<void> =>
+  useDialogStore
+    .getState()
+    .ask({ kind: "properties", title: `${name} Properties`, path })
+    .then(() => undefined);
+
+/** Resolves to a canonical path, or null if the picker was cancelled. */
+export const fileDialog = (
+  mode: "open" | "save",
+  folder: string,
+  fileName = ""
+): Promise<string | null> =>
+  useDialogStore
+    .getState()
+    .ask({
+      kind: "file",
+      title: mode === "open" ? "Open" : "Save As",
+      mode,
+      folder,
+      fileName,
+    })
+    .then((result) => (typeof result === "string" ? result : null));
 
 export const errorDialog = (title: string, message: string): Promise<void> =>
   useDialogStore

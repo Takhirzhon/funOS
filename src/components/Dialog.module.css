@@ -58,3 +58,133 @@
   min-width: 75px;
   height: 23px;
 }
+
+/* ---- Properties ----------------------------------------------------------- */
+
+.propsHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid #d5d2c4;
+}
+
+.propsName {
+  font-size: 11px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.propsList {
+  margin: 0;
+  padding: 10px 14px 4px;
+  font-size: 11px;
+}
+
+/* Label column fixed, value column takes the rest - so the values line up and
+ * a long path wraps under itself instead of pushing the dialog wider.
+ */
+.propsRow {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.propsRow dt {
+  color: #4a4a44;
+}
+
+.propsRow dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Open / Save As -------------------------------------------------------- */
+
+.picker {
+  width: 440px;
+}
+
+.pickerBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 6px;
+}
+
+.pickerLabel {
+  flex: none;
+  width: 62px;
+  font-size: 11px;
+  color: #333;
+}
+
+.pickerPath {
+  flex: 1;
+  min-width: 0;
+  height: 21px;
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  font-size: 11px;
+  background: #fff;
+  border: 1px solid #7f9db9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pickerName {
+  flex: 1;
+  min-width: 0;
+  height: 21px;
+  font-size: 11px;
+  padding: 0 4px;
+}
+
+.pickerList {
+  height: 190px;
+  margin: 0 12px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #7f9db9;
+  padding: 2px;
+}
+
+.pickerItem {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 19px;
+  padding: 0 4px;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.pickerItem:hover {
+  background: #e4eefb;
+}
+
+.pickerSelected {
+  background: #316ac5;
+  color: #fff;
+}
+
+.pickerSelected:hover {
+  background: #316ac5;
+}
+
+.pickerItemLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pickerEmpty {
+  padding: 10px;
+  color: #7a7a72;
+  font-size: 11px;
+}

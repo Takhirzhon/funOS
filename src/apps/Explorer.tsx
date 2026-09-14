@@ -7,7 +7,9 @@ import {
 import { blobUrlFor, isBinary, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { useMenuStore } from "../store/menuStore";
 import { useDndStore } from "../store/dndStore";
-import { confirmDialog, errorDialog, promptDialog } from "../store/dialogStore";
+import { confirmDialog, errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
+import { useClipboardStore } from "../store/clipboardStore";
+import { pasteInto } from "../fs/clipboard";
 import {
   ancestors,
   basename,
@@ -21,8 +23,9 @@ import { MY_DOCUMENTS } from "../fs/seed";
 import { PATH_MIME } from "../fs/dnd";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
+import { entryBytes, entryIcon, entryType } from "../fs/icons";
 import { MenuBar } from "../components/MenuBar";
-import { DriveIcon, FileIcon, FolderIcon, NotepadIcon, PictureIcon } from "../icons";
+import { DriveIcon, FolderIcon } from "../icons";
 import styles from "./Explorer.module.css";
 
 type Props = { path?: string };
@@ -36,32 +39,11 @@ const VIEW_LABELS: Record<ViewMode, string> = {
   details: "Details",
 };
 
-const iconFor = (entry: FsEntry, size: number) => {
-  if (entry.kind === "dir") return <FolderIcon size={size} />;
-  if (entry.mime?.startsWith("image/")) return <PictureIcon size={size} />;
-  return extname(entry.path) === ".txt" ? <NotepadIcon size={size} /> : <FileIcon size={size} />;
-};
-
-/* Windows shows a type for everything, and "File" for what it does not know.
- * Blank cells in a Details view read as a rendering bug. */
-const typeLabel = (entry: FsEntry): string => {
-  if (entry.kind === "dir") return "File Folder";
-  if (entry.mime?.startsWith("image/")) {
-    return `${entry.mime.slice(6).toUpperCase()} Image`;
-  }
-  const ext = extname(entry.path);
-  if (ext === ".txt") return "Text Document";
-  return ext ? `${ext.slice(1).toUpperCase()} File` : "File";
-};
-
-const sizeOf = (entry: FsEntry): number =>
-  entry.bytes ? entry.bytes.byteLength : entry.content.length;
-
 /* KB, rounded up, because that is what Explorer shows - a 12-byte file is
  * "1 KB" there too, and showing bytes would be more accurate and less familiar.
  */
 const sizeLabel = (entry: FsEntry): string =>
-  entry.kind === "dir" ? "" : `${Math.max(1, Math.ceil(sizeOf(entry) / 1024))} KB`;
+  entry.kind === "dir" ? "" : `${Math.max(1, Math.ceil(entryBytes(entry) / 1024))} KB`;
 
 const dateLabel = (ms: number) =>
   new Date(ms).toLocaleString(undefined, {
@@ -85,6 +67,9 @@ export function Explorer({ path }: Props) {
    * events never fire for a pointer drag, so this is the only way Explorer
    * learns about one. */
   const hoverPath = useDndStore((s) => s.hoverPath);
+  const clipboardPath = useClipboardStore((s) => s.path);
+  const cutToClipboard = useClipboardStore((s) => s.cut);
+  const copyToClipboard = useClipboardStore((s) => s.copy);
 
   const [nav, setNav] = useState(() => ({
     stack: [normalize(path ?? MY_DOCUMENTS)],
@@ -203,8 +188,18 @@ export function Explorer({ path }: Props) {
         ],
       },
       { kind: "separator" },
-      { kind: "item", label: "Paste", disabled: true },
-      { kind: "item", label: "Properties", disabled: true },
+      {
+        kind: "item",
+        label: "Paste",
+        disabled: clipboardPath === null,
+        onClick: () => pasteInto(current),
+      },
+      { kind: "separator" },
+      {
+        kind: "item",
+        label: "Properties",
+        onClick: () => void propertiesDialog(current, basename(current)),
+      },
     ]);
   };
 
@@ -215,10 +210,24 @@ export function Explorer({ path }: Props) {
     openMenu(e.clientX, e.clientY, [
       { kind: "item", label: "Open", bold: true, onClick: () => openEntry(entry) },
       { kind: "separator" },
+      { kind: "item", label: "Cut", onClick: () => cutToClipboard(entry.path) },
+      { kind: "item", label: "Copy", onClick: () => copyToClipboard(entry.path) },
+      {
+        kind: "item",
+        label: "Paste",
+        /* Only meaningful on a folder - pasting "into" a file is not a thing. */
+        disabled: clipboardPath === null || entry.kind !== "dir",
+        onClick: () => pasteInto(entry.path),
+      },
+      { kind: "separator" },
       { kind: "item", label: "Rename", onClick: () => void renameEntry(entry) },
       { kind: "item", label: "Delete", onClick: () => void deleteEntry(entry) },
       { kind: "separator" },
-      { kind: "item", label: "Properties", disabled: true },
+      {
+        kind: "item",
+        label: "Properties",
+        onClick: () => void propertiesDialog(entry.path, basename(entry.path)),
+      },
     ]);
   };
 
@@ -414,11 +423,11 @@ export function Explorer({ path }: Props) {
               {items.map((entry) => (
                 <button {...itemProps(entry)} className={stateClasses(entry, styles.detailRow)}>
                   <span className={styles.cellName}>
-                    {iconFor(entry, 16)}
+                    {entryIcon(entry, 16)}
                     <span className={styles.ellipsis}>{basename(entry.path)}</span>
                   </span>
                   <span className={styles.cellSize}>{sizeLabel(entry)}</span>
-                  <span className={styles.ellipsis}>{typeLabel(entry)}</span>
+                  <span className={styles.ellipsis}>{entryType(entry)}</span>
                   <span className={styles.ellipsis}>{dateLabel(entry.modified)}</span>
                 </button>
               ))}
@@ -430,7 +439,7 @@ export function Explorer({ path }: Props) {
                   {view === "thumbnails" && isBinary(entry) && entry.mime?.startsWith("image/") ? (
                     <img className={styles.preview} src={blobUrlFor(entry)} alt="" />
                   ) : (
-                    iconFor(entry, view === "thumbnails" ? 48 : view === "list" ? 16 : 32)
+                    entryIcon(entry, view === "thumbnails" ? 48 : view === "list" ? 16 : 32)
                   )}
                 </span>
                 <span className={styles.itemLabel}>{basename(entry.path)}</span>

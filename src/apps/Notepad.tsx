@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { isBinary, useFsStore } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
-import { confirmDialog, errorDialog, promptDialog } from "../store/dialogStore";
-import { basename, dirname, display, extname, join, normalize } from "../fs/path";
+import { confirmDialog, errorDialog, fileDialog } from "../store/dialogStore";
+import { basename, dirname, display, extname, normalize } from "../fs/path";
 import { MY_DOCUMENTS } from "../fs/seed";
 import { MenuBar } from "../components/MenuBar";
 import styles from "./Notepad.module.css";
@@ -48,12 +48,13 @@ export function Notepad({ path, windowId }: Props) {
   };
 
   const saveAs = async () => {
-    const folder = file ? dirname(file) : MY_DOCUMENTS;
-    const entered = await promptDialog("Save As", `Save in ${display(folder)}:`, name, "Save");
-    if (entered === null) return false;
+    const picked = await fileDialog("save", file ? dirname(file) : MY_DOCUMENTS, name);
+    if (picked === null) return false;
 
-    const withExt = extname(entered) ? entered.trim() : `${entered.trim()}.txt`;
-    const target = join(folder, withExt);
+    /* Default the extension, the way Notepad does: a file saved as "notes"
+     * becomes notes.txt, because otherwise nothing later knows to open it as
+     * text. */
+    const target = extname(picked) ? picked : `${picked}.txt`;
 
     if (target !== file && exists(target)) {
       const ok = await confirmDialog(
@@ -86,15 +87,14 @@ export function Notepad({ path, windowId }: Props) {
 
   const openDoc = async () => {
     if (!(await confirmDiscard())) return;
-    const entered = await promptDialog(
-      "Open",
-      "Type the full path of the file to open:",
-      file ?? `${display(MY_DOCUMENTS)}\\readme.txt`,
-      "Open"
+    const picked = await fileDialog(
+      "open",
+      file ? dirname(file) : MY_DOCUMENTS,
+      file ? basename(file) : ""
     );
-    if (entered === null) return;
+    if (picked === null) return;
 
-    const target = normalize(entered);
+    const target = normalize(picked);
     /* Notepad on a PNG does not fail, it fills the window with mojibake - which
      * looks like a corrupt file rather than the wrong program. */
     if (isBinary(useFsStore.getState().get(target))) {
