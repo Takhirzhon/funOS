@@ -39,9 +39,6 @@ where the shape exists and the behaviour does not.
 
 Ordered by ratio of "makes the place feel alive" to effort.
 
-- [ ] **Command Prompt** — `dir`, `cd`, `type`, `echo`, `cls`. Reads the VFS, so
-      it is mostly a parser and a scrollback.
-- [ ] **Paint** — canvas, the tool palette, save to the VFS as PNG.
 - [ ] **Minesweeper** — small, self-contained, and instantly recognisable.
 - [ ] **Solitaire** — the card flip animation is the whole point.
 - [ ] **Calculator** — Standard and Scientific.
@@ -75,11 +72,12 @@ back. Both are wired up anyway — they work on some Linux desktops and in kiosk
 mode, and cost nothing when they do not. The shortcut that always arrives is
 `Ctrl+Alt+Left/Right`. Worth knowing before this gets filed as a bug.
 
-**The bundle budget is close.** CI fails the build over 120KB of gzipped entry
-JS and 64KB of CSS; the last measurement was 100KB and 45KB. Paint, with a
-canvas and a palette, is the app likely to cross it. `apps/registry.ts` is the
-right place to start splitting — every app is already reached through one
-lookup, so lazy-loading them is a change to that file and nothing else.
+**The bundle budget is close, and it is now the binding constraint.** CI fails
+the build over 120KB of gzipped entry JS; Paint and the Command Prompt took it
+to **103KB**. Roughly two more applications fit. `apps/registry.ts` is the
+place to split: every app is reached through one lookup, so making `component`
+a `lazy()` import is a change to that file, plus a Suspense boundary in
+`components/Window.tsx`, and nothing else.
 
 **The desktop and Explorer drag differently, on purpose.** The desktop uses
 pointer events, because it is moving an icon to a *position*; Explorer uses

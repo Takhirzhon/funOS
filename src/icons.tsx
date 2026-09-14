@@ -184,6 +184,35 @@ export const PictureIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+export const PaintIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="pt-pot" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stopColor="#f2f4f7" />
+        <stop offset="0.45" stopColor="#c3ccd6" />
+        <stop offset="1" stopColor="#8e9aa6" />
+      </linearGradient>
+    </defs>
+    {/* the pot, tipped, with paint running out of it */}
+    <path d="M6 14h14l-1.2 12.5a1.4 1.4 0 0 1-1.4 1.3H8.6a1.4 1.4 0 0 1-1.4-1.3z" fill="url(#pt-pot)" stroke="#5d7386" strokeWidth="0.9" />
+    <ellipse cx="13" cy="14" rx="7" ry="2.3" fill="#e6ebf0" stroke="#5d7386" strokeWidth="0.9" />
+    <path d="M20 16c4 0 6 2.4 6 5.6 0 2.6-1.6 4.4-3.4 4.4" stroke="#5d7386" strokeWidth="1.4" fill="none" />
+    <path d="M13 12c2.6-4.6 6.4-7.4 10.6-8.4l1.6 3.6C21.4 8.4 18.4 10.4 16 13.6z" fill="#e0342c" stroke="#8f2418" strokeWidth="0.8" />
+    <ellipse cx="13" cy="14" rx="4.6" ry="1.4" fill="#e0342c" opacity="0.85" />
+  </svg>
+);
+
+export const ConsoleIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <rect x="3" y="5" width="26" height="22" rx="1.5" fill="#f0efe7" stroke="#6b6a5e" strokeWidth="0.9" />
+    <rect x="5" y="9" width="22" height="16" fill="#000" />
+    {/* C:\> and a cursor block - the whole identity of the icon at any size */}
+    <path d="M8 13h3M8 16h5M8 19h4" stroke="#c0c0c0" strokeWidth="1.3" strokeLinecap="round" />
+    <rect x="14.5" y="18" width="3" height="2" fill="#c0c0c0" />
+    <rect x="5" y="5.5" width="22" height="3" fill="#d6d4c8" />
+  </svg>
+);
+
 export const DriveIcon = ({ size = 32, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>

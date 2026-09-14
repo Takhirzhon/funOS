@@ -3,11 +3,15 @@ import { Notepad } from "./Notepad";
 import { MyComputer } from "./MyComputer";
 import { Explorer } from "./Explorer";
 import { ImageViewer } from "./ImageViewer";
+import { CommandPrompt } from "./CommandPrompt";
+import { Paint } from "./Paint";
 import { About } from "./About";
 import { RecycleBin } from "./RecycleBin";
 import { RecycleBinAppIcon } from "./appIcons";
 import {
+  ConsoleIcon,
   DocumentsIcon,
+  PaintIcon,
   InfoIcon,
   MyComputerIcon,
   NotepadIcon,
@@ -73,6 +77,22 @@ export const apps = {
     icon: RecycleBinAppIcon,
     defaultSize: { width: 480, height: 340 },
     onDesktop: true,
+  },
+  paint: {
+    title: "untitled - Paint",
+    label: "Paint",
+    component: Paint as ComponentType<Record<string, unknown>>,
+    icon: PaintIcon,
+    defaultSize: { width: 720, height: 560 },
+    onDesktop: false,
+  },
+  commandPrompt: {
+    title: "Command Prompt",
+    label: "Command Prompt",
+    component: CommandPrompt as ComponentType<Record<string, unknown>>,
+    icon: ConsoleIcon,
+    defaultSize: { width: 620, height: 380 },
+    onDesktop: false,
   },
   notepad: {
     title: "Untitled - Notepad",

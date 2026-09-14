@@ -1,0 +1,44 @@
+/* cmd.exe is not an XP-themed window inside. It is a black rectangle with a
+ * fixed-width font, and the only chrome it has is the title bar it lives in.
+ */
+.app {
+  height: 100%;
+  padding: 4px 6px;
+  overflow-y: auto;
+  background: #000;
+  color: #c0c0c0;
+  /* Perfect DOS VGA 437 ships with xp.css and, until now, nothing used it - the
+   * font was dead weight in every bundle. A console is the one place it is
+   * right rather than a costume.
+   */
+  font-family: "Perfect DOS VGA 437 Win", "Lucida Console", Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.15;
+  cursor: text;
+}
+
+.line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.prompt {
+  display: flex;
+  align-items: baseline;
+}
+
+/* The input is the console: no border, no background, same font, same colour.
+ * Anything else and the caret sits in a box that cmd.exe does not have.
+ */
+.input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  caret-color: #c0c0c0;
+}
