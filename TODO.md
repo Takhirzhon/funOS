@@ -43,15 +43,15 @@ Ordered by ratio of "makes the place feel alive" to effort.
       refuse to be framed; pick ones that allow it and say so honestly rather
       than shipping a window that is blank for unexplained reasons.
 - [ ] **Media Player** — audio from the VFS, with the visualiser.
-- [ ] **Control Panel** — Display Properties first, so the wallpaper and the
-      theme become user-changeable.
+- [ ] **Control Panel proper.** Display Properties exists and owns Themes and
+      Screen Saver. It has no Desktop tab, so the wallpaper is still fixed, and
+      there is no Control Panel window listing anything else.
 
 ## The details nobody asks for and everybody notices
 
-- [ ] **Themes.** Luna Blue, Olive Green, Silver. The palette is already in
-      custom properties in one block of `index.css`, so this is an override
-      rather than a rewrite.
-- [ ] **Screensavers.** Pipes, 3D Maze, Starfield.
+- [ ] **3D Maze.** The other two screensavers shipped; this one needs a
+      raycaster and a texture set, and a flat approximation would be a
+      different program wearing its name. Mystify stands in for now.
 
 ---
 

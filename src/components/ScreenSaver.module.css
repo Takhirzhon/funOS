@@ -1,0 +1,16 @@
+/* Above everything, including the modal dialog layer: a screensaver that a
+ * dialog could cover would be a screensaver that failed to save the screen.
+ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45000;
+  background: #000;
+  cursor: none;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

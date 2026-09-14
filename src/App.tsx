@@ -5,6 +5,7 @@ import { Taskbar } from "./components/Taskbar";
 import { ContextMenu } from "./components/ContextMenu";
 import { Dialog } from "./components/Dialog";
 import { Balloon } from "./components/Balloon";
+import { ScreenSaver } from "./components/ScreenSaver";
 import { TaskSwitcher } from "./components/TaskSwitcher";
 import { BootScreen, GoodbyeScreen, LoginScreen, TurnOffDialog } from "./boot/Session";
 import { useWindowStore } from "./store/windowStore";
@@ -37,6 +38,9 @@ export default function App() {
       <Dialog />
       <Balloon />
       {turningOff && <TurnOffDialog />}
+      {/* Above the dialog layer: a screensaver a dialog could cover would be
+          one that failed to save the screen. */}
+      <ScreenSaver />
     </>
   );
 }

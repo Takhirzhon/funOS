@@ -244,3 +244,117 @@ ul.tree-view,
 .window-host > * {
   pointer-events: auto;
 }
+
+/* ---- Colour schemes -------------------------------------------------------
+ * Olive Green and Silver, as overrides of the one palette block at the top of
+ * this file. Nothing else in the project changes: every colour the shell draws
+ * already comes from these properties, which is the whole reason they were
+ * collected in one place.
+ *
+ * The title bar is the exception and has to be restated, because xp.css hard
+ * codes its gradient rather than reading a property. That is one selector per
+ * scheme, which is cheaper than forking xp.css.
+ */
+[data-theme="olive"] {
+  --luna-blue: #7b8c3f;
+  --luna-blue-dark: #5c6b28;
+
+  --luna-taskbar: linear-gradient(
+    to bottom,
+    #5a6b23 0%,
+    #93a83f 3%,
+    #9db44f 6%,
+    #a8bf5a 10%,
+    #9db44f 12%,
+    #8fa844 15%,
+    #7f9a36 20%,
+    #7d9834 90%,
+    #748c2e 94%,
+    #6a8128 97%,
+    #5e7420 100%
+  );
+  --luna-taskbar-top: #93a83f;
+
+  --luna-tray: linear-gradient(
+    to bottom,
+    #5e7420 0%,
+    #8aa33a 8%,
+    #90a93f 50%,
+    #85a036 88%,
+    #6d8527 100%
+  );
+
+  --luna-task: linear-gradient(to bottom, #9db44f 0%, #87a03c 45%, #7a9334 100%);
+  --luna-task-active: linear-gradient(to bottom, #61761f 0%, #75892d 50%, #7f9435 100%);
+  --luna-task-hover: linear-gradient(to bottom, #b3c96a 0%, #96ad48 45%, #85a03c 100%);
+}
+
+[data-theme="olive"] .title-bar {
+  background: linear-gradient(
+    180deg,
+    #a8bf5a,
+    #7f9a36 8%,
+    #7d9834 40%,
+    #83a03a 88%,
+    #83a03a 93%,
+    #78912f 95%,
+    #5e7420 96%,
+    #5e7420
+  );
+  border-top-color: #93a83f;
+  border-left-color: #93a83f;
+  border-right-color: #5e7420;
+  text-shadow: 1px 1px #4a5c19;
+}
+
+[data-theme="silver"] {
+  --luna-blue: #7a7a92;
+  --luna-blue-dark: #55556a;
+
+  --luna-taskbar: linear-gradient(
+    to bottom,
+    #6d6d84 0%,
+    #9d9db4 3%,
+    #b4b4c8 6%,
+    #c2c2d4 10%,
+    #b4b4c8 12%,
+    #a5a5bb 15%,
+    #9696ae 20%,
+    #9393ab 90%,
+    #8a8aa2 94%,
+    #7f7f97 97%,
+    #71718a 100%
+  );
+  --luna-taskbar-top: #b8b8cc;
+
+  --luna-tray: linear-gradient(
+    to bottom,
+    #71718a 0%,
+    #a3a3ba 8%,
+    #acacc2 50%,
+    #a0a0b7 88%,
+    #82829a 100%
+  );
+
+  --luna-task: linear-gradient(to bottom, #b8b8cc 0%, #a0a0b7 45%, #9393ab 100%);
+  --luna-task-active: linear-gradient(to bottom, #73738c 0%, #87879e 50%, #9191a8 100%);
+  --luna-task-hover: linear-gradient(to bottom, #cbcbdc 0%, #b0b0c5 45%, #a0a0b7 100%);
+}
+
+[data-theme="silver"] .title-bar {
+  background: linear-gradient(
+    180deg,
+    #c6c6d8,
+    #9696ae 8%,
+    #9393ab 40%,
+    #9a9ab1 88%,
+    #9a9ab1 93%,
+    #8d8da5 95%,
+    #71718a 96%,
+    #71718a
+  );
+  border-top-color: #b8b8cc;
+  border-left-color: #b8b8cc;
+  border-right-color: #71718a;
+  text-shadow: 1px 1px #55556a;
+}

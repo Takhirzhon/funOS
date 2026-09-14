@@ -349,8 +349,15 @@ export function Desktop() {
       { kind: "separator" },
       {
         kind: "item",
+        /* Display Properties, not the Desktop folder's properties. Right-click
+         * the desktop and choose Properties and this is what opens in Windows,
+         * which is why nobody ever found the folder's own dialog. */
         label: "Properties",
-        onClick: () => void propertiesDialog([DESKTOP_DIR], "Desktop"),
+        onClick: () =>
+          open("displayProperties", {
+            title: "Display Properties",
+            bounds: { width: 420, height: 470 },
+          }),
       },
     ]);
   };

@@ -1,0 +1,140 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+  font-size: 11px;
+}
+
+/* Tabs sit on the page and the active one joins it, which is the whole trick:
+ * the selected tab has no bottom border, so it reads as part of the sheet.
+ */
+.tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid #919b9c;
+}
+
+.tab {
+  all: unset;
+  padding: 3px 10px 4px;
+  cursor: default;
+  color: #000;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 100%);
+  border: 1px solid #919b9c;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: -1px;
+}
+
+.tab.active {
+  background: #fff;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #fff;
+}
+
+.page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  background: #fff;
+}
+
+.blurb {
+  margin: 0 0 12px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.field > span:first-child {
+  width: 92px;
+  flex: none;
+}
+
+.field select {
+  flex: 1;
+  min-width: 0;
+  max-width: 260px;
+}
+
+.field input[type="number"] {
+  width: 60px;
+}
+
+/* ---- Theme preview ---------------------------------------------------------- */
+
+.sample {
+  border: 1px solid #919b9c;
+  background: #5a7edc;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.sampleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 22px;
+  margin-top: 78px;
+  background: var(--luna-taskbar);
+  border-top: 1px solid var(--luna-taskbar-top);
+}
+
+.sampleStart {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px 0 6px;
+  background: var(--luna-start);
+  border-radius: 0 7px 7px 0;
+  color: #fff;
+  font-family: var(--font-caption);
+  font-style: italic;
+  font-weight: bold;
+}
+
+.sampleTray {
+  width: 56px;
+  height: 22px;
+  background: var(--luna-tray);
+}
+
+/* ---- Screen saver preview ----------------------------------------------------
+ * The little monitor. It is the control that makes this tab make sense, and it
+ * is why this is a window and not a modal that would dim the thing it previews.
+ */
+.monitor {
+  width: 172px;
+  margin: 0 auto 14px;
+}
+
+.monitorScreen {
+  display: block;
+  width: 100%;
+  height: 116px;
+  background: #000;
+  border: 6px solid #d8d5c8;
+  border-bottom-width: 14px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px #6b6a5e, 0 1px 3px #0004;
+}
+
+.stand {
+  width: 54px;
+  height: 10px;
+  margin: 0 auto;
+  background: #c8c5b8;
+  border: 1px solid #6b6a5e;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+}

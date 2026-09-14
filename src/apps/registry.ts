@@ -3,6 +3,7 @@ import { RecycleBinAppIcon } from "./appIcons";
 import {
   CalculatorIcon,
   CardsIcon,
+  ControlPanelIcon,
   ConsoleIcon,
   MineIcon,
   DocumentsIcon,
@@ -113,6 +114,14 @@ export const apps = {
     component: app(() => import("./Minesweeper"), "Minesweeper"),
     icon: MineIcon,
     defaultSize: { width: 340, height: 420 },
+    onDesktop: false,
+  },
+  displayProperties: {
+    title: "Display Properties",
+    label: "Display Properties",
+    component: app(() => import("./DisplayProperties"), "DisplayProperties"),
+    icon: ControlPanelIcon,
+    defaultSize: { width: 420, height: 470 },
     onDesktop: false,
   },
   solitaire: {
