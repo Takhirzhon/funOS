@@ -61,3 +61,31 @@
   flex: none;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
 }
+
+/* "Click here to begin." Pale yellow, one-pixel black border, and it waits
+ * the better part of a second the way every tooltip did, so it shows up for
+ * somebody wondering and not for somebody passing through. */
+.tip {
+  position: absolute;
+  left: 6px;
+  bottom: calc(100% + 4px);
+  padding: 2px 5px;
+  font: 11px var(--font-ui);
+  font-style: normal;
+  font-weight: normal;
+  color: #000;
+  text-shadow: none;
+  background: #ffffe1;
+  border: 1px solid #000;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.1s, visibility 0s 0.1s;
+  pointer-events: none;
+}
+
+.start:hover .tip {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.8s, 0.8s;
+}

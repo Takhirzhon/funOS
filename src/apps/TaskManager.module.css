@@ -1,0 +1,254 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+  font-size: 11px;
+}
+
+.tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid #919b9c;
+}
+
+.tab {
+  all: unset;
+  padding: 3px 10px 4px;
+  cursor: default;
+  color: #000;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 100%);
+  border: 1px solid #919b9c;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: -1px;
+}
+
+.tab.active {
+  background: #fff;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #fff;
+}
+
+.page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 8px;
+  background: #fff;
+}
+
+/* The list: a sunken white box with a column header, which is what every
+ * tab in this program was. */
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #7f9db9;
+}
+
+.headerRow {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  background: linear-gradient(to bottom, #fff 0%, #f0f0ea 100%);
+  border-bottom: 1px solid #d5d2c4;
+}
+
+.headerRow span {
+  padding: 2px 6px;
+  border-right: 1px solid #d5d2c4;
+  white-space: nowrap;
+}
+
+
+.row {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  width: 100%;
+  cursor: default;
+  color: #000;
+}
+
+.row > span {
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* After .row, and doubled up, so the four-column tabs beat the two-column
+ * default whatever order the bundler leaves the rules in. */
+.headerRow.procHeader,
+.row.procRow {
+  grid-template-columns: 1fr 110px 44px 90px;
+}
+
+.headerRow.netHeader,
+.row.netRow {
+  grid-template-columns: 1fr 120px 80px 90px;
+}
+
+.selected {
+  background: #316ac5;
+  color: #fff;
+}
+
+.cellName {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.num {
+  text-align: right;
+}
+
+.buttons {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+}
+
+.buttons button {
+  min-width: 80px;
+  height: 23px;
+}
+
+.check {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---- Performance ----------------------------------------------------------- */
+
+.perf {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+}
+
+.perfRow {
+  display: flex;
+  gap: 6px;
+}
+
+.group {
+  margin: 0;
+  padding: 4px 8px 8px;
+  border: 1px solid #d0d0bf;
+  border-radius: 3px;
+  min-width: 0;
+}
+
+.group legend {
+  color: #0046d5;
+  padding: 0 3px;
+}
+
+.grow {
+  flex: 1;
+}
+
+/* The big number: green LED digits on black, the one thing on this tab
+ * that was not a chart. */
+.meter {
+  width: 64px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  background: #000;
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  font-size: 13px;
+  border: 1px solid #555;
+}
+
+.graph {
+  display: block;
+  width: 100%;
+  height: 56px;
+  border: 1px solid #555;
+}
+
+.graphTall {
+  display: block;
+  width: 100%;
+  height: 120px;
+  border: 1px solid #555;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1px 12px;
+  margin: 0;
+}
+
+.stats dt {
+  color: #000;
+}
+
+.stats dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  flex: none;
+  display: flex;
+  height: 21px;
+  align-items: center;
+  border-top: 1px solid #d5d2c4;
+  background: var(--luna-face);
+}
+
+.status span {
+  padding: 0 8px;
+  height: 17px;
+  line-height: 17px;
+  border-right: 1px solid #aca899;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .tab {
+    padding: 3px 5px 4px;
+  }
+
+  .headerRow.procHeader,
+  .row.procRow {
+    grid-template-columns: 1fr 40px 74px;
+  }
+
+  .procHeader span:nth-child(2),
+  .procRow span:nth-child(2) {
+    display: none;
+  }
+
+  .perfRow {
+    flex-direction: column;
+  }
+}

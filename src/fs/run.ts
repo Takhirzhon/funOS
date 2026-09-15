@@ -2,6 +2,7 @@ import { useWindowStore } from "../store/windowStore";
 import { useFsStore } from "../store/fsStore";
 import { errorDialog, runDialog } from "../store/dialogStore";
 import { apps, type AppId } from "../apps/registry";
+import { useSessionStore } from "../store/sessionStore";
 import { launchFile } from "./open";
 import { basename, normalize } from "./path";
 
@@ -28,6 +29,7 @@ const PROGRAMS: Record<string, AppId> = {
   control: "displayProperties",
   "sysdm.cpl": "systemProperties",
   winver: "about",
+  taskmgr: "taskManager",
 };
 
 const MRU_KEY = "run.mru";
@@ -64,6 +66,12 @@ export function runCommand(input: string): boolean {
   const [head, ...rest] = command.split(/\s+/);
   const name = head.toLowerCase().replace(/\.exe$/, "");
   const argument = rest.join(" ");
+
+  /* Not on any list. */
+  if (name === "crash") {
+    useSessionStore.getState().crash();
+    return true;
+  }
 
   if (name in PROGRAMS) {
     const appId = PROGRAMS[name];

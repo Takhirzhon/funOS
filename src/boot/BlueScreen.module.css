@@ -1,0 +1,30 @@
+/* #0000AA and Lucida Console - the two facts everyone remembers. Above the
+ * boot screen's z-index: a crash covers whatever was on top. */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50000;
+  background: #0000aa;
+  color: #fff;
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+  cursor: none;
+}
+
+.text {
+  margin: 0;
+  padding: 26px 34px;
+  font-family: "Lucida Console", "Courier New", monospace;
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: pre-wrap;
+  user-select: none;
+}
+
+@media (max-width: 700px) {
+  .text {
+    font-size: 11px;
+    padding: 12px 10px;
+  }
+}

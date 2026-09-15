@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import { TASKBAR_HEIGHT, useWindowStore, type WindowState } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
@@ -7,6 +7,24 @@ import { apps } from "../apps/registry";
 import styles from "./Window.module.css";
 
 type Props = { window: WindowState };
+
+/* The Suspense fallback, and the hourglass that goes with it. XP showed the
+ * arrow-with-hourglass from the double-click until the program's window had
+ * something in it, and the class on <body> is how a cursor is changed for the
+ * whole screen rather than for the one element under it. Counted, because two
+ * programs can be starting at once. */
+let starting = 0;
+function Starting() {
+  useEffect(() => {
+    starting += 1;
+    document.body.classList.add("app-starting");
+    return () => {
+      starting -= 1;
+      if (starting === 0) document.body.classList.remove("app-starting");
+    };
+  }, []);
+  return <div className={styles.loading} />;
+}
 
 const MIN_W = 240;
 const MIN_H = 160;
@@ -136,7 +154,7 @@ export function Window({ window: w }: Props) {
               already there, which is what "the program is starting" looks
               like on a desktop. A spinner inside a window that already exists
               reads as an error. */}
-          <Suspense fallback={<div className={styles.loading} />}>
+          <Suspense fallback={<Starting />}>
             {/* windowId lets an app talk about its own window - Notepad renames
                 the caption to whatever file it has open. */}
             <Body {...(w.props ?? {})} windowId={w.id} />

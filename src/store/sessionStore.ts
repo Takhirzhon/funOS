@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { playSound } from "./soundStore";
+import { useWindowStore } from "./windowStore";
 
 /* The machine every screen before the desktop belongs to.
  *
@@ -12,7 +13,27 @@ import { playSound } from "./soundStore";
  * session and only one can be true. Two booleans would allow "shutting down
  * while logged out", which is not a thing.
  */
-export type Phase = "boot" | "login" | "desktop" | "goodbye";
+export type Phase = "boot" | "login" | "desktop" | "goodbye" | "crash";
+
+/* A stop error: the code and the name it was known by. Two of the ones
+ * people actually saw. */
+export type StopError = { code: string; name: string; params: string };
+
+export const STOP_ERRORS = {
+  /* The everyday one - a bad driver, a bad stick of RAM, a Tuesday. */
+  irql: {
+    code: "0x0000000A",
+    name: "IRQL_NOT_LESS_OR_EQUAL",
+    params: "(0x00000000, 0x00000002, 0x00000000, 0x804E3E1D)",
+  },
+  /* What you got for ending csrss.exe in Task Manager, which somebody
+   * always tried. */
+  critical: {
+    code: "0x000000F4",
+    name: "CRITICAL_OBJECT_TERMINATION",
+    params: "(0x00000003, 0x8A1B2C40, 0x8A1B2DB4, 0x805D22DA)",
+  },
+} satisfies Record<string, StopError>;
 
 const SEEN_KEY = "funos.booted";
 
@@ -41,6 +62,8 @@ const rememberBoot = () => {
 
 type SessionStore = {
   phase: Phase;
+  /** Which stop error the blue screen shows. Meaningless outside "crash". */
+  stop: StopError;
   /** True while the shutdown dialog is up, which dims the desktop behind it. */
   turningOff: boolean;
   finishBoot: () => void;
@@ -50,11 +73,19 @@ type SessionStore = {
   cancelTurnOff: () => void;
   turnOff: () => void;
   restart: () => void;
+  /** Blue screen. Every window is gone - that is what a crash was. */
+  crash: (stop?: StopError) => void;
 };
 
 export const useSessionStore = create<SessionStore>((set) => ({
   phase: alreadyBooted() ? "login" : "boot",
+  stop: STOP_ERRORS.irql,
   turningOff: false,
+
+  crash: (stop = STOP_ERRORS.irql) => {
+    useWindowStore.setState({ windows: [], focusedId: null });
+    set({ phase: "crash", stop, turningOff: false });
+  },
 
   finishBoot: () => {
     rememberBoot();

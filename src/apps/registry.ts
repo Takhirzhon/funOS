@@ -16,6 +16,7 @@ import {
   PictureViewerIcon,
   ReaderIcon,
   SystemPropertiesIcon,
+  TaskManagerIcon,
 } from "../icons";
 
 export type IconComponent = ComponentType<{
@@ -164,6 +165,15 @@ export const apps = {
     component: app(() => import("./SystemProperties"), "SystemProperties"),
     icon: SystemPropertiesIcon,
     defaultSize: { width: 420, height: 460 },
+    onDesktop: false,
+  },
+  /* Ctrl+Shift+Esc, the taskbar's menu, or taskmgr in Run. */
+  taskManager: {
+    title: "Windows Task Manager",
+    label: "Task Manager",
+    component: app(() => import("./TaskManager"), "TaskManager"),
+    icon: TaskManagerIcon,
+    defaultSize: { width: 420, height: 480 },
     onDesktop: false,
   },
   solitaire: {

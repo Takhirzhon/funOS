@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
 import { useSoundStore } from "../store/soundStore";
@@ -34,6 +34,12 @@ export function Taskbar() {
 
   /* The taskbar's own menu. Everything here acts on every window at once,
    * which is exactly what distinguishes it from the task button's menu. */
+  /* Stable, so the key listener below is registered once. */
+  const launch = useCallback(
+    (appId: AppId) => open(appId, { title: apps[appId].title, bounds: apps[appId].defaultSize }),
+    [open]
+  );
+
   const barMenu = (e: ReactMouseEvent) => {
     e.preventDefault();
     const none = windows.length === 0;
@@ -54,7 +60,7 @@ export function Taskbar() {
       { kind: "separator" },
       { kind: "item", label: "Show the Desktop", disabled: none, onClick: minimizeAll },
       { kind: "separator" },
-      { kind: "item", label: "Task Manager", disabled: true },
+      { kind: "item", label: "Task Manager", onClick: () => launch("taskManager") },
       { kind: "item", label: "Properties", disabled: true },
     ]);
   };
@@ -66,21 +72,49 @@ export function Taskbar() {
     return () => window.removeEventListener("mousedown", close);
   }, [startOpen]);
 
-  /* Win+Pause opened System Properties. The Win half never reaches a web
-   * page - the host takes it - so Pause on its own does the job here, which
-   * is a key nothing else on this desktop has a use for. */
+  /* The shell's own keys.
+   *
+   *   Pause            System Properties. Win+Pause on the real thing; the Win
+   *                    half never reaches a page, and Pause has no other use.
+   *   Ctrl+Shift+Esc   Task Manager. Windows takes this one for its own Task
+   *                    Manager, so it works on every other host; the taskbar
+   *                    menu and `taskmgr` in Run are the ones that always do.
+   *   Ctrl+Esc         The Start menu, and it arrives everywhere.
+   *   Win, alone       The Start menu too - on hosts that let the key through.
+   *                    "Alone" is a press and release with nothing in between,
+   *                    so Win+R on a host that does let it through does not
+   *                    also open the menu.
+   */
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Pause") return;
-      e.preventDefault();
-      open("systemProperties", {
-        title: apps.systemProperties.title,
-        bounds: apps.systemProperties.defaultSize,
-      });
+    let metaAlone = false;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Meta") {
+        metaAlone = true;
+        return;
+      }
+      metaAlone = false;
+      if (e.key === "Pause") {
+        e.preventDefault();
+        launch("systemProperties");
+      } else if (e.key === "Escape" && e.ctrlKey && e.shiftKey) {
+        e.preventDefault();
+        launch("taskManager");
+      } else if (e.key === "Escape" && e.ctrlKey) {
+        e.preventDefault();
+        setStartOpen((v) => !v);
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Meta" && metaAlone) setStartOpen((v) => !v);
+      metaAlone = false;
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [launch]);
 
   return (
     <>

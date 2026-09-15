@@ -13,6 +13,14 @@ export function StartButton({ open, onClick }: Props) {
     >
       <StartLogoIcon size={19} className={styles.logo} />
       start
+      {/* The tooltip is drawn, not the browser's: a native `title` comes up
+          in the host's style, which on this desktop is the wrong operating
+          system. Hidden while the menu is open, since you have begun. */}
+      {!open && (
+        <span className={styles.tip} role="tooltip">
+          Click here to begin
+        </span>
+      )}
     </button>
   );
 }

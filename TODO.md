@@ -58,10 +58,6 @@ Ordered by ratio of "makes the place feel alive" to effort.
 - [ ] **Control Panel proper.** Display Properties exists and owns Themes and
       Screen Saver. It has no Desktop tab, so the wallpaper is still fixed, and
       there is no Control Panel window listing anything else.
-- [ ] **Task Manager.** Ctrl+Alt+Del (and Ctrl+Shift+Esc, which the browser
-      actually delivers) opens the Applications tab off `windowStore` and a
-      Processes tab that lists the same things with made-up memory. End Task
-      closes the window. It is the most opened window in XP after Explorer.
 - [ ] **Run… Browse.** Greyed, because there is one dialog at a time and a
       file picker would replace the Run box. Either the picker returns into
       the box, or Run becomes a window. Win+R never reaches the page.
@@ -80,8 +76,6 @@ and "that is XP".
 - [ ] **Rename in place.** Click a selected icon, pause, click again - or F2 -
       and the label becomes an edit box on the spot. Both the desktop and
       Explorer rename through a prompt dialog today, which is what a Mac did.
-- [ ] **"Click here to begin."** The Start button's tooltip, and the hover
-      highlight on the button itself. The balloon exists; the tooltip does not.
 - [ ] **The tray chevron.** The arrow that hides inactive icons, and the
       "Windows can hide inactive icons" balloon the first time. The tray has
       two icons and no chevron, which is a tray from a fresh install that
@@ -90,17 +84,9 @@ and "that is XP".
       Critical Stop plays on an error dialog and not just a ding, and that
       the shutdown sound plays over GoodbyeScreen - that one is the sound
       people remember.
-- [ ] **The Windows key opens the Start menu.** It reaches the page on every
-      platform where Alt+Tab does not.
-- [ ] **The busy cursor.** Every app is a lazy import and the Suspense
-      fallback is an empty window. That is right; the cursor should also be
-      the hourglass until the chunk lands.
 - [ ] **Tooltips on task buttons.** The title bar cuts a long caption with
       an ellipsis now; the task button still clips, and has no tooltip to
       show the rest.
-- [ ] **A blue screen.** `crash` at the Command Prompt, or a keystroke, and
-      the real one: `0x0000007B`, the memory dump counting up, any key to
-      reboot into the boot screen. This is the screenshot people share.
 
 ---
 
@@ -110,7 +96,10 @@ and "that is XP".
 claims both before the browser sees them, and `preventDefault` cannot take them
 back. Both are wired up anyway — they work on some Linux desktops and in kiosk
 mode, and cost nothing when they do not. The shortcut that always arrives is
-`Ctrl+Alt+Left/Right`. Worth knowing before this gets filed as a bug.
+`Ctrl+Alt+Left/Right`. Worth knowing before this gets filed as a bug. The
+same goes for Ctrl+Shift+Esc and the Win key on a Windows host - both are
+wired, both work elsewhere, and the taskbar's menu, Ctrl+Esc and `taskmgr`
+in Run are the paths that always arrive.
 
 **The bundle budgets are a tripwire, not a limit.** Nothing about the browser
 stops this being twice the size; the numbers in `ci.yml` are chosen, and their

@@ -250,6 +250,14 @@ ul.tree-view,
   pointer-events: auto;
 }
 
+/* The arrow with the hourglass, everywhere, while a program is starting.
+ * `progress` is that cursor; `wait` is the hourglass alone, which XP used for
+ * "you cannot click anything", and you can. */
+body.app-starting,
+body.app-starting * {
+  cursor: progress !important;
+}
+
 /* ---- Colour schemes -------------------------------------------------------
  * Olive Green and Silver, as overrides of the one palette block at the top of
  * this file. Nothing else in the project changes: every colour the shell draws

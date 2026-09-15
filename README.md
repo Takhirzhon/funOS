@@ -74,7 +74,9 @@ mapping and the formats.
   - **Paint**, **Command Prompt**, **Calculator**, **Minesweeper**, **Solitaire**
   - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze
   - **System Properties** — right-click My Computer, or Pause: registered to, build from `/health`, what the browser knows about the machine
-  - **Run…** — `notepad`, `calc`, `mspaint`, `sol`, `winmine`, `sysdm.cpl`, a path, or an address
+  - **Run…** — `notepad`, `calc`, `mspaint`, `sol`, `winmine`, `sysdm.cpl`, `taskmgr`, a path, or an address
+  - **Task Manager** — Applications (real), Processes (the windows as their .exe names, plus every XP machine's svchost.exe), Performance with a measured CPU graph. Ending csrss.exe does what it did.
+  - A blue screen — `crash` at the Command Prompt or in Run, the memory dump, any key to reboot
   - **About funOS**
 
 ## Project layout

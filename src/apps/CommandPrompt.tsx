@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { isBinary, listEntries, useFsStore } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
+import { useSessionStore } from "../store/sessionStore";
 import { HOME } from "../fs/seed";
 import { basename, display, isDriveRoot, join, normalize } from "../fs/path";
 import { entryBytes } from "../fs/icons";
@@ -81,6 +82,11 @@ export function CommandPrompt({ windowId }: Props) {
       case "ver":
         emit("", "funOS [Version 5.1.2600]", "");
         break;
+
+      /* Not in HELP. Some things you have to know. */
+      case "crash":
+        useSessionStore.getState().crash();
+        return;
 
       case "help":
         emit(

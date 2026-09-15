@@ -8,6 +8,7 @@ import { Balloon } from "./components/Balloon";
 import { ScreenSaver } from "./components/ScreenSaver";
 import { TaskSwitcher } from "./components/TaskSwitcher";
 import { BootScreen, GoodbyeScreen, LoginScreen, TurnOffDialog } from "./boot/Session";
+import { BlueScreen } from "./boot/BlueScreen";
 import { useWindowStore } from "./store/windowStore";
 import { useSessionStore } from "./store/sessionStore";
 
@@ -19,6 +20,7 @@ export default function App() {
   if (phase === "boot") return <BootScreen />;
   if (phase === "login") return <LoginScreen />;
   if (phase === "goodbye") return <GoodbyeScreen />;
+  if (phase === "crash") return <BlueScreen />;
 
   return (
     <>
