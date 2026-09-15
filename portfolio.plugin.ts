@@ -26,8 +26,10 @@ const ROOT = "public/portfolio";
 const URL_BASE = "/portfolio";
 
 /* Skipped at the top level only: the README explains the folder to whoever
- * opens the repository, not to a visitor. */
-const IGNORED = new Set(["README.md", ".gitkeep", ".DS_Store", "Thumbs.db"]);
+ * opens the repository, not to a visitor, and cv.json is read below rather
+ * than shown as a file. */
+const CV_FILE = "cv.json";
+const IGNORED = new Set(["README.md", CV_FILE, ".gitkeep", ".DS_Store", "Thumbs.db"]);
 
 const MIME: Record<string, string> = {
   ".pdf": "application/pdf",
@@ -100,6 +102,60 @@ function scan(dir: string, out: PortfolioFile[]): void {
   }
 }
 
+/* ---- The CV, as data --------------------------------------------------------
+ *
+ * public/portfolio/cv.json sits next to the PDF and says the same things in a
+ * form a program can read: the jobs, the projects, the links, the facts on
+ * the home page. Internet Explorer's pages are drawn from it (src/apps/ie/
+ * pages.tsx), and the JSON-LD a search engine reads is written from it into
+ * index.html here - the pages themselves are inside a window a crawler never
+ * opens. One file to change when the PDF changes. The shape is described
+ * where it is consumed, in src/portfolio.d.ts.
+ */
+const cvPath = () => join(ROOT, CV_FILE);
+const readCv = (): Record<string, unknown> => JSON.parse(readFileSync(cvPath(), "utf8"));
+
+function jsonLd(cv: Record<string, unknown>): string {
+  const c = cv as {
+    name: string;
+    givenName: string;
+    familyName: string;
+    title: string;
+    summary: string;
+    email: string;
+    location: { city: string; countryCode: string };
+    links: { href: string }[];
+    work: { org: string; to: string | null }[];
+    education: { school: string }[];
+    knowsAbout: string[];
+    spoken: { code: string }[];
+  };
+  const current = c.work.find((w) => w.to === null);
+  const person = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: c.name,
+    givenName: c.givenName,
+    familyName: c.familyName,
+    jobTitle: c.title,
+    description: c.summary,
+    url: `${SITE}/`,
+    image: `${SITE}/og.jpg`,
+    email: `mailto:${c.email}`,
+    address: { "@type": "PostalAddress", addressLocality: c.location.city, addressCountry: c.location.countryCode },
+    ...(current ? { worksFor: { "@type": "Organization", name: current.org } } : {}),
+    alumniOf: c.education.map((e) => ({ "@type": "CollegeOrUniversity", name: e.school })),
+    knowsAbout: c.knowsAbout,
+    knowsLanguage: c.spoken.map((s) => s.code),
+    sameAs: c.links.map((l) => l.href),
+  };
+  /* "</script>" inside a JSON string would end the block early; JSON allows
+   * the escaped slash, so it is what goes out. */
+  return JSON.stringify(person, null, 2).replace(/<\//g, "<\\/");
+}
+
+const JSONLD_MARK = "<!-- jsonld -->";
+
 const VIRTUAL_ID = "virtual:portfolio";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 
@@ -156,7 +212,10 @@ function feeds(files: PortfolioFile[]): { rss: string; sitemap: string } {
     .map(parsePost)
     .filter((p): p is Post => p !== null)
     .sort((a, b) => b.date.localeCompare(a.date));
-  const link = (p: Post) => `${SITE}/#about:blog/${p.slug}`;
+  /* The path form from src/apps/ie/site.ts, which is also what the address
+   * bar shows once the post is open. The first items went out as
+   * /#about:blog/<slug>; the desktop still takes that. */
+  const link = (p: Post) => `${SITE}/blog/${p.slug}`;
 
   const items = posts
     .map(
@@ -193,6 +252,18 @@ ${items}
     )
     .join("\n");
 
+  /* The pages Internet Explorer has, at the addresses the desktop opens
+   * them from. Hand-listed, in step with ROUTES in src/apps/ie/site.ts. */
+  const pages = ["/work", "/projects", "/photos", "/guestbook", "/contact", "/blog", "/cv"]
+    .map(
+      (p) => `  <url>
+    <loc>${SITE}${p}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>`
+    )
+    .join("\n");
+
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -200,6 +271,7 @@ ${items}
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+${pages}
 ${urls}
 </urlset>
 `;
@@ -216,7 +288,12 @@ export function portfolio(): Plugin {
       if (id !== RESOLVED_ID) return undefined;
       const files: PortfolioFile[] = [];
       scan(ROOT, files);
-      return `export const files = ${JSON.stringify(files)};`;
+      return `export const files = ${JSON.stringify(files)};\nexport const cv = ${JSON.stringify(readCv())};`;
+    },
+    /* The JSON-LD in index.html is the CV, not a second copy of it. */
+    transformIndexHtml(html) {
+      const block = `<script type="application/ld+json">\n${jsonLd(readCv())}\n    </script>`;
+      return html.replace(JSONLD_MARK, block);
     },
     /* The feed and the sitemap ride along with the build as if they had been
      * in public/. */

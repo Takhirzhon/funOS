@@ -31,6 +31,12 @@
     <meta name="twitter:title" content="Tokhirzhon Tashmatov - a Windows XP desktop in your browser" />
     <meta name="twitter:description" content="AI/ML engineer, Bishkek. The CV is on the desktop." />
     <meta name="twitter:image" content="https://khirokhito.tech/og.jpg" />
+    <!-- Who this is, for a crawler. The pages themselves are drawn inside a
+         window that is not open when the crawler arrives, so nothing on them
+         is in the DOM; this is the part of the home page a search engine can
+         read. Written at build time by portfolio.plugin.ts from
+         public/portfolio/cv.json - the same file the pages are drawn from. -->
+    <!-- jsonld -->
   </head>
   <body>
     <div id="root"></div>

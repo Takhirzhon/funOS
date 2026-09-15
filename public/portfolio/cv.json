@@ -1,0 +1,182 @@
+{
+  "_": "The facts on the home page, next to the PDF they come from. Internet Explorer's Work, Projects, Contact and Quick facts are drawn from this, and portfolio.plugin.ts writes the JSON-LD in index.html from it. Change the PDF, change this; nothing else knows these numbers. Dates are YYYY-MM-DD, YYYY-MM or YYYY. This file is not shown inside funOS.",
+
+  "name": "Tokhirzhon Tashmatov",
+  "givenName": "Tokhirzhon",
+  "familyName": "Tashmatov",
+  "title": "AI/ML Engineer",
+  "location": { "city": "Bishkek", "country": "Kyrgyzstan", "countryCode": "KG" },
+  "email": "tashmatovtahir@gmail.com",
+  "summary": "AI/ML engineer focused on LLM systems and their evaluation. I ship production LLM applications end to end - agents, RAG, retrieval - and build the adversarial-evaluation and red-teaming tooling that stress-tests them and measures where they fail. Strong Python and data-engineering foundation; bias toward building, testing and measuring what actually works.",
+
+  "telegram": "https://t.me/+996770692984",
+  "availability": {
+    "status": "Open to remote AI/LLM engineering roles - full-time or contract, starting on a month's notice.",
+    "timezone": "UTC+6 (Bishkek). No daylight saving.",
+    "overlap": "The whole working day with Europe and the Middle East, mornings with the U.S. East Coast (until about 1 p.m. ET), and afternoons with India and Southeast Asia."
+  },
+
+  "links": [
+    { "label": "GitHub", "href": "https://github.com/Takhirzhon" },
+    { "label": "LinkedIn", "href": "https://www.linkedin.com/in/tokhirzhon-s-tashmatov-6aba2120b/" },
+    { "label": "ResearchGate", "href": "https://www.researchgate.net/profile/Tokhirzhon-Tashmatov" }
+  ],
+
+  "work": [
+    {
+      "role": "Machine Learning / AI Engineer",
+      "org": "ConeRed",
+      "where": "Remote (Spain)",
+      "from": "2025-07",
+      "to": null,
+      "points": [
+        "Built and open-sourced an LLM red-teaming toolkit: 75 adversarial prompt-injection attacks against any HTTP chat endpoint, layered detection (regex + vector similarity + ML classifier + LLM-as-judge), reproducible verdict report.",
+        "Architected a multi-service AI knowledge platform (FastAPI, Next.js/TS, PostgreSQL, Redis, Qdrant, Celery) as a containerized docker-compose stack with nginx TLS ingress.",
+        "Built LangGraph agent pipelines (context → summarize → intent → retrieval → response) over Voyage embeddings in Qdrant, serving multilingual real-time Q&A to 3,500+ users across web, Telegram and an embeddable widget.",
+        "Engineered an agentic backend for autonomous B2B research and outreach with tool-use over LinkedIn, Perplexity and web scraping, auto-generating scored reports into Google Docs/Sheets."
+      ]
+    },
+    {
+      "role": "Data Engineer",
+      "org": "EPAM Systems",
+      "where": "Bishkek (hybrid)",
+      "from": "2024-06",
+      "to": "2024-12",
+      "points": [
+        "Designed and maintained ETL pipelines processing 500 GB/day of log data in Python + SQL on PostgreSQL.",
+        "Cut query latency 22% on high-load services by optimizing schemas, indexes and rewriting queries from measured plans; built FastAPI data-retrieval and pipeline-monitoring tools."
+      ]
+    },
+    {
+      "role": "Backend Developer",
+      "org": "Premium Soft",
+      "where": "Remote (Sofia, Bulgaria)",
+      "from": "2024-01",
+      "to": "2024-05",
+      "points": [
+        "FastAPI backend services for AI-powered internal products; REST APIs for data ingestion, processing and LLM inference pipelines integrated into existing systems."
+      ]
+    },
+    {
+      "role": "Android Developer",
+      "org": "Makers Incubator",
+      "where": "Bishkek",
+      "from": "2023-06",
+      "to": "2023-11",
+      "points": [
+        "Android e-learning app (Kotlin, Firebase) that lifted course registrations 30%; led full-cycle development and cut delivery time 20%."
+      ]
+    }
+  ],
+
+  "education": [
+    {
+      "school": "American University of Central Asia",
+      "degree": "B.A. in Software Engineering",
+      "where": "Bishkek",
+      "from": "2021-08",
+      "to": "2025-06",
+      "note": "Full-ride U.S.-CAEF scholarship (top 1% of applicants)."
+    },
+    {
+      "school": "American University in Bulgaria",
+      "degree": "Exchange semester, Computer Science",
+      "where": "Blagoevgrad",
+      "from": "2024-01",
+      "to": "2024-05",
+      "note": "OSUN Mobility Scholarship."
+    }
+  ],
+
+  "projects": [
+    {
+      "name": "GRANAT",
+      "tag": "Tech Lead · Python, DSP/ML",
+      "text": "Choir-synthesis and vocal-alignment pipeline for a well-known recording artist's music project: aligns and mixes phone-recorded solo vocal takes from many singers into a coherent studio track (onset-envelope DTW + WSOLA time-stretch, ECAPA-TDNN speaker embeddings, Whisper alignment). I own the architecture, roadmap and delivery. Under NDA, so no link and no screenshot."
+    },
+    {
+      "name": "Aegis Security / injection-shield",
+      "tag": "Python, FastAPI · GPLv3",
+      "href": "https://github.com/Takhirzhon/Aegis-Security",
+      "text": "Open-source AI-security platform. The injection-shield module runs 75 adversarial prompt-injection attacks against any HTTP chat endpoint with stacked detection (regex + embeddings + ML classifier + LLM-as-judge) and reproducible reporting, with a browser GUI. Installs with pip from the repository.",
+      "screenshot": "Aegis Security.jpg"
+    },
+    {
+      "name": "GeoGuard",
+      "tag": "Python, ML · Apache-2.0",
+      "href": "https://github.com/Takhirzhon/GeoGuard",
+      "text": "AI geospatial landslide and mudflow prediction for southern Kyrgyzstan: XGBoost/RF/NB over 17 terrain features plus CNNs on satellite imagery. Tabular AUC > 0.94; EfficientNetB0 at 85.4% on imagery alone. Also my bachelor's thesis (2025), published on ResearchGate.",
+      "more": { "label": "Thesis on ResearchGate", "href": "https://www.researchgate.net/profile/Tokhirzhon-Tashmatov" },
+      "screenshot": "GeoGuard.jpg"
+    },
+    {
+      "name": "CoVibeCode",
+      "tag": "Contributor · Tauri v2, Svelte 5, Rust",
+      "href": "https://github.com/Takhirzhon/CoVibeCode",
+      "text": "Local-first desktop client that runs and manages AI coding agents (Claude Code, Codex) on your own machine. I contribute to the upstream project, OpenCovibe.",
+      "more": { "label": "Upstream", "href": "https://github.com/AnyiWang/OpenCovibe" },
+      "screenshot": "CoVibeCode.jpg"
+    },
+    {
+      "name": "Randevu",
+      "tag": "Solo founder · Next.js, FastAPI",
+      "text": "Intent-based social matching as a Telegram Mini App: 15-question profiling, embedding + LLM matching with \"why you match\" explanations. Native iOS/Android in progress.",
+      "screenshot": "Randevu.jpg"
+    },
+    {
+      "name": "funOS",
+      "tag": "React 19, TypeScript · MIT",
+      "href": "https://github.com/Takhirzhon/funOS",
+      "text": "The Windows XP you are looking at. A virtual file system in IndexedDB, a window manager, a dozen applications, and a 120KB budget on the shell that has held.",
+      "screenshot": "funOS.jpg"
+    }
+  ],
+
+  "skills": {
+    "Languages": "Python, TypeScript, JavaScript, SQL, Kotlin, C/C++",
+    "LLM / AI": "RAG, GraphRAG, LangGraph agents, tool-calling, structured outputs, LLM-as-judge evals, prompt-injection defense; OpenAI, Anthropic, Gemini, OpenRouter, Voyage, JINA",
+    "Backend": "FastAPI, Flask, Pydantic, SQLAlchemy, Alembic, Celery, APScheduler",
+    "Data & infra": "PostgreSQL (indexing, query plans), Redis, ETL pipelines, Qdrant, Pinecone, FalkorDB; Docker, docker-compose, GitHub Actions, nginx, AWS, GCP",
+    "Frontend": "React, Next.js, Tailwind (familiar: Vue 3 + Quasar)"
+  },
+  "knowsAbout": [
+    "Large language models", "Retrieval-augmented generation", "LLM agents", "LangGraph",
+    "Prompt-injection defense", "LLM evaluation", "Python", "FastAPI", "PostgreSQL", "Qdrant",
+    "Data engineering", "TypeScript", "React"
+  ],
+  "spoken": [
+    { "language": "English", "code": "en", "level": "C1" },
+    { "language": "Russian", "code": "ru", "level": "fluent" },
+    { "language": "Kyrgyz", "code": "ky", "level": "native" },
+    { "language": "Uzbek", "code": "uz", "level": "native" },
+    { "language": "Tajik", "code": "tg", "level": "basic" }
+  ],
+  "honors": [
+    "Winner, Cyber-Security Hackathon (AUCA, ITF Slovenia, U.S. Embassy Bishkek)",
+    "FLEX finalist (U.S. Department of State)",
+    "1st place, National Technology Creation Olympiad (2020)"
+  ],
+
+  "news": [
+    {
+      "date": "2026-09-16",
+      "text": "This site is a Windows XP desktop that runs in your browser. It now has a blog, addresses you can link to (khirokhito.tech/projects, /cv), and my face on the login screen. The CV is on the desktop; the photographs are in My Pictures.",
+      "href": "https://github.com/Takhirzhon/funOS", "label": "Source"
+    },
+    {
+      "date": "2026-06",
+      "text": "GRANAT, a choir-synthesis pipeline for a recording artist's project, mixes phone-recorded solo takes from many singers into one studio track. The first public demo ran in June.",
+      "href": "about:projects", "label": "More"
+    },
+    {
+      "date": "2025-08",
+      "text": "injection-shield, the red-teaming half of Aegis Security, went open source: 75 adversarial prompt-injection attacks against any HTTP chat endpoint, layered detection, a reproducible verdict report.",
+      "href": "https://github.com/Takhirzhon/Aegis-Security", "label": "GitHub"
+    },
+    {
+      "date": "2025-06",
+      "text": "Graduated from the American University of Central Asia, B.A. in Software Engineering, on a full-ride U.S.-CAEF scholarship. The thesis became GeoGuard.",
+      "href": "about:projects", "label": "GeoGuard"
+    }
+  ]
+}

@@ -288,6 +288,185 @@
   cursor: default;
 }
 
+/* ---- What's new ---------------------------------------------------------
+ * A dated list, the way a "News" column was: the date in small caps-ish
+ * grey, then the item. Newest first, which cv.json keeps.
+ */
+.news {
+  margin: 0 0 10px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.news li {
+  margin-bottom: 7px;
+  padding-left: 12px;
+  text-indent: -12px;
+}
+
+.news li::before {
+  content: "\00BB";
+  color: #1c3f7a;
+  padding-right: 6px;
+}
+
+.newsDate {
+  display: inline-block;
+  text-indent: 0;
+  margin-right: 6px;
+  font-size: 10px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ---- Photos ---------------------------------------------------------------
+ * Thumbnails in the same bevelled frame as the portrait, three to a row on
+ * a 2004 screen, the file name under each. The frame is the whole design:
+ * every photo page had it, and a plain grid of pictures reads as 2015.
+ */
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 12px;
+  margin: 4px 0 14px;
+}
+
+.thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150px;
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.thumbWide {
+  float: left;
+  width: 160px;
+  margin: 2px 12px 6px 0;
+}
+
+.thumbImg {
+  display: block;
+  width: 150px;
+  height: 112px;
+  object-fit: cover;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  outline: 1px solid #808080;
+  outline-offset: -3px;
+  padding: 1px;
+  background: #fff;
+}
+
+.thumbWide .thumbImg {
+  width: 160px;
+  height: 100px;
+}
+
+.thumb:hover .thumbImg {
+  outline-color: #0000cc;
+}
+
+.thumbPlay {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 26px;
+  color: #fff;
+  text-shadow: 0 0 4px #000, 0 0 2px #000;
+  pointer-events: none;
+}
+
+.thumbCaption {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #333;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.thumb:hover .thumbCaption {
+  color: #0000cc;
+  text-decoration: underline;
+}
+
+/* ---- Guestbook ------------------------------------------------------------
+ * A form in a table, inset fields, and entries as a quote with the name
+ * and date under it - the shape every CGI guestbook produced.
+ */
+.guestForm {
+  margin: 0 0 16px;
+}
+
+.guestForm .facts td {
+  border-bottom: 0;
+  padding: 3px 12px 3px 0;
+}
+
+.input,
+.textarea {
+  font: inherit;
+  font-size: 12px;
+  width: 100%;
+  max-width: 420px;
+  padding: 2px 4px;
+  border: 2px inset #ccc;
+  background: #fff;
+  color: #000;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+/* Off the page for people, in the form for bots. display:none would be
+ * honoured by a careful bot too; this is not, and is what the server is
+ * looking for. */
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.guestNote {
+  margin-left: 10px;
+  font-size: 11px;
+  color: #1c3f7a;
+}
+
+.guestEntry {
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  border-left: 3px solid #b7c8e2;
+  background: #f4f7fb;
+}
+
+.guestMessage {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.guestMeta {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #555;
+}
+
+/* A project with a screenshot: the picture floats left of the paragraph,
+ * which is how a table cell would have held it. */
+.project {
+  overflow: hidden;
+}
+
 .footer {
   padding: 8px 16px;
   font-size: 10px;
@@ -354,6 +533,15 @@
 
   .intro {
     flex-direction: column;
+  }
+
+  .gallery {
+    justify-content: center;
+  }
+
+  .thumbWide {
+    float: none;
+    margin: 0 auto 8px;
   }
 
   .masthead {

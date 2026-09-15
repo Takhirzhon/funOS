@@ -1,15 +1,30 @@
 import type { ComponentType } from "react";
-import { BlankPage, BlogPage, CannotDisplayPage, ContactPage, HomePage, PostPage, ProjectsPage, WorkPage, type PageProps } from "./pages";
+import { cv } from "virtual:portfolio";
+import {
+  BlankPage,
+  BlogPage,
+  CannotDisplayPage,
+  ContactPage,
+  GuestbookPage,
+  HomePage,
+  PhotosPage,
+  PostPage,
+  ProjectsPage,
+  WorkPage,
+  type PageProps,
+} from "./pages";
 
 type Page = { title: string; Component: ComponentType<PageProps> };
 
 const PAGES: Record<string, Page> = {
-  "about:me": { title: "Tokhirzhon Tashmatov - Home", Component: HomePage },
-  "about:work": { title: "Work - Tokhirzhon Tashmatov", Component: WorkPage },
-  "about:projects": { title: "Projects - Tokhirzhon Tashmatov", Component: ProjectsPage },
-  "about:contact": { title: "Contact - Tokhirzhon Tashmatov", Component: ContactPage },
+  "about:me": { title: `${cv.name} - Home`, Component: HomePage },
+  "about:work": { title: `Work - ${cv.name}`, Component: WorkPage },
+  "about:projects": { title: `Projects - ${cv.name}`, Component: ProjectsPage },
+  "about:photos": { title: `Photos - ${cv.name}`, Component: PhotosPage },
+  "about:guestbook": { title: `Guestbook - ${cv.name}`, Component: GuestbookPage },
+  "about:contact": { title: `Contact - ${cv.name}`, Component: ContactPage },
   "about:blank": { title: "about:blank", Component: BlankPage },
-  "about:blog": { title: "Blog - Tokhirzhon Tashmatov", Component: BlogPage },
+  "about:blog": { title: `Blog - ${cv.name}`, Component: BlogPage },
 };
 
 /** The page for an address, or the one that says there is not one. */

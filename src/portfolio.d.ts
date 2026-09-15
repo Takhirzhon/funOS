@@ -9,4 +9,66 @@ declare module "virtual:portfolio" {
     content?: string;
   };
   export const files: PortfolioFile[];
+
+  /** A date as cv.json writes one: YYYY-MM-DD, YYYY-MM or YYYY. */
+  export type CvDate = string;
+
+  export type CvLink = { label: string; href: string };
+
+  export type CvJob = {
+    role: string;
+    org: string;
+    where: string;
+    from: CvDate;
+    /** null while it is the current one. */
+    to: CvDate | null;
+    points: string[];
+  };
+
+  export type CvSchool = {
+    school: string;
+    degree: string;
+    where: string;
+    from: CvDate;
+    to: CvDate;
+    note?: string;
+  };
+
+  export type CvProject = {
+    name: string;
+    tag: string;
+    /** The project itself, when it has a public home. */
+    href?: string;
+    text: string;
+    /** A second link - the paper, the upstream. */
+    more?: CvLink;
+    /** File name under My Documents\My Pictures\Projects; shown when the file exists. */
+    screenshot?: string;
+  };
+
+  export type CvNews = { date: CvDate; text: string; href?: string; label?: string };
+
+  /** public/portfolio/cv.json: the CV, as data. */
+  export const cv: {
+    name: string;
+    givenName: string;
+    familyName: string;
+    title: string;
+    location: { city: string; country: string; countryCode: string };
+    email: string;
+    /** A t.me link - by handle or by phone number. Absent: no Telegram row. */
+    telegram?: string;
+    /** The three lines a recruiter reads first on the Contact page. */
+    availability: { status: string; timezone: string; overlap: string };
+    summary: string;
+    links: CvLink[];
+    work: CvJob[];
+    education: CvSchool[];
+    projects: CvProject[];
+    skills: Record<string, string>;
+    knowsAbout: string[];
+    spoken: { language: string; code: string; level: string }[];
+    honors: string[];
+    news: CvNews[];
+  };
 }
