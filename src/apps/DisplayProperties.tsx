@@ -128,10 +128,10 @@ export function DisplayProperties() {
             </label>
 
             <p className={styles.blurb}>
-              3D Maze is real 3D and downloads about 150KB the first time you pick it.
-              Nothing else on this desktop pays for that — it is fetched only when
-              chosen. Its brick and floor textures are drawn in code rather than
-              downloaded.
+              3D Maze and 3D Text are real 3D and download about 150KB the first time
+              you pick one. Nothing else on this desktop pays for that — it is fetched
+              only when chosen. The bricks, the floor and the letters are drawn in code
+              rather than downloaded.
             </p>
           </>
         )}

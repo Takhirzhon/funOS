@@ -46,10 +46,15 @@ this; what is left is content and the places it should be reachable from.
 - [ ] **The blog's list is the folder.** Posts are files, which is right,
       but nothing paginates: at fifty posts about:blog is a long page. A
       year's worth per page, and an archive, when there is a year's worth.
-- [ ] **The home page follows the CV.** `apps/ie/pages.tsx` is written by
-      hand from the PDF on the desktop, so the two can drift. When the CV
-      changes, that file is the other place to change - or generate the
-      Work page from a small JSON next to the PDF in `public/portfolio/`.
+- [ ] **Project screenshots.** `about:projects` shows a "click to enlarge"
+      picture for any project whose `screenshot` in `cv.json` names a file in
+      `My Pictures\Projects`. Only funOS has one. Aegis (the GUI), GeoGuard
+      (a map), CoVibeCode and Randevu need theirs taken.
+- [ ] **The photo page loads the originals.** Thumbnails are the full
+      1920px JPEGs scaled down by CSS - about 3.5MB for the page on a phone.
+      A `-thumb` variant next to each photograph, made by the same pillow
+      step that strips the EXIF, would fix it; the page would have to know
+      to hide them from the grid and Explorer would still show them.
 
 ## Applications
 
@@ -64,9 +69,14 @@ Ordered by ratio of "makes the place feel alive" to effort.
 - [ ] **Search and Help and Support.** Both are Start menu items with no
       window behind them. Search can be a real search over the VFS - the
       dog is optional, the results list is not. Help can be one page.
-- [ ] **Media Player: audio.** The player takes MP3 already; nothing ships
-      one. `My Music` with a track in it, and the visualiser that is currently
-      a gradient earns a real waveform.
+- [ ] **Media Player: the visualiser.** `My Music` has a track now (a
+      generated ambient sketch - a real one, with rights to put it here,
+      would be better), and the visualiser that is currently a gradient
+      earns a real waveform.
+- [ ] **The guestbook, moderated from the desktop.** Entries are removed
+      with `curl -X DELETE` and the admin token (deploy/README.md). A
+      Delete button on the page, shown only when the token is in
+      localStorage, would make it a thing the owner does from the site.
 
 ## The details nobody asks for and everybody notices
 
@@ -111,7 +121,7 @@ made rather than a thing that happened. Four of them:
 | entry JS | 97KB | 120KB | a heavy library imported by the shell |
 | entry CSS | 42KB | 64KB | a second UI kit next to xp.css |
 | largest app chunk | 3KB | 48KB | one app pulling in something enormous |
-| 3D Maze chunk | 126KB | 160KB | three.js, exempted and watched separately |
+| WebGL savers chunk (`gl-*`) | 128KB | 160KB | three.js - 3D Maze and 3D Text behind one import, exempted and watched separately |
 | first paint | 323KB | 400KB | the total a visitor waits for |
 
 The entry is structural now: every app is a lazy import, so adding

@@ -9,7 +9,7 @@ import { create } from "zustand";
  * payment.
  */
 export type Theme = "blue" | "olive" | "silver";
-export type Saver = "none" | "starfield" | "pipes" | "mystify" | "maze";
+export type Saver = "none" | "starfield" | "pipes" | "mystify" | "maze" | "text";
 
 export const THEME_NAMES: Record<Theme, string> = {
   blue: "Windows XP (Luna Blue)",
@@ -23,6 +23,7 @@ export const SAVER_NAMES: Record<Saver, string> = {
   pipes: "3D Pipes",
   mystify: "Mystify",
   maze: "3D Maze",
+  text: "3D Text",
 };
 
 const KEY = "funos.display";

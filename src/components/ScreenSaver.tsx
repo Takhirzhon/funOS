@@ -154,10 +154,14 @@ const mystify: Draw = (ctx, w, h, t) => {
 };
 
 /* Loaded on selection, not on load. This one import is the reason three.js
- * never touches the entry bundle. */
-const Maze3D = lazy(async () => ({ default: (await import("./savers/Maze3D")).Maze3D }));
+ * never touches the entry bundle - and it is one import for both WebGL
+ * savers, so three.js is one chunk (savers/gl.ts says why). */
+const Maze3D = lazy(async () => ({ default: (await import("./savers/gl")).Maze3D }));
+const Text3D = lazy(async () => ({ default: (await import("./savers/gl")).Text3D }));
 
-const DRAWERS: Record<Exclude<Saver, "none" | "maze">, Draw> = {
+const GL: Partial<Record<Saver, typeof Maze3D>> = { maze: Maze3D, text: Text3D };
+
+const DRAWERS: Record<Exclude<Saver, "none" | "maze" | "text">, Draw> = {
   starfield,
   pipes: pipesDraw,
   mystify,
@@ -170,8 +174,8 @@ export function SaverCanvas({ saver, className }: { saver: Saver; className?: st
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
-    /* The 3D saver renders itself; this effect is only for the 2D three. */
-    if (!canvas || !ctx || saver === "none" || saver === "maze") return;
+    /* The 3D savers render themselves; this effect is only for the 2D three. */
+    if (!canvas || !ctx || saver === "none" || saver in GL) return;
 
     /* Sized from the element rather than from the window: the same component
      * runs full screen and inside a 150px preview. */
@@ -186,7 +190,7 @@ export function SaverCanvas({ saver, className }: { saver: Saver; className?: st
     let frame = 0;
     let raf = 0;
     const tick = () => {
-      DRAWERS[saver](ctx, canvas.width, canvas.height, frame);
+      DRAWERS[saver as keyof typeof DRAWERS](ctx, canvas.width, canvas.height, frame);
       frame += 1;
       raf = requestAnimationFrame(tick);
     };
@@ -199,12 +203,13 @@ export function SaverCanvas({ saver, className }: { saver: Saver; className?: st
   }, [saver]);
 
   if (saver === "none") return <div className={className} style={{ background: "#000" }} />;
-  if (saver === "maze") {
+  const Gl = GL[saver];
+  if (Gl) {
     return (
       /* Black while three.js arrives, which on a screensaver is indistinguishable
        * from the screensaver having just started. */
       <Suspense fallback={<div className={className} style={{ background: "#000" }} />}>
-        <Maze3D className={className} />
+        <Gl className={className} />
       </Suspense>
     );
   }
