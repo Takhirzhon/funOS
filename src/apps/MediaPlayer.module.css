@@ -28,7 +28,13 @@
   overflow: hidden;
 }
 
+/* Pinned to the stage's edges rather than sized by its own frame. A grid
+ * item takes its intrinsic size - 1280px tall for a phone video - and the
+ * stage then showed the top of it and cropped the rest. Absolute, it is the
+ * stage's size whatever the clip's, and contain letterboxes the difference. */
 .video {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;

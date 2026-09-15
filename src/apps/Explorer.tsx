@@ -91,7 +91,9 @@ export function Explorer({ path, windowId }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   const anchor = useRef<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
-  const [view, setView] = useState<ViewMode>("icons");
+  /* Thumbnails: a folder of photographs is what most visitors open, and a
+   * grid of identical picture icons says nothing about them. */
+  const [view, setView] = useState<ViewMode>("thumbnails");
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(ancestors(normalize(path ?? MY_DOCUMENTS)))
   );
