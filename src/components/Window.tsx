@@ -20,8 +20,8 @@ const MIN_H = 160;
 const SNAP = 12;
 
 function snapToEdges(x: number, y: number, width: number, height: number) {
-  const right = window.innerWidth;
-  const bottom = window.innerHeight - TASKBAR_HEIGHT;
+  const right = document.documentElement.clientWidth;
+  const bottom = document.documentElement.clientHeight - TASKBAR_HEIGHT;
 
   let nextX = x;
   if (Math.abs(x) <= SNAP) nextX = 0;

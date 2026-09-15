@@ -56,10 +56,6 @@ this; what is left is content and the places it should be reachable from.
       Win+Pause. "Registered to: Tokhirzhon Tashmatov", the processor, the
       RAM, the funOS version from `/health`. Two hundred lines that make the
       machine belong to someone.
-- [ ] **A phone.** The desktop is unusable at 390px and that is the screen a
-      recruiter opens the link on. Not a responsive redesign - windows open
-      maximized under ~700px, icons a size larger, tap opens where double-click
-      does. XP on a small screen, not a different app.
 
 ## Applications
 
@@ -106,8 +102,9 @@ and "that is XP".
 - [ ] **The busy cursor.** Every app is a lazy import and the Suspense
       fallback is an empty window. That is right; the cursor should also be
       the hourglass until the chunk lands.
-- [ ] **Tooltips on task buttons**, and ellipsis on a caption too long for
-      the button, which today just clips.
+- [ ] **Tooltips on task buttons.** The title bar cuts a long caption with
+      an ellipsis now; the task button still clips, and has no tooltip to
+      show the rest.
 - [ ] **A blue screen.** `crash` at the Command Prompt, or a keystroke, and
       the real one: `0x0000007B`, the memory dump counting up, any key to
       reboot into the boot screen. This is the screenshot people share.
@@ -143,6 +140,16 @@ Worth knowing when one trips: **the wallpaper is 184KB, which is larger than
 the entry JS and CSS together.** The code budgets guard the smaller half. If
 first paint ever needs to come down, the photograph is the first place to
 look, not the JavaScript.
+
+**Small screens are two media queries, not a mode.** `(max-width: 700px)`
+opens every window maximized and hides Explorer's tree; `(pointer: coarse)`
+makes a single tap open, because a double tap is a zoom gesture first. Both
+live in `hooks/useMediaQuery.ts` and nowhere else. Two things that bit:
+`innerWidth` lies on a phone once anything is wider than the screen (the page
+zooms out and reports the zoomed-out width - measure
+`documentElement.clientWidth`, and the viewport meta forbids the zoom), and a
+tap delivers a synthetic `mouseenter` before its `click`, so a hover-opens /
+click-toggles control opens and closes in one gesture.
 
 **The portfolio is a layer, not a seed.** `src/fs/seed.ts` runs once per
 browser, so a file added there never reaches anyone who has visited before.

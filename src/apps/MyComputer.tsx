@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useFsStore } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
+import { COARSE, useMediaQuery } from "../hooks/useMediaQuery";
 import { errorDialog } from "../store/dialogStore";
 import { DRIVE } from "../fs/path";
 import { entryBytes } from "../fs/icons";
@@ -21,6 +22,7 @@ export function MyComputer() {
   const entries = useFsStore((s) => s.entries);
   const open = useWindowStore((s) => s.open);
   const [selected, setSelected] = useState<string | null>(null);
+  const coarse = useMediaQuery(COARSE);
 
   /* Size on disk, from the only thing here that is real: how much the file
    * system is actually holding, text and bytes both. It goes up when you save
@@ -62,6 +64,7 @@ export function MyComputer() {
               setSelected(drive.letter);
             }}
             onDoubleClick={() => openDrive(drive.letter, drive.mounted)}
+            onClick={coarse ? () => openDrive(drive.letter, drive.mounted) : undefined}
           >
             <drive.icon size={48} />
             <span className={styles.label}>{`${drive.label} (${drive.letter})`}</span>

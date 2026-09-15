@@ -103,6 +103,11 @@
   color-scheme: light;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+  /* A finger's double tap is a zoom gesture before it is anything else, and
+   * the 300ms the browser waits to find out is the lag people mean when they
+   * say a web page "does not feel native". Neither belongs on a desktop. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 * {

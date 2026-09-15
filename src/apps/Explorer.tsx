@@ -13,6 +13,7 @@ import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
 import { deletePaths } from "../fs/trash";
 import { useShellShortcuts } from "../hooks/useShellShortcuts";
+import { COARSE, useMediaQuery } from "../hooks/useMediaQuery";
 import { useWindowStore } from "../store/windowStore";
 import {
   ancestors,
@@ -74,6 +75,7 @@ export function Explorer({ path, windowId }: Props) {
   const clipboardPaths = useClipboardStore((s) => s.paths);
   const clipboardMode = useClipboardStore((s) => s.mode);
   const focusedWindow = useWindowStore((s) => s.focusedId);
+  const coarse = useMediaQuery(COARSE);
   const cutToClipboard = useClipboardStore((s) => s.cut);
   const copyToClipboard = useClipboardStore((s) => s.copy);
 
@@ -341,6 +343,8 @@ export function Explorer({ path, windowId }: Props) {
       selectOn(e, entry.path);
     },
     onDoubleClick: () => openEntry(entry),
+    /* A finger opens with one tap; see useMediaQuery for why. */
+    onClick: coarse ? () => openEntry(entry) : undefined,
     onContextMenu: itemMenu(entry),
     ...dragProps(entry),
   });

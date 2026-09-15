@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- No pinch zoom, no zoom-out to fit: this is a desktop, not a page. Without
+         minimum-scale a window wider than the screen makes the phone zoom out to
+         show it, and every number the shell measures is wrong from then on. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
     <title>funOS</title>
   </head>
   <body>

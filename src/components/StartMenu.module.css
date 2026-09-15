@@ -251,3 +251,31 @@
 .footerButton:hover {
   background: rgba(255, 255, 255, 0.22);
 }
+
+/* ---- Small screens ----------------------------------------------------------
+ * The menu is 386px and a phone is 390: it fit, barely, and the All Programs
+ * flyout opened off the right edge. Full width, and the flyout stacks above
+ * its row instead of beside it.
+ */
+@media (max-width: 700px) {
+  .menu {
+    width: 100vw;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .right {
+    width: 46%;
+  }
+
+  /* Fixed, so the menu's overflow: hidden cannot clip it: a sheet over the
+   * menu, up from the All Programs row, as tall as the list needs. */
+  .flyout {
+    position: fixed;
+    left: 6px;
+    right: 6px;
+    bottom: calc(var(--taskbar-height) + 44px);
+    max-height: calc(100vh - var(--taskbar-height) - 60px);
+  }
+}

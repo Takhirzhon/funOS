@@ -6,7 +6,7 @@
   right: 10px;
   bottom: calc(var(--taskbar-height) + 12px);
   z-index: 26000;
-  width: 260px;
+  width: min(260px, calc(100vw - 20px));
   padding: 9px 11px 11px;
   background: #ffffe1;
   border: 1px solid #8d8d6b;

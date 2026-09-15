@@ -89,7 +89,12 @@ function scan(dir: string, out: PortfolioFile[]): void {
     if (mime.startsWith("text/") && stat.size <= INLINE_TEXT_LIMIT) {
       file.content = readFileSync(full, "utf8");
     } else {
-      file.url = `${URL_BASE}/${rel.split("/").map(encodeURIComponent).join("/")}`;
+      /* encodeURI, not encodeURIComponent per segment: the latter turns a
+       * comma into %2C, which nginx decodes and Vite's dev server does not -
+       * "Ratsek, June 2026.jpg" was a photograph in production and index.html
+       * in development. encodeURI leaves the characters a path may contain
+       * alone; the two it must not, it does not know about. */
+      file.url = `${URL_BASE}/${encodeURI(rel).replace(/[#?]/g, encodeURIComponent)}`;
     }
     out.push(file);
   }

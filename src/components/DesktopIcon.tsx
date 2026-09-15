@@ -18,6 +18,8 @@ type Props = {
   onPointerDown: (e: ReactPointerEvent<HTMLButtonElement>) => void;
   onContextMenu: (e: ReactMouseEvent<HTMLButtonElement>) => void;
   onOpen: () => void;
+  /** A single tap, on a touch screen - where a double tap is a zoom. */
+  onTap?: () => void;
 };
 
 /* Selection and position are props, not local state.
@@ -38,6 +40,7 @@ export function DesktopIcon({
   onPointerDown,
   onContextMenu,
   onOpen,
+  onTap,
 }: Props) {
   const classes = [styles.icon];
   if (selected) classes.push(styles.selected);
@@ -51,6 +54,7 @@ export function DesktopIcon({
       style={{ transform: `translate(${x}px, ${y}px)` }}
       onPointerDown={onPointerDown}
       onContextMenu={onContextMenu}
+      onClick={onTap}
       onDoubleClick={(e) => {
         e.stopPropagation();
         onOpen();

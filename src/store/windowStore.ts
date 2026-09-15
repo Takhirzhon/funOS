@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { COMPACT, matches } from "../hooks/useMediaQuery";
 
 export type Bounds = { x: number; y: number; width: number; height: number };
 
@@ -48,12 +49,45 @@ type Store = {
   tile: (orientation: "horizontal" | "vertical") => void;
   restore: (id: string) => void;
   toggleFromTaskbar: (id: string) => void;
+  /** The viewport changed: maximized windows fill the new one, the rest stay on it. */
+  fit: () => void;
 };
 
 let idCounter = 0;
 const nextId = () => `w${++idCounter}`;
 
 const cascadeOffset = (n: number) => 24 + (n % 8) * 24;
+
+/* The whole desktop: what a maximized window fills.
+ *
+ * The layout viewport, not `innerWidth`. On a phone, the moment anything is
+ * wider than the screen - a landscape-sized window after turning back to
+ * portrait - mobile Chrome zooms out to show it all, and `innerWidth` then
+ * reports the zoomed-out width: 844 on a 390px screen. Sizing the window to
+ * that keeps it too wide, which keeps the page zoomed out, forever. The
+ * document element's client size is the screen in CSS pixels regardless. */
+const fullBounds = (): Bounds => ({
+  x: 0,
+  y: 0,
+  width: document.documentElement.clientWidth,
+  height: document.documentElement.clientHeight - TASKBAR_HEIGHT,
+});
+
+/* A window that would hang off the edge is pulled back onto the screen, and
+ * one wider than the screen is narrowed to fit. Applied when restoring, and
+ * when the viewport shrinks under a window that was fine a moment ago - a
+ * phone turning sideways, a browser window being dragged narrower. */
+const clamp = (b: Bounds): Bounds => {
+  const area = fullBounds();
+  const width = Math.min(b.width, area.width);
+  const height = Math.min(b.height, area.height);
+  return {
+    width,
+    height,
+    x: Math.max(0, Math.min(b.x, area.width - width)),
+    y: Math.max(0, Math.min(b.y, area.height - height)),
+  };
+};
 
 export const useWindowStore = create<Store>((set, get) => ({
   windows: [],
@@ -71,14 +105,20 @@ export const useWindowStore = create<Store>((set, get) => ({
       width: opts.bounds?.width ?? 520,
       height: opts.bounds?.height ?? 380,
     };
+    /* On a small screen every window opens maximized. A 520px Notepad on a
+     * 390px phone is a window with its right third off the screen and its
+     * close button with it; maximized, it is Notepad. Restore still works and
+     * gives back the size the app asked for, clamped to whatever fits. */
+    const compact = matches(COMPACT);
     const win: WindowState = {
       id,
       appId,
       title: opts.title ?? appId,
-      bounds,
+      bounds: compact ? fullBounds() : bounds,
+      prevBounds: compact ? bounds : undefined,
       zIndex: newZ,
       minimized: false,
-      maximized: false,
+      maximized: compact,
       props: opts.props,
     };
     set({ windows: [...windows, win], topZ: newZ, focusedId: id });
@@ -135,7 +175,7 @@ export const useWindowStore = create<Store>((set, get) => ({
           return {
             ...w,
             maximized: false,
-            bounds: w.prevBounds ?? w.bounds,
+            bounds: clamp(w.prevBounds ?? w.bounds),
             prevBounds: undefined,
           };
         }
@@ -143,12 +183,7 @@ export const useWindowStore = create<Store>((set, get) => ({
           ...w,
           maximized: true,
           prevBounds: w.bounds,
-          bounds: {
-            x: 0,
-            y: 0,
-            width: window.innerWidth,
-            height: window.innerHeight - TASKBAR_HEIGHT,
-          },
+          bounds: fullBounds(),
         };
       }),
     })),
@@ -178,8 +213,9 @@ export const useWindowStore = create<Store>((set, get) => ({
   cascade: () =>
     set((s) => {
       const visible = s.windows.filter((w) => !w.minimized);
-      const width = Math.max(360, Math.round(window.innerWidth * 0.55));
-      const height = Math.max(240, Math.round((window.innerHeight - TASKBAR_HEIGHT) * 0.62));
+      const area = fullBounds();
+      const width = Math.max(360, Math.round(area.width * 0.55));
+      const height = Math.max(240, Math.round(area.height * 0.62));
       return {
         windows: s.windows.map((w) => {
           const index = visible.indexOf(w);
@@ -192,8 +228,8 @@ export const useWindowStore = create<Store>((set, get) => ({
             bounds: {
               /* Wrap before the stack marches off the bottom right. Eight is
                * about where XP gives up too. */
-              x: 12 + (offset % (Math.max(1, window.innerWidth - width - 24) || 1)),
-              y: 12 + (offset % Math.max(1, window.innerHeight - TASKBAR_HEIGHT - height - 24)),
+              x: 12 + (offset % (Math.max(1, area.width - width - 24) || 1)),
+              y: 12 + (offset % Math.max(1, area.height - height - 24)),
               width,
               height,
             },
@@ -207,7 +243,7 @@ export const useWindowStore = create<Store>((set, get) => ({
       const visible = s.windows.filter((w) => !w.minimized);
       if (visible.length === 0) return s;
 
-      const area = { width: window.innerWidth, height: window.innerHeight - TASKBAR_HEIGHT };
+      const area = fullBounds();
       /* "Tile Horizontally" in Windows means the windows are stacked in
        * horizontal bands, not laid out in a horizontal row. It reads backwards
        * and it is what the menu item does. */
@@ -237,6 +273,14 @@ export const useWindowStore = create<Store>((set, get) => ({
 
   restore: (id) => get().focus(id),
 
+  fit: () =>
+    set((s) => ({
+      windows: s.windows.map((w) => ({
+        ...w,
+        bounds: w.maximized ? fullBounds() : clamp(w.bounds),
+      })),
+    })),
+
   toggleFromTaskbar: (id) => {
     const { windows, focusedId, minimize, focus } = get();
     const w = windows.find((w) => w.id === id);
@@ -250,3 +294,11 @@ export const useWindowStore = create<Store>((set, get) => ({
     }
   },
 }));
+
+/* A maximized window is sized in pixels when it is maximized, and nothing
+ * re-sized it afterwards - so turning a phone sideways left a portrait-shaped
+ * window on a landscape screen. Listened for here rather than in a component
+ * because it is the store's numbers that are wrong, not anything's render. */
+if (typeof window !== "undefined") {
+  window.addEventListener("resize", () => useWindowStore.getState().fit());
+}

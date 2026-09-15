@@ -379,3 +379,15 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ---- Small screens ----------------------------------------------------------
+ * The tree is the first thing to go: at 390px it is half the window, and the
+ * address bar and Up button already do its job. The breakpoint is the one
+ * windows open maximized at (hooks/useMediaQuery.ts), so the two decisions
+ * arrive together.
+ */
+@media (max-width: 700px) {
+  .tree {
+    display: none;
+  }
+}

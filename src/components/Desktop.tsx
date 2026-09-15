@@ -27,6 +27,7 @@ import { pasteInto } from "../fs/clipboard";
 import { showBalloon } from "../store/balloonStore";
 import { deletePaths } from "../fs/trash";
 import { useShellShortcuts } from "../hooks/useShellShortcuts";
+import { COARSE, useMediaQuery } from "../hooks/useMediaQuery";
 import { DESKTOP_DIR } from "../fs/seed";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
@@ -82,6 +83,7 @@ export function Desktop() {
   const copyToClipboard = useClipboardStore((s) => s.copy);
 
   const fieldRef = useRef<HTMLDivElement>(null);
+  const coarse = useMediaQuery(COARSE);
   const [rows, setRows] = useState(8);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [marquee, setMarquee] = useState<Marquee | null>(null);
@@ -144,6 +146,10 @@ export function Desktop() {
   }, [items, positions, rows]);
 
   const dragRef = useRef<Drag | null>(null);
+  /* Whether the gesture that just ended moved the icon. The click event
+   * arrives after pointerup, by which time the drag record is gone, and a
+   * tap that dragged an icon somewhere must not also open it. */
+  const lastMoved = useRef(false);
   const marqueeRef = useRef<Marquee | null>(null);
   const layoutRef = useRef(layout);
   const itemsRef = useRef(items);
@@ -202,6 +208,7 @@ export function Desktop() {
 
     const onUp = () => {
       const d = dragRef.current;
+      lastMoved.current = d?.moved ?? false;
       if (d) {
         const target = useDndStore.getState().hoverPath;
         if (d.moved && target && containsSystemPath(d.id)) {
@@ -498,6 +505,13 @@ export function Desktop() {
               onPointerDown={beginDrag(item.id)}
               onContextMenu={itemMenu(item)}
               onOpen={() => openItem(item)}
+              onTap={
+                coarse
+                  ? () => {
+                      if (!lastMoved.current) openItem(item);
+                    }
+                  : undefined
+              }
             />
           );
         })}

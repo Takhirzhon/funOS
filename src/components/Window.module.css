@@ -74,6 +74,16 @@
   flex: none;
 }
 
+/* One line, always. A caption longer than the bar - a photograph's name plus
+ * the viewer's - is cut with an ellipsis, not wrapped into a taller title
+ * bar, which is what XP does and what keeps the buttons where they were. */
+.titleBar :global(.title-bar-text) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
 /* ---- Open and minimize --------------------------------------------------
  * Animated on .window, never on the react-rnd wrapper: the wrapper's transform
  * is how react-rnd positions the window, so animating it there would send the

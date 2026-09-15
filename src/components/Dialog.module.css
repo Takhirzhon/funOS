@@ -13,8 +13,9 @@
 }
 
 .dialog {
-  min-width: 320px;
-  max-width: 460px;
+  /* Never wider than the screen, with a margin to show it is a dialog. */
+  min-width: min(320px, calc(100vw - 16px));
+  max-width: min(460px, calc(100vw - 16px));
   display: flex;
   flex-direction: column;
   box-shadow: 4px 5px 16px rgba(0, 0, 0, 0.5);

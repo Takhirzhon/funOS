@@ -218,3 +218,11 @@ input.volume {
   color: #cfdaf0;
   font-variant-numeric: tabular-nums;
 }
+
+/* On a phone the playlist would take half the picture. Previous and Next
+ * still walk it. */
+@media (max-width: 700px) {
+  .playlist {
+    display: none;
+  }
+}

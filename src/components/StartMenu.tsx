@@ -89,7 +89,11 @@ export function StartMenu({ onClose }: Props) {
                   ? `${styles.allProgramsButton} ${styles.allProgramsOpen}`
                   : styles.allProgramsButton
               }
-              onClick={() => setAllOpen((v) => !v)}
+              /* Opens, never toggles. A tap on a touch screen arrives as a
+               * synthetic mouseenter and then a click; a toggle here opened the
+               * flyout and shut it again in the same gesture. XP's button does
+               * not close the list either - the menu closing does that. */
+              onClick={() => setAllOpen(true)}
               /* Opens on hover as well as on click, like the real one. It does
                * not close on leave: the flyout is to the right, and the pointer
                * has to cross the gap to reach it. */
