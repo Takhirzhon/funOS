@@ -11,6 +11,7 @@
 .stage {
   flex: 1;
   min-height: 0;
+  position: relative;
   display: grid;
   place-items: center;
   overflow: auto;
@@ -18,9 +19,16 @@
   background: #5d5d5d;
 }
 
+/* Fit to Window: pinned to the stage's edges, not sized by the picture. As a
+ * grid item a portrait photograph took its own height and the stage grew a
+ * scrollbar, showing the top third of it. Absolute, the picture is the
+ * stage's size and contain letterboxes the difference - the same fix the
+ * Media Player needed for a phone clip. */
 .fit {
-  max-width: 100%;
-  max-height: 100%;
+  position: absolute;
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
   object-fit: contain;
 }
 
