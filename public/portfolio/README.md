@@ -6,7 +6,7 @@ mirrors `C:\Documents and Settings\User\`.
 
 | here | there |
 |---|---|
-| `Desktop/CV.pdf` | `C:\Documents and Settings\User\Desktop\CV.pdf` — an icon on the desktop |
+| `Desktop/Tokhirzhon Tashmatov - CV.pdf` | `C:\Documents and Settings\User\Desktop\...` — an icon on the desktop |
 | `Desktop/About Me.txt` | the same, opens in Notepad |
 | `My Documents/My Pictures/*.jpg` | opens in Windows Picture Viewer, arrows walk the folder |
 | `My Documents/My Videos/*.mp4` | opens in Windows Media Player, the folder is the playlist |
@@ -25,5 +25,8 @@ audio, JPEG/PNG/WebP for pictures, PDF for documents. `.txt` files under 64KB
 are inlined into the bundle so Notepad can show them without a request; the
 rest is fetched when opened. This file is ignored.
 
-The files that are here now are placeholders so the desktop has something on
-it. Replace them.
+Photographs are resized to 1920px on the long side, quality 85, and saved
+without EXIF - iPhone originals carry GPS coordinates, and a portfolio should
+not publish where a picture was taken. `pillow` with `pillow-heif` does all
+three in four lines (`ImageOps.exif_transpose`, `thumbnail`, `save` without
+`exif=`); HEIC will not display in a browser and has to become JPEG.

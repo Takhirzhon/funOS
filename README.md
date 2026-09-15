@@ -55,7 +55,7 @@ it is there for everyone, including people who were here before (the seed file
 system runs only once per browser; this layer runs every time). Visitors can
 open and copy these files and get XP's "Access is denied" if they try to
 delete one. [`public/portfolio/README.md`](public/portfolio/README.md) has the
-mapping and the formats. The files there now are placeholders.
+mapping and the formats.
 
 ## What's working today
 

@@ -8,11 +8,13 @@ right-click things, open two windows and watch the inactive one go grey.
 What is here
 ------------
 
-  CV.pdf                  on the desktop - double-click it, or right-click
+  Tokhirzhon Tashmatov - CV.pdf
+                          on the desktop - double-click it, or right-click
                           and choose Open. "Save a Copy" downloads it.
 
-  My Documents\My Pictures    photographs. The arrows walk the folder.
-  My Documents\My Videos      a few clips. The folder is the playlist.
+  My Documents\My Pictures    photographs - the mountains above Bishkek,
+                              CyberSafe, graduation. The arrows walk the
+                              folder.
 
 Where else to find me
 ---------------------

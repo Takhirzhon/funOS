@@ -43,10 +43,9 @@ recruiter on a phone to find the CV in ten seconds. The system layer
 (`fs/system.ts`, `public/portfolio/`) is done and is the mechanism for all of
 this; what is left is content and the places it should be reachable from.
 
-- [ ] **Replace the placeholders.** `public/portfolio/` holds a hand-written
-      PDF, two gradients and a test pattern so that the desktop has something
-      on it. The real CV, real photographs and real clips go in the same
-      folders under the same names; nothing else changes.
+- [ ] **A video.** The CV and the photographs are real now; `My Videos` is
+      empty and Media Player has nothing to play. One clip - MP4, H.264, a
+      minute or two - and the folder is a playlist again.
 - [ ] **Internet Explorer, as the front door.** Not a general browser: an IE6
       shell whose home page is a hand-written `about:me` inside the window,
       with the links bar pointing at GitHub and LinkedIn and opening them in
