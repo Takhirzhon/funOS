@@ -1,0 +1,295 @@
+/* A personal home page, 2004.
+ *
+ * Verdana at 12px because that is what the web looked like before web fonts;
+ * a dark-blue masthead, a menu down the left on pale blue, black-on-white
+ * text with underlined links. It is drawn with flexbox but it should look
+ * like it was drawn with a table, which is the whole design brief.
+ */
+.site {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #000;
+  background: #fff;
+  user-select: text;
+}
+
+.masthead {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #1c3f7a;
+  color: #fff;
+  border-bottom: 3px solid #f5a623;
+}
+
+.mastName {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+}
+
+.mastSub {
+  font-size: 11px;
+  color: #cfe0ff;
+}
+
+.columns {
+  flex: 1;
+  display: flex;
+}
+
+.nav {
+  flex: none;
+  width: 150px;
+  padding: 10px 0;
+  background: #e7eef8;
+  border-right: 1px solid #b7c8e2;
+}
+
+.navItem {
+  padding: 3px 14px;
+}
+
+.navItem .a {
+  text-decoration: none;
+}
+
+.navItem .a:hover {
+  text-decoration: underline;
+}
+
+.navCurrent {
+  background: #fff;
+  border-top: 1px solid #b7c8e2;
+  border-bottom: 1px solid #b7c8e2;
+  margin-right: -1px;
+  font-weight: bold;
+}
+
+.navRule {
+  height: 1px;
+  margin: 8px 12px;
+  background: #b7c8e2;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 22px 22px;
+}
+
+.h1 {
+  margin: 4px 0 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: normal;
+  font-size: 22px;
+  color: #1c3f7a;
+  border-bottom: 1px solid #b7c8e2;
+  padding-bottom: 4px;
+}
+
+.h2 {
+  margin: 18px 0 6px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #1c3f7a;
+}
+
+.p {
+  margin: 0 0 10px;
+}
+
+.small {
+  font-size: 11px;
+  color: #555;
+}
+
+.a {
+  color: #0000cc;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.a:visited {
+  color: #551a8b;
+}
+
+.a:hover {
+  color: #cc0000;
+}
+
+.intro {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.intro p {
+  margin: 0 0 10px;
+}
+
+/* The photograph, with the two-tone bevel every image on every home page
+ * had - a border that looked like a picture frame at 96dpi. */
+.portrait {
+  flex: none;
+  width: 150px;
+  height: auto;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+  outline: 1px solid #808080;
+  outline-offset: -3px;
+  padding: 1px;
+  background: #fff;
+}
+
+.list {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+
+.list li {
+  margin-bottom: 5px;
+}
+
+.facts {
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.facts td {
+  padding: 3px 12px 3px 0;
+  vertical-align: top;
+  border-bottom: 1px dotted #ccd;
+}
+
+.facts td:first-child {
+  color: #1c3f7a;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.entry {
+  margin-bottom: 14px;
+}
+
+.entryHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  align-items: baseline;
+  margin-bottom: 3px;
+}
+
+.entryWhen {
+  font-size: 11px;
+  color: #555;
+}
+
+/* The visitor counter: black box, green seven-segment-ish digits. It was on
+ * every page, it was always wrong, and it was the best part. */
+.counterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  font-size: 11px;
+}
+
+.counter {
+  display: inline-block;
+  padding: 1px 6px;
+  background: #000;
+  color: #33ff33;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 2px;
+  border: 1px solid #555;
+}
+
+.button {
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 10px;
+  cursor: default;
+}
+
+.footer {
+  padding: 8px 16px;
+  font-size: 10px;
+  color: #666;
+  border-top: 1px solid #b7c8e2;
+  background: #f4f7fb;
+}
+
+.blank {
+  height: 100%;
+  background: #fff;
+}
+
+/* ---- The page cannot be displayed ---------------------------------------
+ * Arial, a little bigger than the chrome, a rule, and the tan "Cannot find
+ * server" at the foot. Anyone who was online in 2004 saw this daily.
+ */
+.cannot {
+  padding: 30px 40px 20px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  color: #000;
+  user-select: text;
+}
+
+.cannotTitle {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 12px;
+}
+
+.cannotRule {
+  border: 0;
+  border-top: 1px solid #c0c0c0;
+  margin: 14px 0;
+}
+
+.cannot ul {
+  padding-left: 30px;
+}
+
+.cannot li {
+  margin-bottom: 8px;
+}
+
+.cannotFoot {
+  margin-top: 30px;
+  color: #666;
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .nav {
+    width: 110px;
+  }
+
+  .navItem {
+    padding: 3px 8px;
+  }
+
+  .content {
+    padding: 8px 12px 16px;
+  }
+
+  .intro {
+    flex-direction: column;
+  }
+
+  .masthead {
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+  }
+}

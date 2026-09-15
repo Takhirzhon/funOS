@@ -23,6 +23,7 @@ export function Taskbar() {
   const focusedId = useWindowStore((s) => s.focusedId);
   const toggleFromTaskbar = useWindowStore((s) => s.toggleFromTaskbar);
   const minimizeAll = useWindowStore((s) => s.minimizeAll);
+  const open = useWindowStore((s) => s.open);
   const cascade = useWindowStore((s) => s.cascade);
   const tile = useWindowStore((s) => s.tile);
   const openMenu = useMenuStore((s) => s.open);
@@ -93,7 +94,12 @@ export function Taskbar() {
             type="button"
             className={styles.quickButton}
             title="Launch Internet Explorer Browser"
-            disabled
+            onClick={() =>
+              open("internetExplorer", {
+                title: apps.internetExplorer.title,
+                bounds: apps.internetExplorer.defaultSize,
+              })
+            }
           >
             <IEIcon />
           </button>

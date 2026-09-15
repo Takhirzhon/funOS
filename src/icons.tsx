@@ -122,6 +122,19 @@ export const ShieldIcon = ({ size = 16, ...p }: IconProps) => <Xp name="security
 export const ShowDesktopIcon = ({ size = 16, ...p }: IconProps) => <Xp name="desktop" size={size} {...p} />;
 export const IEIcon = ({ size = 16, ...p }: IconProps) => <Xp name="internet-explorer" size={size} {...p} />;
 
+/* ---- Internet Explorer's toolbar ------------------------------------------- */
+
+export const BackIcon = ({ size = 22, ...p }: IconProps) => <Xp name="back" size={size} {...p} />;
+export const ForwardIcon = ({ size = 22, ...p }: IconProps) => <Xp name="forward" size={size} {...p} />;
+export const StopIcon = ({ size = 22, ...p }: IconProps) => <Xp name="ie-stop" size={size} {...p} />;
+export const RefreshIcon = ({ size = 22, ...p }: IconProps) => <Xp name="ie-refresh" size={size} {...p} />;
+export const HomeIcon = ({ size = 22, ...p }: IconProps) => <Xp name="ie-home" size={size} {...p} />;
+export const FavoritesIcon = ({ size = 22, ...p }: IconProps) => <Xp name="favorites" size={size} {...p} />;
+export const HistoryIcon = ({ size = 22, ...p }: IconProps) => <Xp name="ie-history" size={size} {...p} />;
+export const GoIcon = ({ size = 16, ...p }: IconProps) => <Xp name="go" size={size} {...p} />;
+export const InternetShortcutIcon = ({ size = 16, ...p }: IconProps) => <Xp name="internet-shortcut" size={size} {...p} />;
+export const EmailIcon = ({ size = 28, ...p }: IconProps) => <Xp name="email" size={size} {...p} />;
+
 /* ---- Still drawn ---------------------------------------------------------- */
 
 /* Acrobat's document: the same page as every other file, with the red band

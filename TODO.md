@@ -46,12 +46,10 @@ this; what is left is content and the places it should be reachable from.
 - [ ] **A video.** The CV and the photographs are real now; `My Videos` is
       empty and Media Player has nothing to play. One clip - MP4, H.264, a
       minute or two - and the folder is a playlist again.
-- [ ] **Internet Explorer, as the front door.** Not a general browser: an IE6
-      shell whose home page is a hand-written `about:me` inside the window,
-      with the links bar pointing at GitHub and LinkedIn and opening them in
-      a real tab. Most sites refuse to be framed anyway; the ones that do can
-      be a Favorites folder with an honest name. Same window, same toolbar,
-      and it stops being a blank iframe with an unexplained reason.
+- [ ] **The home page follows the CV.** `apps/ie/pages.tsx` is written by
+      hand from the PDF on the desktop, so the two can drift. When the CV
+      changes, that file is the other place to change - or generate the
+      Work page from a small JSON next to the PDF in `public/portfolio/`.
 - [ ] **System Properties.** Right-click My Computer > Properties, and
       Win+Pause. "Registered to: Tokhirzhon Tashmatov", the processor, the
       RAM, the funOS version from `/health`. Two hundred lines that make the

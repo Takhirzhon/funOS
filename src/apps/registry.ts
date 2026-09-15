@@ -7,6 +7,7 @@ import {
   ConsoleIcon,
   MineIcon,
   DocumentsIcon,
+  IEIcon,
   PaintIcon,
   InfoIcon,
   MediaPlayerIcon,
@@ -60,6 +61,16 @@ type AppDef = {
  * button, Start menu, Alt+Tab later - reads it from here.
  */
 export const apps = {
+  /* First, so it is first on the desktop: the front door of the portfolio.
+   * XP put an IE icon there too, until SP2 tidied it into the Start menu. */
+  internetExplorer: {
+    title: "Internet Explorer",
+    label: "Internet Explorer",
+    component: app(() => import("./InternetExplorer"), "InternetExplorer"),
+    icon: IEIcon,
+    defaultSize: { width: 780, height: 580 },
+    onDesktop: true,
+  },
   myComputer: {
     title: "My Computer",
     label: "My Computer",

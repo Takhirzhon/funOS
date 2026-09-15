@@ -1,0 +1,248 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+}
+
+/* The three toolbars are Explorer's, restated: same gradient, same grip,
+ * same button chrome - IE and Explorer were one program under the hood and
+ * looked it. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  margin: 0;
+  border-bottom: 1px solid #d5d2c4;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 45%, #e3dfcb 100%);
+  min-height: 28px;
+}
+
+.grip {
+  flex: none;
+  width: 4px;
+  height: 18px;
+  margin-right: 4px;
+  border-left: 1px solid #fff;
+  border-right: 1px solid #b9b5a2;
+}
+
+.divider {
+  flex: none;
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  border-left: 1px solid #b9b5a2;
+  border-right: 1px solid #fff;
+}
+
+.navButton,
+.iconButton,
+.goButton,
+.link {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: default;
+  color: #000;
+  white-space: nowrap;
+}
+
+.iconButton {
+  padding: 0 3px;
+}
+
+.navButton:hover:not(:disabled),
+.iconButton:hover:not(:disabled),
+.goButton:hover,
+.link:hover {
+  border-color: #b6c8e8;
+  background: linear-gradient(to bottom, #fdfefe 0%, #dfeafb 100%);
+}
+
+.navButton:active:not(:disabled),
+.iconButton:active:not(:disabled),
+.goButton:active,
+.pressed {
+  border-color: #8aa5cc;
+  background: linear-gradient(to bottom, #cddcf2 0%, #e6eefb 100%);
+}
+
+.navButton:disabled,
+.iconButton:disabled {
+  color: #a09e94;
+}
+
+.navButton:disabled img,
+.iconButton:disabled img {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+.dropArrow {
+  font-size: 8px;
+  margin-left: 1px;
+  color: #444;
+}
+
+.label {
+  flex: none;
+  color: #5a5a52;
+  padding: 0 6px 0 2px;
+}
+
+.addressWrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  background: #fff;
+  border: 1px solid #7f9db9;
+}
+
+.addressIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+}
+
+.address {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  padding: 0 2px;
+  font: inherit;
+  background: transparent;
+}
+
+.link {
+  height: 22px;
+  padding: 0 5px;
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* The Explorer bar: Favorites and History slid in from the left, on the same
+ * pale blue as Explorer's task pane. */
+.sidebar {
+  flex: none;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  background: #eef3fb;
+  border-right: 1px solid #b9b5a2;
+  overflow: auto;
+}
+
+.sidebarHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-weight: bold;
+  color: #000;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 45%, #e3dfcb 100%);
+  border-bottom: 1px solid #d5d2c4;
+}
+
+.sidebarClose {
+  all: unset;
+  width: 16px;
+  text-align: center;
+  cursor: default;
+  color: #444;
+}
+
+.sidebarClose:hover {
+  color: #000;
+  background: #dfeafb;
+}
+
+.sidebarItem {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  cursor: default;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarItem:hover {
+  color: #1a4fb8;
+  text-decoration: underline;
+}
+
+.page {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: #fff;
+}
+
+.status {
+  flex: none;
+  height: 21px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 2px;
+  border-top: 1px solid #d5d2c4;
+  background: var(--luna-face);
+  font-size: 11px;
+}
+
+/* IE's status bar was a row of sunken panes; two of them are enough to read
+ * as the real one. */
+.statusMain {
+  flex: 1;
+  padding: 0 6px;
+  height: 17px;
+  line-height: 17px;
+  border: 1px solid;
+  border-color: #aca899 #fff #fff #aca899;
+}
+
+.statusZone {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 130px;
+  padding: 0 6px;
+  height: 17px;
+  border: 1px solid;
+  border-color: #aca899 #fff #fff #aca899;
+}
+
+@media (max-width: 700px) {
+  .label,
+  .dropArrow,
+  .searchButton {
+    display: none;
+  }
+
+  .navButton {
+    padding: 0 4px;
+  }
+
+  .sidebar {
+    width: 140px;
+  }
+}

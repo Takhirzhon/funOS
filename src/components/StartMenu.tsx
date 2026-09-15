@@ -15,8 +15,11 @@ import styles from "./StartMenu.module.css";
 
 type Props = { onClose: () => void };
 
-/* Pinned programs — the bold entries at the top of the white column. */
-const pinned: { appId: AppId; sub: string }[] = [
+/* Pinned programs — the bold entries at the top of the white column. XP's
+ * first two were always "Internet" and "E-mail", with the program's name
+ * underneath; the label is the role, the sub is what fills it. */
+const pinned: { appId: AppId; label?: string; sub: string }[] = [
+  { appId: "internetExplorer", label: "Internet", sub: "Internet Explorer" },
   { appId: "notepad", sub: "Plain-text editor" },
   { appId: "about", sub: "Project info" },
 ];
@@ -69,11 +72,11 @@ export function StartMenu({ onClose }: Props) {
 
       <div className={styles.body}>
         <div className={styles.left}>
-          {pinned.map(({ appId, sub }) => (
+          {pinned.map(({ appId, label, sub }) => (
             <MenuItem
               key={appId}
               icon={<AppGlyph id={appId} size={28} />}
-              label={apps[appId].label}
+              label={label ?? apps[appId].label}
               sub={sub}
               onClick={() => launch(appId)}
             />
