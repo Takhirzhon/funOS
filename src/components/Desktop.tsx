@@ -14,6 +14,7 @@ import { apps, appIds, type AppId } from "../apps/registry";
 import { DesktopIcon } from "./DesktopIcon";
 import {
   CELL_H,
+  CELL_W,
   FIELD_PAD,
   defaultPosition,
   snap,
@@ -84,7 +85,8 @@ export function Desktop() {
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const coarse = useMediaQuery(COARSE);
-  const [rows, setRows] = useState(8);
+  const [grid, setGrid] = useState({ rows: 8, width: 0, height: 0 });
+  const rows = grid.rows;
   const [drag, setDrag] = useState<Drag | null>(null);
   const [marquee, setMarquee] = useState<Marquee | null>(null);
   const [dropActive, setDropActive] = useState(false);
@@ -108,7 +110,11 @@ export function Desktop() {
     const el = fieldRef.current;
     if (!el) return;
     const update = () =>
-      setRows(Math.max(1, Math.floor((el.clientHeight - FIELD_PAD) / CELL_H)));
+      setGrid({
+        rows: Math.max(1, Math.floor((el.clientHeight - FIELD_PAD) / CELL_H)),
+        width: el.clientWidth,
+        height: el.clientHeight,
+      });
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
@@ -137,13 +143,46 @@ export function Desktop() {
     return [...shortcuts, ...files];
   }, [entries]);
 
+  /* Where each icon goes.
+   *
+   * A stored position is honoured if it is on screen. Everything else - a new
+   * shortcut, a file that just arrived, an icon whose stored spot is off the
+   * bottom of a phone that has fewer rows than the monitor it was placed on -
+   * takes the first free cell, walking down column one and then over. Which
+   * is what Windows does, and the reason two icons never share a cell there.
+   *
+   * It used to be "stored position, else the cell for this index", and the
+   * index knew nothing about what was stored: adding Internet Explorer at the
+   * top of the registry put it on top of My Computer for anyone who had ever
+   * dragged an icon. */
   const layout = useMemo(() => {
     const map: Record<string, Pos> = {};
-    items.forEach((item, index) => {
-      map[item.id] = positions[item.id] ?? defaultPosition(index, rows);
-    });
+    const taken = new Set<string>();
+    const key = (p: Pos) => `${p.x},${p.y}`;
+    const onScreen = (p: Pos) =>
+      grid.width === 0 || (p.x + CELL_W <= grid.width && p.y + CELL_H <= grid.height);
+
+    const loose: Item[] = [];
+    for (const item of items) {
+      const stored = positions[item.id];
+      if (stored && onScreen(stored) && !taken.has(key(stored))) {
+        map[item.id] = stored;
+        taken.add(key(stored));
+      } else {
+        loose.push(item);
+      }
+    }
+
+    let slot = 0;
+    for (const item of loose) {
+      let pos = defaultPosition(slot, rows);
+      while (taken.has(key(pos))) pos = defaultPosition(++slot, rows);
+      map[item.id] = pos;
+      taken.add(key(pos));
+      slot += 1;
+    }
     return map;
-  }, [items, positions, rows]);
+  }, [items, positions, rows, grid.width, grid.height]);
 
   const dragRef = useRef<Drag | null>(null);
   /* Whether the gesture that just ended moved the icon. The click event
