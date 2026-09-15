@@ -175,8 +175,10 @@ XP's own (`public/icons/xp/`, from softwarehistorysociety/XPIcons) and the
 budget argument is answered the same way the wallpaper's was — the bytes live
 outside the bundle and are fetched by `<img>` when something shows them. The
 desktop costs eight small files at first paint. The licence position is the
-Bliss one, stated above. Two are still drawn: the Start flag, which would be
-the trademark rather than the picture, and the PDF badge, which XP never had.
+Bliss one, stated above. The flag is the 2002 logo's own paths (Wikimedia
+Commons, "Windows logo - 2002–2012 (Multicolored).svg") with the Start
+button's gradients put back; the PDF badge is still drawn, since XP never
+had one.
 
 ---
 

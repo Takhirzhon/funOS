@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 150">
   <defs>
-    <linearGradient id="r" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ff8b7a"/><stop offset="1" stop-color="#e33b26"/></linearGradient>
-    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#a6e48f"/><stop offset="1" stop-color="#3f9c2c"/></linearGradient>
-    <linearGradient id="b" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#8ecbf7"/><stop offset="1" stop-color="#1a70c8"/></linearGradient>
-    <linearGradient id="y" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffe694"/><stop offset="1" stop-color="#eeb318"/></linearGradient>
+    <linearGradient id="r" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffa374"/><stop offset=".5" stop-color="#f8682c"/><stop offset="1" stop-color="#d9430f"/></linearGradient>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#c8ea5a"/><stop offset=".5" stop-color="#91c300"/><stop offset="1" stop-color="#6c9a00"/></linearGradient>
+    <linearGradient id="b" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#7fdcff"/><stop offset=".5" stop-color="#00b4f1"/><stop offset="1" stop-color="#0086c4"/></linearGradient>
+    <linearGradient id="y" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset=".5" stop-color="#ffc300"/><stop offset="1" stop-color="#e39a00"/></linearGradient>
   </defs>
-  <path d="M2.5 7.2 14 4.6v10.6H2.5z" fill="url(#r)"/>
-  <path d="M15.6 4.3 30 1.6v13.6H15.6z" fill="url(#g)"/>
-  <path d="M2.5 16.8H14v10.6L2.5 25z" fill="url(#b)"/>
-  <path d="M15.6 16.8H30v13.6l-14.4-2.7z" fill="url(#y)"/>
+  <path d="M82.2 67.3a53.9 53.9 0 0 0-31-11.3c-8.7-.1-19.1 2.4-32.2 7.8L35.2 7.4c33.1-13.7 49-6 63.3 3.7L82.2 67.3z" fill="url(#r)"/>
+  <path d="M170 20.7c-33 13.7-49 6-63.2-3.6L90.8 73.5c14.3 9.7 31.5 17.7 63.2 3.5l16.3-56.3z" fill="url(#g)"/>
+  <path d="M63 134.2c-14.3-9.6-30-17.6-63-3.9l16.2-56.6c33-13.6 49-5.9 63.3 3.8L63 134.2z" fill="url(#b)"/>
+  <path d="M88 83c14.4 9.6 30.3 17.3 63.3 3.6L135 142.8c-33 13.7-48.9 6-63.2-3.7L88.1 83z" fill="url(#y)"/>
 </svg>

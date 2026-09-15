@@ -14,9 +14,9 @@
  * with alpha at q90; 48 icons, 186KB, none of it on the critical path. The
  * recipe is in public/icons/xp/README.md.
  *
- * The artwork is Microsoft's, the same way Bliss is - see TODO.md. Two icons
- * are still drawn here: the Start flag, which is the one thing that would be
- * a trademark rather than a picture, and the PDF badge, which XP never had.
+ * The artwork is Microsoft's, the same way Bliss is - see TODO.md. Two are
+ * still SVG here: the flag, whose paths are the 2002 logo's own with the
+ * Start button's lighting put back, and the PDF badge, which XP never had.
  *
  * Every export keeps the signature it had as an SVG - `size`, `style`,
  * `className` - so nothing that renders an icon knows or cares what it is.
@@ -168,30 +168,39 @@ export const PdfIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+/* The flag. The four panes are the 2002 Windows logo's own paths - the one
+ * on the Start button, the boot screen and the tab - from Wikimedia Commons'
+ * "Windows logo - 2002–2012 (Multicolored).svg". The logo was flat there;
+ * on the button XP lit it from the upper left and dropped a shadow under it,
+ * which is what the gradients and the caller's filter put back. Microsoft's
+ * mark, used the way Bliss is. */
 export const StartLogoIcon = ({ size = 18, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+  <svg viewBox="0 0 170 150" style={box(size, style)} className={className} aria-hidden>
     <defs>
       <linearGradient id="wf-r" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#ff8b7a" />
-        <stop offset="1" stopColor="#e33b26" />
+        <stop offset="0" stopColor="#ffa374" />
+        <stop offset="0.5" stopColor="#f8682c" />
+        <stop offset="1" stopColor="#d9430f" />
       </linearGradient>
       <linearGradient id="wf-g" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#a6e48f" />
-        <stop offset="1" stopColor="#3f9c2c" />
+        <stop offset="0" stopColor="#c8ea5a" />
+        <stop offset="0.5" stopColor="#91c300" />
+        <stop offset="1" stopColor="#6c9a00" />
       </linearGradient>
       <linearGradient id="wf-b" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#8ecbf7" />
-        <stop offset="1" stopColor="#1a70c8" />
+        <stop offset="0" stopColor="#7fdcff" />
+        <stop offset="0.5" stopColor="#00b4f1" />
+        <stop offset="1" stopColor="#0086c4" />
       </linearGradient>
       <linearGradient id="wf-y" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffe694" />
-        <stop offset="1" stopColor="#eeb318" />
+        <stop offset="0" stopColor="#ffe27a" />
+        <stop offset="0.5" stopColor="#ffc300" />
+        <stop offset="1" stopColor="#e39a00" />
       </linearGradient>
     </defs>
-    {/* the flag waves: the top edge curves up, the bottom sags */}
-    <path d="M2.5 7.2 14 4.6v10.6H2.5z" fill="url(#wf-r)" />
-    <path d="M15.6 4.3 30 1.6v13.6H15.6z" fill="url(#wf-g)" />
-    <path d="M2.5 16.8H14v10.6L2.5 25z" fill="url(#wf-b)" />
-    <path d="M15.6 16.8H30v13.6l-14.4-2.7z" fill="url(#wf-y)" />
+    <path d="M82.2 67.3a53.9 53.9 0 0 0-31-11.3c-8.7-.1-19.1 2.4-32.2 7.8L35.2 7.4c33.1-13.7 49-6 63.3 3.7L82.2 67.3z" fill="url(#wf-r)" />
+    <path d="M170 20.7c-33 13.7-49 6-63.2-3.6L90.8 73.5c14.3 9.7 31.5 17.7 63.2 3.5l16.3-56.3z" fill="url(#wf-g)" />
+    <path d="M63 134.2c-14.3-9.6-30-17.6-63-3.9l16.2-56.6c33-13.6 49-5.9 63.3 3.8L63 134.2z" fill="url(#wf-b)" />
+    <path d="M88 83c14.4 9.6 30.3 17.3 63.3 3.6L135 142.8c-33 13.7-48.9 6-63.2-3.7L88.1 83z" fill="url(#wf-y)" />
   </svg>
 );
