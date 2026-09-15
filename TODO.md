@@ -43,9 +43,6 @@ recruiter on a phone to find the CV in ten seconds. The system layer
 (`fs/system.ts`, `public/portfolio/`) is done and is the mechanism for all of
 this; what is left is content and the places it should be reachable from.
 
-- [ ] **A video.** The CV and the photographs are real now; `My Videos` is
-      empty and Media Player has nothing to play. One clip - MP4, H.264, a
-      minute or two - and the folder is a playlist again.
 - [ ] **The home page follows the CV.** `apps/ie/pages.tsx` is written by
       hand from the PDF on the desktop, so the two can drift. When the CV
       changes, that file is the other place to change - or generate the
