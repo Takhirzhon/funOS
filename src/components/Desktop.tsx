@@ -37,6 +37,7 @@ import { dropPathAt, useDndStore } from "../store/dndStore";
 import { PATH_MIME } from "../fs/dnd";
 import { basename } from "../fs/path";
 import { entryIcon } from "../fs/icons";
+import { CV_PATH, urlForPath } from "../apps/ie/site";
 import styles from "./Desktop.module.css";
 
 const ICON_W = 76;
@@ -110,20 +111,33 @@ export function Desktop() {
     return () => clearTimeout(timer);
   }, []);
 
-  /* A deep link. #about:blog/x in the address bar - from the feed, a search
-   * result, or a shared link - opens Internet Explorer on that page once
-   * the desktop is up. Once: the hash is consumed, so a reload with the
-   * window closed does not open it again. */
+  /* A deep link. /projects, /blog/x or /cv in the address bar - from a cover
+   * letter, the feed, a search result - opens what the path names once the
+   * desktop is up: Internet Explorer on the page, or the CV in its reader.
+   * The path is consumed here; Internet Explorer puts its own back while it
+   * is open and clears it when it closes, so a reload reopens what was on
+   * screen and nothing else. The CV is a file, and files arrive with the file
+   * system, so this waits for it. #about:x is the form the first feed items
+   * went out with, and still arrives. */
+  const fsReady = useFsStore((s) => s.ready);
   useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    if (!hash.startsWith("about:")) return;
-    window.history.replaceState(null, "", window.location.pathname);
-    open("internetExplorer", {
-      title: apps.internetExplorer.title,
-      bounds: apps.internetExplorer.defaultSize,
-      props: { url: hash },
-    });
-  }, [open]);
+    if (!fsReady) return;
+    const { pathname, hash } = window.location;
+    const path = pathname.replace(/\/+$/, "").toLowerCase() || "/";
+    const url = hash.startsWith("#about:") ? hash.slice(1) : path === "/" ? undefined : urlForPath(path);
+    if (!url && path !== CV_PATH) return;
+    window.history.replaceState(null, "", "/");
+    if (url) {
+      open("internetExplorer", {
+        title: apps.internetExplorer.title,
+        bounds: apps.internetExplorer.defaultSize,
+        props: { url },
+      });
+      return;
+    }
+    const cv = listEntries(useFsStore.getState().entries, DESKTOP_DIR).find((e) => e.mime === "application/pdf");
+    if (cv) launchFile(cv);
+  }, [fsReady, open]);
 
   useLayoutEffect(() => {
     const el = fieldRef.current;

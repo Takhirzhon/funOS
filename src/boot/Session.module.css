@@ -154,17 +154,17 @@
   background: rgba(255, 255, 255, 0.16);
 }
 
+/* The account picture, in XP's frame: a white border with rounded corners
+ * and a soft shadow. The image is shipped at twice this size so it stays
+ * sharp on a high-density screen. */
 .avatar {
+  display: block;
   width: 54px;
   height: 54px;
   border-radius: 5px;
   border: 2px solid #fff;
-  background: linear-gradient(135deg, #8fc9f5 0%, #2f74d8 100%);
-  display: grid;
-  place-items: center;
-  font-family: var(--font-caption);
-  font-size: 26px;
-  font-weight: bold;
+  object-fit: cover;
+  background: #2f74d8;
   box-shadow: 0 1px 4px #00000055;
 }
 

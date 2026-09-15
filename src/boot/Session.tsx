@@ -3,6 +3,16 @@ import { useSessionStore } from "../store/sessionStore";
 import { RestartIcon, ShutdownIcon, StandByIcon, StartLogoIcon } from "../icons";
 import styles from "./Session.module.css";
 
+/* The account on the welcome screen. XP put a picture in the tile - the
+ * chess pieces, the rubber duck, or your own - and this one is the owner's,
+ * because the welcome screen is the first thing a visitor sees with a name
+ * on it. The picture is a file under public/, not an import: at 2.5KB Vite
+ * would inline it into the entry chunk as base64, which is the budgeted
+ * half. The profile folder stays C:\Documents and Settings\User: XP named
+ * the folder when the account was created and never renamed it afterwards,
+ * and returning visitors have that tree in IndexedDB already. */
+const ACCOUNT = { name: "Tokhirzhon", picture: "/account.webp" };
+
 const BOOT_MS = 2400;
 
 export function BootScreen() {
@@ -64,8 +74,8 @@ export function LoginScreen() {
       <div className={styles.loginBand}>
         <div className={styles.loginPrompt}>To begin, click your user name</div>
         <button type="button" className={styles.tile} onClick={logIn} autoFocus>
-          <span className={styles.avatar}>U</span>
-          <span className={styles.tileName}>User</span>
+          <img src={ACCOUNT.picture} alt="" className={styles.avatar} width={54} height={54} draggable={false} />
+          <span className={styles.tileName}>{ACCOUNT.name}</span>
         </button>
       </div>
 

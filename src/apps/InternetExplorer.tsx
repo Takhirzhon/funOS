@@ -15,7 +15,7 @@ import {
   SearchIcon,
   StopIcon,
 } from "../icons";
-import { HOME, LINKS, NavigateContext, openExternal, normalizeUrl } from "./ie/site";
+import { HOME, LINKS, NavigateContext, openExternal, normalizeUrl, pathFor, urlForPath } from "./ie/site";
 import { pageFor } from "./ie/router";
 import { postUrl, usePosts } from "../blog/posts";
 import styles from "./InternetExplorer.module.css";
@@ -61,16 +61,26 @@ export function InternetExplorer({ url, windowId }: Props) {
     if (windowId) setTitle(windowId, `${title} - Internet Explorer`);
   }, [windowId, title, setTitle]);
 
-  /* The address bar's address is also the site's: about:blog/x becomes
-   * #about:blog/x in the real URL bar, so a page can be linked to from
-   * outside and the desktop opens it on arrival (Desktop.tsx). The home
-   * page clears it - a link to the site is a link to the desktop. */
+  /* The address bar's address is also the site's: about:work becomes
+   * khirokhito.tech/work in the real URL bar, so the page can be copied
+   * from there and the desktop opens it on arrival (Desktop.tsx). The home
+   * page is the site itself. A page with no outside address - about:blank,
+   * a site that cannot be displayed - leaves the bar where it was. */
   useEffect(() => {
-    const hash = current === HOME ? "" : `#${current}`;
-    if (current.startsWith("about:") && window.location.hash !== hash) {
-      window.history.replaceState(null, "", hash || window.location.pathname);
+    const path = pathFor(current);
+    if (path && window.location.pathname !== path) {
+      window.history.replaceState(null, "", path);
     }
   }, [current]);
+  useEffect(
+    () => () => {
+      /* Closed: the address bar goes back to the site. Otherwise a reload
+       * would reopen a window that had been closed on purpose. */
+      if (urlForPath(window.location.pathname) === undefined) return;
+      window.history.replaceState(null, "", "/");
+    },
+    []
+  );
 
   const navigate = (to: string) => {
     const target = normalizeUrl(to);
