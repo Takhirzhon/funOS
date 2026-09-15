@@ -27,6 +27,7 @@ import { MY_DOCUMENTS } from "../fs/seed";
 import { PATH_MIME } from "../fs/dnd";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
+import { accessDenied, containsSystemPath } from "../fs/system";
 import { entryBytes, entryIcon, entryType } from "../fs/icons";
 import { MenuBar } from "../components/MenuBar";
 import { DriveIcon, FolderIcon } from "../icons";
@@ -148,6 +149,10 @@ export function Explorer({ path, windowId }: Props) {
   };
 
   const renameEntry = async (entry: FsEntry) => {
+    if (containsSystemPath(entry.path)) {
+      await accessDenied("rename", entry.path);
+      return;
+    }
     const next = await promptDialog("Rename", "New name:", basename(entry.path));
     if (next === null) return;
     const result = rename(entry.path, next);
@@ -276,6 +281,10 @@ export function Explorer({ path, windowId }: Props) {
   /* ---- Drag and drop ------------------------------------------------------ */
 
   const moveInto = (source: string, folder: string) => {
+    if (containsSystemPath(source)) {
+      void accessDenied("move", source);
+      return;
+    }
     if (move(source, folder) === null) {
       void errorDialog(
         "Move",
@@ -326,7 +335,6 @@ export function Explorer({ path, windowId }: Props) {
   });
 
   const itemProps = (entry: FsEntry) => ({
-    key: entry.path,
     type: "button" as const,
     onMouseDown: (e: ReactMouseEvent) => {
       e.stopPropagation();
@@ -464,7 +472,7 @@ export function Explorer({ path, windowId }: Props) {
                 <span>Date Modified</span>
               </div>
               {items.map((entry) => (
-                <button {...itemProps(entry)} className={stateClasses(entry, styles.detailRow)}>
+                <button key={entry.path} {...itemProps(entry)} className={stateClasses(entry, styles.detailRow)}>
                   <span className={styles.cellName}>
                     {entryIcon(entry, 16)}
                     <span className={styles.ellipsis}>{basename(entry.path)}</span>
@@ -477,7 +485,7 @@ export function Explorer({ path, windowId }: Props) {
             </>
           ) : (
             items.map((entry) => (
-              <button {...itemProps(entry)} className={stateClasses(entry, styles.item)}>
+              <button key={entry.path} {...itemProps(entry)} className={stateClasses(entry, styles.item)}>
                 <span className={styles.thumb}>
                   {view === "thumbnails" && isBinary(entry) && entry.mime?.startsWith("image/") ? (
                     <img className={styles.preview} src={blobUrlFor(entry)} alt="" />

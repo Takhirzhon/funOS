@@ -3,6 +3,7 @@ import { useDialogStore, type DialogRequest } from "../store/dialogStore";
 import { listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { basename, dirname, display, isDriveRoot, join, normalize } from "../fs/path";
 import { entryBytes, entryIcon, entryType, formatBytes } from "../fs/icons";
+import { isSystemPath } from "../fs/system";
 import { HelpIcon, InfoIcon, ShutdownIcon } from "../icons";
 import styles from "./Dialog.module.css";
 
@@ -211,6 +212,7 @@ function Properties({
   }
   if (single?.mime) rows.push(["Content type:", single.mime]);
   if (single?.restorePath) rows.push(["Origin:", display(single.restorePath)]);
+  if (single && isSystemPath(single.path)) rows.push(["Attributes:", "Read-only, System"]);
   if (single) {
     rows.push(["Created:", new Date(single.created).toLocaleString()]);
     rows.push(["Modified:", new Date(single.modified).toLocaleString()]);

@@ -9,9 +9,11 @@ import {
   DocumentsIcon,
   PaintIcon,
   InfoIcon,
+  MediaPlayerIcon,
   MyComputerIcon,
   NotepadIcon,
   PictureIcon,
+  ReaderIcon,
 } from "../icons";
 
 export type IconComponent = ComponentType<{
@@ -82,6 +84,25 @@ export const apps = {
     component: app(() => import("./ImageViewer"), "ImageViewer"),
     icon: PictureIcon,
     defaultSize: { width: 620, height: 480 },
+    onDesktop: false,
+  },
+  /* Opened by a video or an audio file, and from All Programs - WMP was the
+   * one media app on the machine, and it lived in the Start menu. */
+  mediaPlayer: {
+    title: "Windows Media Player",
+    label: "Windows Media Player",
+    component: app(() => import("./MediaPlayer"), "MediaPlayer"),
+    icon: MediaPlayerIcon,
+    defaultSize: { width: 640, height: 520 },
+    onDesktop: false,
+  },
+  /* Opened by a .pdf - the CV on the desktop is the reason it exists. */
+  pdfReader: {
+    title: "PDF Reader",
+    label: "PDF Reader",
+    component: app(() => import("./PdfReader"), "PdfReader"),
+    icon: ReaderIcon,
+    defaultSize: { width: 720, height: 560 },
     onDesktop: false,
   },
   recycleBin: {

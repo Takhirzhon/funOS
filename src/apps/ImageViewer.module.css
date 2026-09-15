@@ -36,6 +36,55 @@
   padding: 20px;
 }
 
+/* The strip of round buttons under the picture - the part of the Picture and
+ * Fax Viewer that was actually its own, since the rest was a grey rectangle. */
+.controls {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-top: 1px solid #fff;
+  background: var(--luna-face);
+}
+
+.navButton {
+  all: unset;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 11px;
+  border: 1px solid #7f9db9;
+  background: linear-gradient(to bottom, #fdfefe 0%, #dfeafb 100%);
+  font-size: 10px;
+  color: #1a3d7a;
+  cursor: default;
+}
+
+.navButton:hover:not(:disabled) {
+  border-color: #3c7fb1;
+  background: linear-gradient(to bottom, #fff 0%, #cfe0fa 100%);
+}
+
+.navButton:disabled {
+  color: #a0a8b4;
+  border-color: #c4ccd6;
+  background: #f0f0ea;
+}
+
+.counter {
+  min-width: 52px;
+  text-align: center;
+  font-size: 10px;
+  color: #333;
+}
+
+.spacer {
+  flex: 1;
+}
+
 .status {
   flex: none;
   height: 19px;

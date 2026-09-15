@@ -1,0 +1,220 @@
+/* Media Player 9's skin, as far as flat CSS reaches it: a navy body that goes
+ * almost black behind the picture, silver-blue edges, the round play button
+ * in the bottom left. Nothing here is a bitmap.
+ */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(to bottom, #2b4a86 0%, #1a2f5c 12%, #101d3a 100%);
+  color: #dfe8f7;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.stage {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 6px 0 6px 6px;
+  background: #000;
+  border: 1px solid #4a6aa8;
+  overflow: hidden;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Audio still needs the element for the sound; the picture is the ambience. */
+.audioOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ambience {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background:
+    radial-gradient(ellipse at 30% 30%, rgba(88, 140, 230, 0.55), transparent 60%),
+    radial-gradient(ellipse at 70% 70%, rgba(240, 138, 18, 0.35), transparent 55%),
+    #05102a;
+  animation: drift 14s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 40px 30px, -40px -30px, 0 0;
+  }
+}
+
+.nowPlaying {
+  font-size: 12px;
+  color: #eaf1ff;
+  text-shadow: 0 1px 2px #000;
+  max-width: 80%;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist {
+  flex: none;
+  width: 170px;
+  display: flex;
+  flex-direction: column;
+  margin: 6px;
+  border: 1px solid #4a6aa8;
+  background: #0b1a3c;
+}
+
+.playlistHead {
+  flex: none;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(to bottom, #3d64b3, #24427f);
+  border-bottom: 1px solid #4a6aa8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlistItems {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.track {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #cfdaf0;
+  cursor: default;
+}
+
+.track:hover {
+  background: #1c3570;
+}
+
+.active {
+  color: #fff;
+  background: #2f5db8;
+}
+
+.trackNo {
+  flex: none;
+  width: 14px;
+  text-align: right;
+  color: #8fa6d4;
+}
+
+.trackName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyList {
+  padding: 8px;
+  font-size: 11px;
+  color: #8fa6d4;
+}
+
+.seekRow {
+  flex: none;
+  padding: 0 8px;
+}
+
+/* Both spelled with the element: xp.css styles input[type="range"] with its
+ * own width, and a bare class loses to that on specificity. */
+input.seek {
+  width: 100%;
+  accent-color: #f0a030;
+}
+
+input.volume {
+  width: 70px;
+  flex: none;
+  accent-color: #f0a030;
+}
+
+.transport {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 8px;
+}
+
+.playButton {
+  all: unset;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 13px;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #8fc3ff, #2a6bd6 55%, #123a80);
+  border: 1px solid #0b2f60;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  cursor: default;
+}
+
+.playButton:disabled {
+  opacity: 0.45;
+}
+
+.small {
+  all: unset;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 10px;
+  color: #dfe8f7;
+  background: radial-gradient(circle at 35% 30%, #4f76bd, #24427f 60%, #142a58);
+  border: 1px solid #0b2f60;
+  cursor: default;
+}
+
+.small:disabled {
+  opacity: 0.4;
+}
+
+.time {
+  margin-left: auto;
+  font-size: 11px;
+  color: #cfdaf0;
+  font-variant-numeric: tabular-nums;
+}

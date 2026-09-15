@@ -8,6 +8,10 @@ import { DRIVE } from "./path";
  * why hydration replaces the map wholesale instead of merging: merging would
  * resurrect every seeded file the moment it was thrown away.
  *
+ * Which is also why the portfolio is not here. Anything that has to reach a
+ * returning visitor - the CV, the photographs - goes in public/portfolio/ and
+ * arrives through fs/system.ts, on every load, over the top of this.
+ *
  * The layout is XP's, down to "Documents and Settings" rather than "Users" -
  * the rename happened in Vista, and getting it wrong is the kind of detail
  * someone who used this machine daily notices immediately.
@@ -32,6 +36,7 @@ const DIRS = [
   MY_DOCUMENTS,
   `${MY_DOCUMENTS}/My Pictures`,
   `${MY_DOCUMENTS}/My Music`,
+  `${MY_DOCUMENTS}/My Videos`,
   RECYCLE_BIN,
   `${DRIVE}/Program Files`,
   `${DRIVE}/Program Files/funOS`,

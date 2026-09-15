@@ -3,6 +3,7 @@ import { useFsStore } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
 import { errorDialog } from "../store/dialogStore";
 import { DRIVE } from "../fs/path";
+import { entryBytes } from "../fs/icons";
 import { DriveIcon } from "../icons";
 import styles from "./MyComputer.module.css";
 
@@ -26,11 +27,7 @@ export function MyComputer() {
    * something, which costs nothing and is better than a hardcoded 40.0 GB.
    */
   const used = useMemo(
-    () =>
-      Object.values(entries).reduce(
-        (total, e) => total + (e.bytes ? e.bytes.byteLength : e.content.length),
-        0
-      ),
+    () => Object.values(entries).reduce((total, e) => total + entryBytes(e), 0),
     [entries]
   );
 

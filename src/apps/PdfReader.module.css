@@ -1,0 +1,96 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+}
+
+/* The toolbar is Explorer's, restated: the two apps should look like they
+ * came from the same machine, and a shared stylesheet for three rules would
+ * be a module that exists to hold a gradient. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-bottom: 1px solid #d5d2c4;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 45%, #e3dfcb 100%);
+}
+
+.grip {
+  flex: none;
+  width: 4px;
+  height: 18px;
+  margin-right: 2px;
+  border-left: 1px solid #fff;
+  border-right: 1px solid #b9b5a2;
+}
+
+.toolButton {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: default;
+  color: #000;
+}
+
+.toolButton:hover:not(:disabled) {
+  border-color: #b6c8e8;
+  background: linear-gradient(to bottom, #fdfefe 0%, #dfeafb 100%);
+}
+
+.toolButton:active:not(:disabled) {
+  border-color: #8aa5cc;
+  background: linear-gradient(to bottom, #cddcf2 0%, #e6eefb 100%);
+}
+
+.toolButton:disabled {
+  color: #a09e94;
+}
+
+/* Acrobat's grey, and the browser's own viewer draws on top of it. */
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  background: #5d5d5d;
+}
+
+.frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #5d5d5d;
+}
+
+.empty {
+  place-self: center;
+  color: #e8e8e8;
+  font-size: 11px;
+  text-align: center;
+  padding: 20px;
+}
+
+.status {
+  flex: none;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px;
+  border-top: 1px solid #d5d2c4;
+  font-size: 10px;
+  color: #333;
+}
+
+.status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -35,20 +35,83 @@ where the shape exists and the behaviour does not.
       gesture started on. The clipboard understands a list now; dragging does
       not.
 
+## Portfolio
+
+This is somebody's portfolio as well as a desktop, and the two pull in
+different directions: the desktop wants to be 2004, the portfolio wants a
+recruiter on a phone to find the CV in ten seconds. The system layer
+(`fs/system.ts`, `public/portfolio/`) is done and is the mechanism for all of
+this; what is left is content and the places it should be reachable from.
+
+- [ ] **Replace the placeholders.** `public/portfolio/` holds a hand-written
+      PDF, two gradients and a test pattern so that the desktop has something
+      on it. The real CV, real photographs and real clips go in the same
+      folders under the same names; nothing else changes.
+- [ ] **Internet Explorer, as the front door.** Not a general browser: an IE6
+      shell whose home page is a hand-written `about:me` inside the window,
+      with the links bar pointing at GitHub and LinkedIn and opening them in
+      a real tab. Most sites refuse to be framed anyway; the ones that do can
+      be a Favorites folder with an honest name. Same window, same toolbar,
+      and it stops being a blank iframe with an unexplained reason.
+- [ ] **System Properties.** Right-click My Computer > Properties, and
+      Win+Pause. "Registered to: Tokhirzhon Tashmatov", the processor, the
+      RAM, the funOS version from `/health`. Two hundred lines that make the
+      machine belong to someone.
+- [ ] **A phone.** The desktop is unusable at 390px and that is the screen a
+      recruiter opens the link on. Not a responsive redesign - windows open
+      maximized under ~700px, icons a size larger, tap opens where double-click
+      does. XP on a small screen, not a different app.
+
 ## Applications
 
 Ordered by ratio of "makes the place feel alive" to effort.
 
-- [ ] **Internet Explorer** — an iframe shell with the XP toolbar. Most sites
-      refuse to be framed; pick ones that allow it and say so honestly rather
-      than shipping a window that is blank for unexplained reasons.
-- [ ] **Media Player** — audio from the VFS, with the visualiser.
 - [ ] **Control Panel proper.** Display Properties exists and owns Themes and
       Screen Saver. It has no Desktop tab, so the wallpaper is still fixed, and
       there is no Control Panel window listing anything else.
+- [ ] **Task Manager.** Ctrl+Alt+Del (and Ctrl+Shift+Esc, which the browser
+      actually delivers) opens the Applications tab off `windowStore` and a
+      Processes tab that lists the same things with made-up memory. End Task
+      closes the window. It is the most opened window in XP after Explorer.
+- [ ] **Run…** The Start menu item does nothing. `notepad`, `calc`, `mspaint`,
+      `cmd`, `sol`, `winmine`, `explorer`, `wmplayer` - every name already
+      exists in `apps/registry.ts`; this is a map from the DOS name to the app
+      id and an "cannot find the file" error for everything else.
+- [ ] **Search and Help and Support.** Both are Start menu items with no
+      window behind them. Search can be a real search over the VFS - the
+      dog is optional, the results list is not. Help can be one page.
+- [ ] **Media Player: audio.** The player takes MP3 already; nothing ships
+      one. `My Music` with a track in it, and the visualiser that is currently
+      a gradient earns a real waveform.
 
 ## The details nobody asks for and everybody notices
 
+Each of these is small. Together they are the difference between "a theme"
+and "that is XP".
+
+- [ ] **Rename in place.** Click a selected icon, pause, click again - or F2 -
+      and the label becomes an edit box on the spot. Both the desktop and
+      Explorer rename through a prompt dialog today, which is what a Mac did.
+- [ ] **"Click here to begin."** The Start button's tooltip, and the hover
+      highlight on the button itself. The balloon exists; the tooltip does not.
+- [ ] **The tray chevron.** The arrow that hides inactive icons, and the
+      "Windows can hide inactive icons" balloon the first time. The tray has
+      two icons and no chevron, which is a tray from a fresh install that
+      nobody has used.
+- [ ] **Sounds, the rest of them.** Start-up and ding exist. Check that the
+      Critical Stop plays on an error dialog and not just a ding, and that
+      the shutdown sound plays over GoodbyeScreen - that one is the sound
+      people remember.
+- [ ] **The Windows key opens the Start menu.** It reaches the page on every
+      platform where Alt+Tab does not.
+- [ ] **The busy cursor.** Every app is a lazy import and the Suspense
+      fallback is an empty window. That is right; the cursor should also be
+      the hourglass until the chunk lands.
+- [ ] **Tooltips on task buttons**, and ellipsis on a caption too long for
+      the button, which today just clips.
+- [ ] **A blue screen.** `crash` at the Command Prompt, or a keystroke, and
+      the real one: `0x0000007B`, the memory dump counting up, any key to
+      reboot into the boot screen. This is the screenshot people share.
 
 ---
 
@@ -81,6 +144,21 @@ Worth knowing when one trips: **the wallpaper is 184KB, which is larger than
 the entry JS and CSS together.** The code budgets guard the smaller half. If
 first paint ever needs to come down, the photograph is the first place to
 look, not the JavaScript.
+
+**The portfolio is a layer, not a seed.** `src/fs/seed.ts` runs once per
+browser, so a file added there never reaches anyone who has visited before.
+`public/portfolio/` is compiled into a manifest by `portfolio.plugin.ts`,
+laid over the stored tree on every load by `fs/system.ts`, stripped before
+every write to IndexedDB, and refused for delete, rename, move and save with
+XP's "Access is denied". Put the CV in the folder, deploy, and it is on every
+visitor's desktop - which is the only reason the layer exists. Do not add
+portfolio content to the seed; do not make the layer writable to fix a
+complaint that it is not.
+
+**Not doing, and why.** Not twenty-eight applications - five that are
+finished beat twenty that are frames. Not a raster icon set - the licence and
+the budget, both above. Not pdf.js - the browser renders PDFs already, and
+400KB for a worse copy of that is the exact thing the chunk budget catches.
 
 **The desktop and Explorer drag differently, on purpose.** The desktop uses
 pointer events, because it is moving an icon to a *position*; Explorer uses

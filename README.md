@@ -46,6 +46,17 @@ Drop the alias and go back to a plain `typescript` entry once typescript-eslint
 ships support for 7.x ([issue #10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)).
 `npm view typescript-eslint@latest peerDependencies` is the whole check.
 
+## It is also a portfolio
+
+`public/portfolio/` mirrors `C:\Documents and Settings\User\`, and whatever is
+in it appears inside funOS on every visit - the CV on the desktop, the
+photographs in My Pictures, the clips in My Videos. Drop a file in, merge, and
+it is there for everyone, including people who were here before (the seed file
+system runs only once per browser; this layer runs every time). Visitors can
+open and copy these files and get XP's "Access is denied" if they try to
+delete one. [`public/portfolio/README.md`](public/portfolio/README.md) has the
+mapping and the formats. The files there now are placeholders.
+
 ## What's working today
 
 - Desktop wallpaper (Bliss-inspired SVG)
@@ -54,9 +65,13 @@ ships support for 7.x ([issue #10940](https://github.com/typescript-eslint/types
 - Taskbar with Start button, open-window tabs, and clock
 - Two-column XP-style Start Menu
 - Apps:
-  - **Notepad** — textarea with File / Edit / Help menus, auto-save to localStorage, open / save-as
-  - **My Computer** — placeholder drives view
-  - **Recycle Bin** — empty placeholder
+  - **Notepad** — File / Edit / Help menus, open / save-as against the virtual file system
+  - **Explorer** and **My Computer** — a real file system in IndexedDB, four views, drag and drop, Recycle Bin
+  - **Windows Picture Viewer** — with Previous / Next through the folder
+  - **Windows Media Player** — video and audio, the folder is the playlist
+  - **PDF Reader** — the browser's renderer in an XP frame, with Save a Copy
+  - **Paint**, **Command Prompt**, **Calculator**, **Minesweeper**, **Solitaire**
+  - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze
   - **About funOS**
 
 ## Project layout
@@ -102,17 +117,5 @@ route file, and what to check when a deploy does not land.
 
 ## Roadmap
 
-Near-term:
-
-- Virtual file system backed by IndexedDB (BrowserFS or a thin custom layer)
-- File Explorer app reading the VFS
-- Right-click context menus on desktop and inside windows
-- Paint clone, calculator, classic Solitaire
-- Boot splash + login screen
-
-Stretch:
-
-- IE6-style browser shell with iframe-based browsing
-- Sound effects (the XP startup chime, error ding)
-- Multiple wallpapers + theme picker (Luna Blue / Olive / Silver)
-- Drag-and-drop file uploads onto the desktop
+What is not done yet, and the decisions that are still binding, live in
+[`TODO.md`](TODO.md). Finished work is deleted from it rather than ticked off.

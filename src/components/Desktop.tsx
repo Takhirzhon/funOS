@@ -30,6 +30,7 @@ import { useShellShortcuts } from "../hooks/useShellShortcuts";
 import { DESKTOP_DIR } from "../fs/seed";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
+import { accessDenied, containsSystemPath } from "../fs/system";
 import { dropPathAt, useDndStore } from "../store/dndStore";
 import { PATH_MIME } from "../fs/dnd";
 import { basename } from "../fs/path";
@@ -203,7 +204,10 @@ export function Desktop() {
       const d = dragRef.current;
       if (d) {
         const target = useDndStore.getState().hoverPath;
-        if (d.moved && target) {
+        if (d.moved && target && containsSystemPath(d.id)) {
+          /* It stays; Windows still lets you drag it before saying so. */
+          void accessDenied("move", d.id);
+        } else if (d.moved && target) {
           /* Dropped into a folder somewhere else on screen. The icon's stored
            * position is deliberately not updated - it is leaving. */
           if (useFsStore.getState().move(d.id, target) === null) {
@@ -396,6 +400,10 @@ export function Desktop() {
         label: "Rename",
         onClick: () => {
           void (async () => {
+            if (containsSystemPath(item.entry.path)) {
+              await accessDenied("rename", item.entry.path);
+              return;
+            }
             const next = await promptDialog("Rename", "New name:", item.label);
             if (next === null) return;
             if (rename(item.entry.path, next) === null) {
@@ -438,7 +446,9 @@ export function Desktop() {
 
     const internal = e.dataTransfer.getData(PATH_MIME);
     if (internal) {
-      if (move(internal, DESKTOP_DIR) === null) {
+      if (containsSystemPath(internal)) {
+        void accessDenied("move", internal);
+      } else if (move(internal, DESKTOP_DIR) === null) {
         void errorDialog(
           "Move",
           `Cannot move '${basename(internal)}' to the desktop: something with that name is already there.`

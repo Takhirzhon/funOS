@@ -20,10 +20,27 @@ export function launchFile(entry: FsEntry): void {
   const name = basename(entry.path);
 
   if (isBinary(entry)) {
-    if (entry.mime?.startsWith("image/")) {
+    const mime = entry.mime ?? "";
+    if (mime.startsWith("image/")) {
       open("imageViewer", {
         title: `${name} - Windows Picture Viewer`,
         bounds: { width: 620, height: 480 },
+        props: { path: entry.path },
+      });
+      return;
+    }
+    if (mime.startsWith("video/") || mime.startsWith("audio/")) {
+      open("mediaPlayer", {
+        title: `${name} - Windows Media Player`,
+        bounds: { width: 640, height: 520 },
+        props: { path: entry.path },
+      });
+      return;
+    }
+    if (mime === "application/pdf") {
+      open("pdfReader", {
+        title: `${name} - PDF Reader`,
+        bounds: { width: 720, height: 560 },
         props: { path: entry.path },
       });
       return;

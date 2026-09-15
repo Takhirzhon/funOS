@@ -2,6 +2,7 @@ import { useFsStore } from "../store/fsStore";
 import { confirmDialog, errorDialog } from "../store/dialogStore";
 import { basename, isInside } from "./path";
 import { RECYCLE_BIN } from "./seed";
+import { accessDenied, firstSystemPath } from "./system";
 
 /* Deleting, in one place, because the desktop and Explorer must ask the same
  * question and mean the same thing by the answer.
@@ -15,6 +16,14 @@ export async function deletePaths(paths: string[], permanent = false): Promise<s
   const fs = useFsStore.getState();
   const targets = paths.filter((p) => fs.exists(p));
   if (targets.length === 0) return [];
+
+  /* Refused before the question, not after it. Windows names the first file
+   * it cannot touch and stops there, which is what this does too. */
+  const owned = firstSystemPath(targets);
+  if (owned) {
+    await accessDenied("delete", owned);
+    return [];
+  }
 
   /* One question for the whole selection, not one per file. Windows asks once
    * and names the count; asking five times is how a "delete these five" turns

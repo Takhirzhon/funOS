@@ -2,6 +2,7 @@ import { useClipboardStore } from "../store/clipboardStore";
 import { useFsStore } from "../store/fsStore";
 import { errorDialog } from "../store/dialogStore";
 import { basename } from "./path";
+import { accessDenied, firstSystemPath } from "./system";
 
 /* Paste, in one place, because the desktop and Explorer must not disagree about
  * what it does.
@@ -11,6 +12,16 @@ export function pasteInto(folder: string): void {
   if (paths.length === 0) return;
 
   const fs = useFsStore.getState();
+
+  /* A cut of a system file is allowed to sit on the clipboard - Windows lets
+   * you press Ctrl+X on anything - and is refused here, where the move would
+   * happen. A copy is fine: the copy is the visitor's. */
+  const owned = mode === "cut" ? firstSystemPath(paths) : undefined;
+  if (owned) {
+    void accessDenied("move", owned);
+    return;
+  }
+
   const failed: string[] = [];
   let pasted = 0;
 

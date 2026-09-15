@@ -184,6 +184,114 @@ export const PictureIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
+/* Acrobat's document: the same page as every other file, with the red band
+ * that made a PDF recognisable across a room in 2004. */
+export const PdfIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="pdf-page" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stopColor="#ffffff" />
+        <stop offset="1" stopColor="#e3e8ed" />
+      </linearGradient>
+      <linearGradient id="pdf-band" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#f0645a" />
+        <stop offset="1" stopColor="#b8221a" />
+      </linearGradient>
+    </defs>
+    <path d="M7 3h12l6 6v20H7z" fill="url(#pdf-page)" stroke="#8794a1" strokeWidth="0.9" />
+    <path d="M19 3v6h6" fill="#cdd7e0" stroke="#8794a1" strokeWidth="0.9" />
+    <rect x="4.5" y="15" width="19" height="9" rx="1" fill="url(#pdf-band)" stroke="#8a1a12" strokeWidth="0.8" />
+    <text
+      x="14"
+      y="21.8"
+      textAnchor="middle"
+      fontFamily="Arial, Helvetica, sans-serif"
+      fontWeight="700"
+      fontSize="6.4"
+      fill="#fff"
+    >
+      PDF
+    </text>
+  </svg>
+);
+
+/* A strip of film. XP used it for every video type, and it still reads at 16px
+ * where a play button would look like a button. */
+export const VideoIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="vid-frame" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#8fc4ef" />
+        <stop offset="1" stopColor="#2f6cbf" />
+      </linearGradient>
+    </defs>
+    <rect x="3" y="6" width="26" height="20" rx="1.5" fill="#3b3b3b" stroke="#1d1d1d" strokeWidth="0.9" />
+    <rect x="8" y="9.5" width="16" height="13" fill="url(#vid-frame)" />
+    <path d="M8 9.5h16v4.5c-5.3 1.6-10.7 1.6-16 0z" fill="#fff" opacity="0.35" />
+    {/* sprocket holes, both edges */}
+    <path
+      d="M4.5 8h2v2h-2zM4.5 12h2v2h-2zM4.5 16h2v2h-2zM4.5 20h2v2h-2zM25.5 8h2v2h-2zM25.5 12h2v2h-2zM25.5 16h2v2h-2zM25.5 20h2v2h-2z"
+      fill="#e8e8e8"
+    />
+    <path d="M13.5 12.5v7l6-3.5z" fill="#fff" />
+  </svg>
+);
+
+export const MusicIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="mus-page" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0" stopColor="#ffffff" />
+        <stop offset="1" stopColor="#e3e8ed" />
+      </linearGradient>
+    </defs>
+    <path d="M7 3h12l6 6v20H7z" fill="url(#mus-page)" stroke="#8794a1" strokeWidth="0.9" />
+    <path d="M19 3v6h6" fill="#cdd7e0" stroke="#8794a1" strokeWidth="0.9" />
+    <path d="M13.5 22.5V12l8-2v10.5" stroke="#2f6cbf" strokeWidth="1.6" fill="none" strokeLinejoin="round" />
+    <ellipse cx="11.5" cy="22.8" rx="2.4" ry="1.8" fill="#2f6cbf" />
+    <ellipse cx="19.5" cy="20.8" rx="2.4" ry="1.8" fill="#2f6cbf" />
+  </svg>
+);
+
+/* Media Player 9's badge: an orange play button on a blue disc. Not the exact
+ * logo, but the two colours next to each other are most of the recognition. */
+export const MediaPlayerIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <radialGradient id="wmp-disc" cx="0.35" cy="0.3" r="0.8">
+        <stop offset="0" stopColor="#9fd0ff" />
+        <stop offset="0.55" stopColor="#2f7fd6" />
+        <stop offset="1" stopColor="#0f3f80" />
+      </radialGradient>
+      <linearGradient id="wmp-play" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#ffd070" />
+        <stop offset="1" stopColor="#f08a12" />
+      </linearGradient>
+    </defs>
+    <circle cx="16" cy="16" r="12.5" fill="url(#wmp-disc)" stroke="#0b2f60" strokeWidth="0.9" />
+    <ellipse cx="12.5" cy="10" rx="6" ry="3.4" fill="#fff" opacity="0.28" />
+    <path d="M12 9.5v13l10.5-6.5z" fill="url(#wmp-play)" stroke="#8a4a05" strokeWidth="0.8" strokeLinejoin="round" />
+  </svg>
+);
+
+/* A reader: the PDF page inside a viewer's frame, so the application and the
+ * document it opens do not share an icon. */
+export const ReaderIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="rd-band" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#f0645a" />
+        <stop offset="1" stopColor="#b8221a" />
+      </linearGradient>
+    </defs>
+    <rect x="3" y="4" width="26" height="24" rx="2" fill="#e9eef5" stroke="#6b7d8c" strokeWidth="0.9" />
+    <rect x="3" y="4" width="26" height="4" rx="1.5" fill="#3a8de0" />
+    <rect x="8" y="10.5" width="16" height="15" fill="#fff" stroke="#8794a1" strokeWidth="0.8" />
+    <rect x="8" y="16" width="16" height="4" fill="url(#rd-band)" />
+    <path d="M10.5 13h11M10.5 22.5h8" stroke="#aab6c2" strokeWidth="1" strokeLinecap="round" />
+  </svg>
+);
+
 export const PaintIcon = ({ size = 32, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { idbGet, idbSet } from "../fs/idb";
 import { RECYCLE_BIN, buildSeed } from "../fs/seed";
+import { containsSystemPath, isSystemPath, systemOverlay } from "../fs/system";
 import {
   basename,
   dirname,
@@ -36,6 +37,15 @@ export type FsEntry = {
   bytes?: Uint8Array;
   /** MIME type, binary files only. */
   mime?: string;
+  /* A file that lives on the server rather than in the map: the portfolio,
+   * shipped under public/portfolio/ and laid over the tree by fs/system.ts.
+   * Its bytes are never here - a browser element points at the URL directly,
+   * which is the only sane way to show a 40MB video from a file system that
+   * serializes itself to IndexedDB on every write.
+   */
+  url?: string;
+  /** Byte length of a `url` file, known from the build. Nothing else sets it. */
+  size?: number;
   /* Where this came from, set only on the top entry of something in the Recycle
    * Bin. Children of a recycled folder do not carry one - restoring the folder
    * brings them with it, and a per-child path would be a second copy of the
@@ -46,9 +56,10 @@ export type FsEntry = {
   modified: number;
 };
 
-/** True for files written by `writeBinary` - the ones Notepad cannot show. */
+/** True for files written by `writeBinary` and for served ones - the ones
+ *  Notepad cannot show. */
 export const isBinary = (entry: FsEntry | undefined): boolean =>
-  entry?.kind === "file" && entry.bytes !== undefined;
+  entry?.kind === "file" && (entry.bytes !== undefined || entry.url !== undefined);
 
 /* Object URLs are cached per path+timestamp. Minting a new one on every render
  * leaks: each URL pins its Blob in memory until revoked, and a thumbnail grid
@@ -57,6 +68,7 @@ export const isBinary = (entry: FsEntry | undefined): boolean =>
 const urlCache = new Map<string, { key: string; url: string }>();
 
 export function blobUrlFor(entry: FsEntry): string | undefined {
+  if (entry.url) return entry.url;
   if (!entry.bytes) return undefined;
   const key = `${entry.modified}:${entry.bytes.byteLength}`;
   const cached = urlCache.get(entry.path);
@@ -118,7 +130,16 @@ type FsStore = {
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 const persist = (entries: Record<string, FsEntry>) => {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => void idbSet(STORAGE_KEY, entries), 250);
+  saveTimer = setTimeout(() => {
+    /* The system layer is never written. Persisting it would freeze this
+     * build's manifest into every visitor's database, and a file removed from
+     * the portfolio later would linger there with nothing able to delete it. */
+    const own: Record<string, FsEntry> = {};
+    for (const [key, value] of Object.entries(entries)) {
+      if (!isSystemPath(key)) own[key] = value;
+    }
+    void idbSet(STORAGE_KEY, own);
+  }, 250);
 };
 
 /* Exported as a pure function as well as a store method.
@@ -170,6 +191,10 @@ function relocate(
   if (!entry || isDriveRoot(from)) return null;
   if (to === from) return from;
   if (to in entries) return null;
+  /* A system file stays where the build put it, and so does any folder with
+   * one inside - moving the folder would move the file. The callers check
+   * first and say why; this is the guarantee behind the message. */
+  if (containsSystemPath(from)) return null;
 
   const now = Date.now();
   const next: Record<string, FsEntry> = {};
@@ -198,8 +223,16 @@ const sortEntries = (a: FsEntry, b: FsEntry) => {
   });
 };
 
+/* The system layer wins over whatever is underneath it - the seed now, the
+ * stored tree once it arrives. A visitor who saved their own CV.pdf on the
+ * desktop last year sees this build's, which is the point. */
+const withSystem = (entries: Record<string, FsEntry>): Record<string, FsEntry> => ({
+  ...entries,
+  ...systemOverlay(),
+});
+
 export const useFsStore = create<FsStore>((set, get) => ({
-  entries: buildSeed(),
+  entries: withSystem(buildSeed()),
   ready: false,
 
   get: (path) => get().entries[normalize(path)],
@@ -234,6 +267,7 @@ export const useFsStore = create<FsStore>((set, get) => ({
     const parent = dirname(target);
     if (!(parent in entries) || entries[parent].kind !== "dir") return false;
     if (entries[target]?.kind === "dir") return false;
+    if (isSystemPath(target)) return false;
 
     const now = Date.now();
     const existing = entries[target];
@@ -261,6 +295,7 @@ export const useFsStore = create<FsStore>((set, get) => ({
     const parent = dirname(target);
     if (!(parent in entries) || entries[parent].kind !== "dir") return false;
     if (entries[target]?.kind === "dir") return false;
+    if (isSystemPath(target)) return false;
 
     const now = Date.now();
     const next = {
@@ -289,6 +324,7 @@ export const useFsStore = create<FsStore>((set, get) => ({
     const target = normalize(path);
     const { entries } = get();
     if (!(target in entries) || isDriveRoot(target)) return false;
+    if (containsSystemPath(target)) return false;
 
     /* Recursive by definition: with a flat map, "delete the folder" and "delete
      * everything under it" are the same filter. A tree would need a walk here,
@@ -455,7 +491,7 @@ export const useFsStore = create<FsStore>((set, get) => ({
 void (async () => {
   const stored = await idbGet<Record<string, FsEntry>>(STORAGE_KEY);
   if (stored && typeof stored === "object" && Object.keys(stored).length > 0) {
-    useFsStore.setState({ entries: stored, ready: true });
+    useFsStore.setState({ entries: withSystem(stored), ready: true });
   } else {
     useFsStore.setState({ ready: true });
     persist(useFsStore.getState().entries);

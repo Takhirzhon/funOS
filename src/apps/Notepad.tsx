@@ -4,6 +4,7 @@ import { useWindowStore } from "../store/windowStore";
 import { confirmDialog, errorDialog, fileDialog } from "../store/dialogStore";
 import { basename, dirname, display, extname, normalize } from "../fs/path";
 import { MY_DOCUMENTS } from "../fs/seed";
+import { accessDenied, isSystemPath } from "../fs/system";
 import { MenuBar } from "../components/MenuBar";
 import styles from "./Notepad.module.css";
 
@@ -38,6 +39,12 @@ export function Notepad({ path, windowId }: Props) {
 
   const save = (target: string | null = file): boolean => {
     if (!target) return false;
+    /* About Me.txt is part of the machine. Editing it is fine - saving it is
+     * where XP would have said no, and "Save As" is still there. */
+    if (isSystemPath(target)) {
+      void accessDenied("save", target);
+      return false;
+    }
     if (!writeFile(target, text)) {
       void errorDialog("Notepad", `Cannot save ${display(target)}.\n\nThe folder does not exist.`);
       return false;
