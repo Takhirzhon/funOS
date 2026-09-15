@@ -465,7 +465,12 @@ export function Desktop() {
         onDrop={onDrop}
       >
         {items.map((item) => {
-          const isDragging = drag?.id === item.id;
+          /* Only once the pointer has actually moved. The drag record exists
+           * from pointerdown, but the dragging style makes the icon transparent
+           * to hit-testing - applied on the first press, the button under the
+           * cursor vanishes before pointerup, the click lands on the field, and
+           * no double-click ever reaches the icon. */
+          const isDragging = drag?.id === item.id && drag.moved;
           const pos = isDragging ? drag.pos : layout[item.id];
           return (
             <DesktopIcon
