@@ -206,7 +206,7 @@ export const apps = {
     component: app(() => import("./About"), "About"),
     icon: InfoIcon,
     defaultSize: { width: 420, height: 300 },
-    onDesktop: true,
+    onDesktop: false,
   },
 } satisfies Record<string, AppDef>;
 

@@ -29,7 +29,7 @@ import { showBalloon } from "../store/balloonStore";
 import { deletePaths } from "../fs/trash";
 import { useShellShortcuts } from "../hooks/useShellShortcuts";
 import { COARSE, useMediaQuery } from "../hooks/useMediaQuery";
-import { DESKTOP_DIR } from "../fs/seed";
+import { DESKTOP_DIR, RECYCLE_BIN } from "../fs/seed";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
 import { accessDenied, containsSystemPath } from "../fs/system";
@@ -90,6 +90,10 @@ export function Desktop() {
   const [drag, setDrag] = useState<Drag | null>(null);
   const [marquee, setMarquee] = useState<Marquee | null>(null);
   const [dropActive, setDropActive] = useState(false);
+  /* Explorer's HTML5 drag hovering the Recycle Bin icon. The pointer drag
+   * reports the same thing through the dnd store's hoverPath. */
+  const [binHover, setBinHover] = useState(false);
+  const hoverPath = useDndStore((s) => s.hoverPath);
 
   /* The welcome balloon, once per log-in. XP popped one out of the tray a few
    * seconds after the desktop appeared, and the delay is the whole effect: it
@@ -253,6 +257,12 @@ export function Desktop() {
         if (d.moved && target && containsSystemPath(d.id)) {
           /* It stays; Windows still lets you drag it before saying so. */
           void accessDenied("move", d.id);
+        } else if (d.moved && target === RECYCLE_BIN) {
+          /* Onto the bin. Recycled rather than moved, so Restore knows where
+           * it came from. */
+          if (useFsStore.getState().recycle(d.id) === null) {
+            void errorDialog("Recycle Bin", `Cannot send '${basename(d.id)}' to the Recycle Bin.`);
+          }
         } else if (d.moved && target) {
           /* Dropped into a folder somewhere else on screen. The icon's stored
            * position is deliberately not updated - it is leaving. */
@@ -516,6 +526,29 @@ export function Desktop() {
     });
   };
 
+  /* Dropping a file from Explorer onto the Recycle Bin icon. Stops before
+   * the field's own handler, which would move the file onto the desktop. */
+  const binDragOver = (e: ReactDragEvent<HTMLButtonElement>) => {
+    if (!e.dataTransfer.types.includes(PATH_MIME)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    setBinHover(true);
+  };
+  const binDrop = (e: ReactDragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setBinHover(false);
+    setDropActive(false);
+    const source = e.dataTransfer.getData(PATH_MIME);
+    if (!source) return;
+    if (containsSystemPath(source)) {
+      void accessDenied("delete", source);
+    } else if (useFsStore.getState().recycle(source) === null) {
+      void errorDialog("Recycle Bin", `Cannot send '${basename(source)}' to the Recycle Bin.`);
+    }
+  };
+
   return (
     <div className="desktop">
       <div
@@ -551,6 +584,15 @@ export function Desktop() {
               onPointerDown={beginDrag(item.id)}
               onContextMenu={itemMenu(item)}
               onOpen={() => openItem(item)}
+              dropPath={item.kind === "app" && item.appId === "recycleBin" ? RECYCLE_BIN : undefined}
+              dropTarget={
+                item.kind === "app" &&
+                item.appId === "recycleBin" &&
+                (binHover || (hoverPath === RECYCLE_BIN && drag?.id !== item.id))
+              }
+              onDragOver={item.kind === "app" && item.appId === "recycleBin" ? binDragOver : undefined}
+              onDragLeave={item.kind === "app" && item.appId === "recycleBin" ? () => setBinHover(false) : undefined}
+              onDrop={item.kind === "app" && item.appId === "recycleBin" ? binDrop : undefined}
               onTap={
                 coarse
                   ? () => {

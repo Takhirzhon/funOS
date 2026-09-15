@@ -24,7 +24,7 @@ import {
   isDriveRoot,
   normalize,
 } from "../fs/path";
-import { MY_DOCUMENTS } from "../fs/seed";
+import { MY_DOCUMENTS, RECYCLE_BIN } from "../fs/seed";
 import { PATH_MIME } from "../fs/dnd";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
@@ -287,6 +287,12 @@ export function Explorer({ path, windowId }: Props) {
   const moveInto = (source: string, folder: string) => {
     if (containsSystemPath(source)) {
       void accessDenied("move", source);
+      return;
+    }
+    if (folder === RECYCLE_BIN) {
+      if (useFsStore.getState().recycle(source) === null) {
+        void errorDialog("Recycle Bin", `Cannot send '${basename(source)}' to the Recycle Bin.`);
+      }
       return;
     }
     if (move(source, folder) === null) {

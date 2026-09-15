@@ -7,7 +7,7 @@ mirrors `C:\Documents and Settings\User\`.
 | here | there |
 |---|---|
 | `Desktop/Tokhirzhon Tashmatov - CV.pdf` | `C:\Documents and Settings\User\Desktop\...` — an icon on the desktop |
-| `Desktop/About Me.txt` | the same, opens in Notepad |
+| `Desktop/anything.txt` | the same, opens in Notepad |
 | `My Documents/My Pictures/*.jpg` | opens in Windows Picture Viewer, arrows walk the folder |
 | `My Documents/My Videos/*.mp4` | opens in Windows Media Player, the folder is the playlist |
 | `My Documents/My Music/*.mp3` | Media Player too |

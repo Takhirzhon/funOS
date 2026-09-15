@@ -1,4 +1,5 @@
 import type {
+  DragEvent as ReactDragEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
   ReactNode,
@@ -20,6 +21,13 @@ type Props = {
   onOpen: () => void;
   /** A single tap, on a touch screen - where a double tap is a zoom. */
   onTap?: () => void;
+  /** A folder path this icon accepts drops for - the Recycle Bin's, mostly. */
+  dropPath?: string;
+  /** Lit as a drop target, by either drag system. */
+  dropTarget?: boolean;
+  onDragOver?: (e: ReactDragEvent<HTMLButtonElement>) => void;
+  onDragLeave?: (e: ReactDragEvent<HTMLButtonElement>) => void;
+  onDrop?: (e: ReactDragEvent<HTMLButtonElement>) => void;
 };
 
 /* Selection and position are props, not local state.
@@ -41,9 +49,14 @@ export function DesktopIcon({
   onContextMenu,
   onOpen,
   onTap,
+  dropPath,
+  dropTarget,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: Props) {
   const classes = [styles.icon];
-  if (selected) classes.push(styles.selected);
+  if (selected || dropTarget) classes.push(styles.selected);
   if (dragging) classes.push(styles.dragging);
   if (cut) classes.push(styles.cut);
 
@@ -55,6 +68,10 @@ export function DesktopIcon({
       onPointerDown={onPointerDown}
       onContextMenu={onContextMenu}
       onClick={onTap}
+      data-drop-path={dropPath}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
       onDoubleClick={(e) => {
         e.stopPropagation();
         onOpen();
