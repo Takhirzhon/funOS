@@ -4,7 +4,7 @@ import { listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { basename, dirname, display, isDriveRoot, join, normalize } from "../fs/path";
 import { entryBytes, entryIcon, entryType, formatBytes } from "../fs/icons";
 import { isSystemPath } from "../fs/system";
-import { HelpIcon, InfoIcon, ShutdownIcon } from "../icons";
+import { ErrorIcon, InfoIcon, QuestionIcon } from "../icons";
 import styles from "./Dialog.module.css";
 
 /* The one modal dialog, mounted once in App next to the context menu. */
@@ -80,7 +80,7 @@ function Message({
   const cancel = () => close(request.kind === "prompt" ? null : false);
 
   const Icon =
-    request.kind === "error" ? ShutdownIcon : request.kind === "confirm" ? HelpIcon : InfoIcon;
+    request.kind === "error" ? ErrorIcon : request.kind === "confirm" ? QuestionIcon : InfoIcon;
 
   return (
     <div className={`window ${styles.dialog}`}>

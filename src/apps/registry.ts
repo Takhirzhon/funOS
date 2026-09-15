@@ -3,7 +3,7 @@ import { RecycleBinAppIcon } from "./appIcons";
 import {
   CalculatorIcon,
   CardsIcon,
-  ControlPanelIcon,
+  DisplayPropertiesIcon,
   ConsoleIcon,
   MineIcon,
   DocumentsIcon,
@@ -12,7 +12,7 @@ import {
   MediaPlayerIcon,
   MyComputerIcon,
   NotepadIcon,
-  PictureIcon,
+  PictureViewerIcon,
   ReaderIcon,
 } from "../icons";
 
@@ -82,7 +82,7 @@ export const apps = {
     title: "Windows Picture Viewer",
     label: "Picture Viewer",
     component: app(() => import("./ImageViewer"), "ImageViewer"),
-    icon: PictureIcon,
+    icon: PictureViewerIcon,
     defaultSize: { width: 620, height: 480 },
     onDesktop: false,
   },
@@ -141,7 +141,7 @@ export const apps = {
     title: "Display Properties",
     label: "Display Properties",
     component: app(() => import("./DisplayProperties"), "DisplayProperties"),
-    icon: ControlPanelIcon,
+    icon: DisplayPropertiesIcon,
     defaultSize: { width: 420, height: 470 },
     onDesktop: false,
   },

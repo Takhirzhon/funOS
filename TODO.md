@@ -155,8 +155,7 @@ portfolio content to the seed; do not make the layer writable to fix a
 complaint that it is not.
 
 **Not doing, and why.** Not twenty-eight applications - five that are
-finished beat twenty that are frames. Not a raster icon set - the licence and
-the budget, both above. Not pdf.js - the browser renders PDFs already, and
+finished beat twenty that are frames. Not pdf.js - the browser renders PDFs already, and
 400KB for a worse copy of that is the exact thing the chunk budget catches.
 
 **The desktop and Explorer drag differently, on purpose.** The desktop uses
@@ -183,11 +182,15 @@ makes — not a licence that permits it. If this ever becomes something that
 matters, `src/assets/wallpaper.svg` is still in the tree and still wired up as
 the layer underneath: deleting one line in `index.css` reverts it.
 
-**The icons stay ours.** Drawn as SVG to the XP grammar — one light source at
-the upper left, a single outline, soft gradients per surface. Partly the same
-licence question, mostly the budget: an authentic raster set at 16/32/48px is
-several hundred KB before it draws anything. `apps/registry.ts` owns the
-mapping, so swapping the source later does not touch a single call site.
+**The icons are the originals, and they are files.** They were SVG lookalikes
+for a year, drawn to the XP grammar, and the argument was the budget: a raster
+set is several hundred KB and the shell is gated at 120KB. The set is now
+XP's own (`public/icons/xp/`, from softwarehistorysociety/XPIcons) and the
+budget argument is answered the same way the wallpaper's was — the bytes live
+outside the bundle and are fetched by `<img>` when something shows them. The
+desktop costs eight small files at first paint. The licence position is the
+Bliss one, stated above. Two are still drawn: the Start flag, which would be
+the trademark rather than the picture, and the PDF badge, which XP never had.
 
 ---
 

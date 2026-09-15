@@ -30,7 +30,7 @@ import { launchFile } from "../fs/open";
 import { accessDenied, containsSystemPath } from "../fs/system";
 import { entryBytes, entryIcon, entryType } from "../fs/icons";
 import { MenuBar } from "../components/MenuBar";
-import { DriveIcon, FolderIcon } from "../icons";
+import { DriveIcon } from "../icons";
 import styles from "./Explorer.module.css";
 
 type Props = { path?: string; windowId?: string };
@@ -552,7 +552,8 @@ function TreeNode({ path, depth, entries, current, expanded, onToggle, onSelect 
           <span className={styles.twistySpacer} />
         )}
         <button type="button" className={styles.nodeLabel} onClick={() => onSelect(path)}>
-          {isDriveRoot(path) ? <DriveIcon size={16} /> : <FolderIcon size={16} />}
+          {/* The list's icon, so My Pictures is My Pictures in the tree too. */}
+          {isDriveRoot(path) || !entries[path] ? <DriveIcon size={16} /> : entryIcon(entries[path], 16)}
           {label}
         </button>
       </div>

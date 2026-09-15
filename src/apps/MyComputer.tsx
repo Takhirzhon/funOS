@@ -4,7 +4,7 @@ import { useWindowStore } from "../store/windowStore";
 import { errorDialog } from "../store/dialogStore";
 import { DRIVE } from "../fs/path";
 import { entryBytes } from "../fs/icons";
-import { DriveIcon } from "../icons";
+import { CdDriveIcon, DriveIcon, RemovableDriveIcon } from "../icons";
 import styles from "./MyComputer.module.css";
 
 /* Only C: has a file system behind it. The other two are here because My
@@ -12,9 +12,9 @@ import styles from "./MyComputer.module.css";
  * that says "insert a disc" is more honest than pretending it is not there.
  */
 const drives = [
-  { letter: DRIVE, label: "Local Disk", kind: "Local Disk", mounted: true },
-  { letter: "D:", label: "CD Drive", kind: "CD Drive", mounted: false },
-  { letter: "E:", label: "Removable Disk", kind: "Removable Disk", mounted: false },
+  { letter: DRIVE, label: "Local Disk", kind: "Local Disk", mounted: true, icon: DriveIcon },
+  { letter: "D:", label: "CD Drive", kind: "CD Drive", mounted: false, icon: CdDriveIcon },
+  { letter: "E:", label: "Removable Disk", kind: "Removable Disk", mounted: false, icon: RemovableDriveIcon },
 ];
 
 export function MyComputer() {
@@ -63,7 +63,7 @@ export function MyComputer() {
             }}
             onDoubleClick={() => openDrive(drive.letter, drive.mounted)}
           >
-            <DriveIcon size={48} />
+            <drive.icon size={48} />
             <span className={styles.label}>{`${drive.label} (${drive.letter})`}</span>
             <span className={styles.detail}>
               {drive.mounted ? `${(used / 1024).toFixed(1)} KB used` : drive.kind}

@@ -1,19 +1,25 @@
-/* Inline SVG icon set.
+/* The icon set: Windows XP's own.
  *
- * Inline rather than a sprite sheet or PNGs for one reason: the entry bundle is
- * gated at 120KB gzipped, and an XP-authentic raster set at 16/32/48px is
- * several hundred KB before it has drawn anything. SVG that gzips to a few
- * hundred bytes per icon buys the fidelity back for almost nothing.
+ * These used to be SVG lookalikes drawn to XP's grammar, and the reasoning was
+ * the entry budget - a raster set at 16/32/48px is several hundred KB, and the
+ * shell is gated at 120KB gzipped. Both facts are still true; what changed is
+ * where the pixels live. The icons are files under public/icons/xp/, fetched
+ * by <img> when something on screen actually shows them, and the bundle
+ * carries only the names. First paint fetches the eight on the desktop and
+ * nothing else.
  *
- * These are lookalikes, drawn to the XP icon grammar rather than traced from it:
- *   - a light source at the upper left, always
- *   - a single dark outline, never a stroke on every internal edge
- *   - one soft vertical gradient per surface, plus a white gloss on glass
- *   - 45-degree perspective on anything box-shaped
+ * Source: softwarehistorysociety/XPIcons, 1024px renders of the originals,
+ * reduced to 96px (anything drawn at 32 or 48, and still sharp at 2x) and 24px
+ * (the tray, task buttons, list view, the Start menu's right column). WebP
+ * with alpha at q90; 48 icons, 186KB, none of it on the critical path. The
+ * recipe is in public/icons/xp/README.md.
  *
- * Every gradient id is prefixed with the icon name. Two SVGs on the same page
- * with an id of "gloss" is a real bug and a confusing one: the second element
- * silently inherits the first one's gradient.
+ * The artwork is Microsoft's, the same way Bliss is - see TODO.md. Two icons
+ * are still drawn here: the Start flag, which is the one thing that would be
+ * a trademark rather than a picture, and the PDF badge, which XP never had.
+ *
+ * Every export keeps the signature it had as an SVG - `size`, `style`,
+ * `className` - so nothing that renders an icon knows or cares what it is.
  */
 import type { CSSProperties } from "react";
 
@@ -32,157 +38,91 @@ const box = (size: number, style?: CSSProperties): CSSProperties => ({
   ...style,
 });
 
+/* The cut-off between the two renders. 24 is the largest thing the small file
+ * is drawn at, and a 32px icon scaled up from 24 is exactly the blur this
+ * exists to avoid. */
+const SMALL = 24;
+
+/* One <img>, and every icon is a one-line component around it - written out
+ * rather than produced by a factory so that each export is a component to
+ * fast refresh and to anyone reading the file. */
+function Xp({ name, size = 32, style, className }: IconProps & { name: string }) {
+  return (
+    <img
+      src={`${import.meta.env.BASE_URL}icons/xp/${name}${size <= SMALL ? "-s" : ""}.webp`}
+      width={size}
+      height={size}
+      style={box(size, style)}
+      className={className}
+      alt=""
+      draggable={false}
+      aria-hidden
+    />
+  );
+}
+
 /* ---- Desktop and shell ---------------------------------------------------- */
 
-export const MyComputerIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="mc-case" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#fdfdfa" />
-        <stop offset="0.45" stopColor="#e3e1d4" />
-        <stop offset="1" stopColor="#b9b7a8" />
-      </linearGradient>
-      <linearGradient id="mc-screen" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#4e9fe0" />
-        <stop offset="0.5" stopColor="#1f6fc0" />
-        <stop offset="1" stopColor="#134f93" />
-      </linearGradient>
-      <linearGradient id="mc-gloss" x1="0" x2="0.6" y1="0" y2="1">
-        <stop offset="0" stopColor="#fff" stopOpacity="0.65" />
-        <stop offset="0.6" stopColor="#fff" stopOpacity="0.05" />
-        <stop offset="1" stopColor="#fff" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-    {/* monitor */}
-    <rect x="3" y="5" width="26" height="18" rx="2" fill="url(#mc-case)" stroke="#6b6a5e" />
-    <rect x="5.5" y="7.5" width="21" height="12.5" rx="1" fill="url(#mc-screen)" />
-    <path d="M5.5 7.5h21v7c-7 2.2-14 2.2-21 0z" fill="url(#mc-gloss)" />
-    {/* stand and base */}
-    <path d="M12 23h8l1 3h-10z" fill="#cfcdbf" stroke="#6b6a5e" strokeWidth="0.8" />
-    <rect x="6" y="26" width="20" height="3.5" rx="1.5" fill="url(#mc-case)" stroke="#6b6a5e" />
-    <circle cx="9.5" cy="27.8" r="0.7" fill="#4c7f3d" />
-  </svg>
-);
+export const MyComputerIcon = (p: IconProps) => <Xp name="my-computer" {...p} />;
+export const RecycleBinIcon = (p: IconProps) => <Xp name="recycle-bin-empty" {...p} />;
+export const RecycleBinFullIcon = (p: IconProps) => <Xp name="recycle-bin-full" {...p} />;
+export const NotepadIcon = (p: IconProps) => <Xp name="notepad" {...p} />;
+export const TextDocumentIcon = (p: IconProps) => <Xp name="text-document" {...p} />;
+export const FolderIcon = (p: IconProps) => <Xp name="folder" {...p} />;
+export const FolderOpenIcon = (p: IconProps) => <Xp name="folder-open" {...p} />;
+export const FileIcon = (p: IconProps) => <Xp name="document" {...p} />;
+export const PictureIcon = (p: IconProps) => <Xp name="picture" {...p} />;
+export const VideoIcon = (p: IconProps) => <Xp name="video" {...p} />;
+export const MusicIcon = (p: IconProps) => <Xp name="audio" {...p} />;
+export const MediaPlayerIcon = (p: IconProps) => <Xp name="media-player" {...p} />;
+export const PictureViewerIcon = (p: IconProps) => <Xp name="picture-viewer" {...p} />;
+export const ReaderIcon = (p: IconProps) => <Xp name="viewer" {...p} />;
+export const PaintIcon = (p: IconProps) => <Xp name="paint" {...p} />;
+export const ConsoleIcon = (p: IconProps) => <Xp name="command-prompt" {...p} />;
+export const CardsIcon = (p: IconProps) => <Xp name="solitaire" {...p} />;
+export const MineIcon = (p: IconProps) => <Xp name="minesweeper" {...p} />;
+export const CalculatorIcon = (p: IconProps) => <Xp name="calculator" {...p} />;
+export const DriveIcon = (p: IconProps) => <Xp name="local-disk" {...p} />;
+export const CdDriveIcon = (p: IconProps) => <Xp name="cd-rom" {...p} />;
+export const RemovableDriveIcon = (p: IconProps) => <Xp name="removable" {...p} />;
+export const InfoIcon = (p: IconProps) => <Xp name="information" {...p} />;
+export const ErrorIcon = (p: IconProps) => <Xp name="critical" {...p} />;
+export const QuestionIcon = (p: IconProps) => <Xp name="question" {...p} />;
+export const WarningIcon = (p: IconProps) => <Xp name="alert" {...p} />;
+export const SystemPropertiesIcon = (p: IconProps) => <Xp name="system-properties" {...p} />;
+export const TaskManagerIcon = (p: IconProps) => <Xp name="task-manager" {...p} />;
+export const UserAccountsIcon = (p: IconProps) => <Xp name="user-accounts" {...p} />;
 
-export const RecycleBinIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="rb-body" x1="0" x2="1" y1="0" y2="0">
-        <stop offset="0" stopColor="#e9f2f8" />
-        <stop offset="0.35" stopColor="#aec6d6" />
-        <stop offset="0.65" stopColor="#cfe0ea" />
-        <stop offset="1" stopColor="#8ea7b8" />
-      </linearGradient>
-      <linearGradient id="rb-lid" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#f2f8fc" />
-        <stop offset="1" stopColor="#9fb7c8" />
-      </linearGradient>
-    </defs>
-    <path d="M8 10h16l-1.6 18.2a1.4 1.4 0 0 1-1.4 1.3H11a1.4 1.4 0 0 1-1.4-1.3z" fill="url(#rb-body)" stroke="#5d7386" strokeWidth="0.9" />
-    {/* the vertical ribs, lighter than the outline so they read as moulding */}
-    <path d="M13 13.5 12.4 26M16 13.5V26M19 13.5l.6 12.5" stroke="#7e95a6" strokeWidth="0.9" fill="none" strokeLinecap="round" />
-    <ellipse cx="16" cy="10" rx="8.6" ry="2.4" fill="url(#rb-lid)" stroke="#5d7386" strokeWidth="0.9" />
-    <rect x="13.4" y="5.4" width="5.2" height="2.6" rx="1.2" fill="#cfe0ea" stroke="#5d7386" strokeWidth="0.9" />
-    {/* the recycle triangle, the one thing that identifies this icon at 16px */}
-    <path d="M16 15.6l2.2 3.8h-4.4z" fill="#3f8f32" opacity="0.85" />
-  </svg>
-);
+/* The special folders: Explorer draws these with their own picture, and the
+ * user's profile is where anyone who has used XP expects to see them. */
+export const DesktopFolderIcon = (p: IconProps) => <Xp name="desktop" {...p} />;
+export const MyPicturesIcon = (p: IconProps) => <Xp name="my-pictures" {...p} />;
+export const MyMusicIcon = (p: IconProps) => <Xp name="my-music" {...p} />;
+export const MyVideosIcon = (p: IconProps) => <Xp name="my-videos" {...p} />;
 
-/* The bin with something in it. Same silhouette as the empty one - it has to
- * read as the same object - with crumpled paper above the rim, which is the
- * only part of XP's full-bin icon anyone actually registers.
- */
-export const RecycleBinFullIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="rbf-body" x1="0" x2="1" y1="0" y2="0">
-        <stop offset="0" stopColor="#e9f2f8" />
-        <stop offset="0.35" stopColor="#aec6d6" />
-        <stop offset="0.65" stopColor="#cfe0ea" />
-        <stop offset="1" stopColor="#8ea7b8" />
-      </linearGradient>
-    </defs>
-    {/* paper first, so the bin overlaps it and the sheets sit *inside* */}
-    <path d="M10.5 7.5 13 3.8l3.4 2.4L19 3l1.6 3.6 3-1.2-.8 3.4-11.8.9z" fill="#fdfdf7" stroke="#b9b6a6" strokeWidth="0.8" strokeLinejoin="round" />
-    <path d="M13.5 6.2l2.2 1.7M18 5.4l.9 2" stroke="#cfcdbd" strokeWidth="0.8" />
-    <path d="M8 10h16l-1.6 18.2a1.4 1.4 0 0 1-1.4 1.3H11a1.4 1.4 0 0 1-1.4-1.3z" fill="url(#rbf-body)" stroke="#5d7386" strokeWidth="0.9" />
-    <path d="M13 13.5 12.4 26M16 13.5V26M19 13.5l.6 12.5" stroke="#7e95a6" strokeWidth="0.9" fill="none" strokeLinecap="round" />
-    <ellipse cx="16" cy="10" rx="8.6" ry="2.4" fill="#cfe0ea" stroke="#5d7386" strokeWidth="0.9" />
-    <path d="M16 15.6l2.2 3.8h-4.4z" fill="#3f8f32" opacity="0.85" />
-  </svg>
-);
+/* ---- Start menu ----------------------------------------------------------- */
 
-export const NotepadIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="np-page" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffffff" />
-        <stop offset="1" stopColor="#dfe6ec" />
-      </linearGradient>
-      <linearGradient id="np-bar" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#7fb2e8" />
-        <stop offset="1" stopColor="#2f6cbf" />
-      </linearGradient>
-    </defs>
-    {/* the page, with the folded corner XP uses on every document icon */}
-    <path d="M7 3h13l5 5v21H7z" fill="url(#np-page)" stroke="#6b7d8c" strokeWidth="0.9" />
-    <path d="M20 3v5h5" fill="#c6d4e0" stroke="#6b7d8c" strokeWidth="0.9" />
-    <rect x="9.5" y="10.5" width="13" height="3" fill="url(#np-bar)" />
-    <path d="M9.5 17h13M9.5 20h13M9.5 23h9" stroke="#9aa8b5" strokeWidth="1" strokeLinecap="round" />
-  </svg>
-);
+export const DocumentsIcon = ({ size = 24, ...p }: IconProps) => <Xp name="my-documents" size={size} {...p} />;
+export const ControlPanelIcon = ({ size = 24, ...p }: IconProps) => <Xp name="control-panel" size={size} {...p} />;
+export const DisplayPropertiesIcon = ({ size = 24, ...p }: IconProps) => <Xp name="display-properties" size={size} {...p} />;
+export const HelpIcon = ({ size = 24, ...p }: IconProps) => <Xp name="help" size={size} {...p} />;
+export const SearchIcon = ({ size = 24, ...p }: IconProps) => <Xp name="search" size={size} {...p} />;
+export const RunIcon = ({ size = 24, ...p }: IconProps) => <Xp name="run" size={size} {...p} />;
+export const LogOffIcon = ({ size = 20, ...p }: IconProps) => <Xp name="log-off" size={size} {...p} />;
+export const ShutdownIcon = ({ size = 20, ...p }: IconProps) => <Xp name="power" size={size} {...p} />;
+export const RestartIcon = ({ size = 20, ...p }: IconProps) => <Xp name="restart" size={size} {...p} />;
+export const StandByIcon = ({ size = 20, ...p }: IconProps) => <Xp name="stand-by" size={size} {...p} />;
 
-export const FolderIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="fd-back" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffd979" />
-        <stop offset="1" stopColor="#e8a72e" />
-      </linearGradient>
-      <linearGradient id="fd-front" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffe9a8" />
-        <stop offset="0.55" stopColor="#fdcb62" />
-        <stop offset="1" stopColor="#e79b1f" />
-      </linearGradient>
-    </defs>
-    <path d="M3 8h9l2.5 3H29v16H3z" fill="url(#fd-back)" stroke="#a8741a" strokeWidth="0.9" />
-    <path d="M3 12h26l-2.5 15H5.5z" fill="url(#fd-front)" stroke="#a8741a" strokeWidth="0.9" />
-  </svg>
-);
+/* ---- Notification area ---------------------------------------------------- */
 
-/* The generic document. Deliberately plainer than NotepadIcon: in a file list
- * the point is to say "this is a file and it is not a folder", and anything
- * with a recognisable silhouette competes with the names next to it.
- */
-export const FileIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="fl-page" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffffff" />
-        <stop offset="1" stopColor="#e3e8ed" />
-      </linearGradient>
-    </defs>
-    <path d="M7 3h12l6 6v20H7z" fill="url(#fl-page)" stroke="#8794a1" strokeWidth="0.9" />
-    <path d="M19 3v6h6" fill="#cdd7e0" stroke="#8794a1" strokeWidth="0.9" />
-    <path d="M10 14h12M10 18h12M10 22h8" stroke="#aab6c2" strokeWidth="1" strokeLinecap="round" />
-  </svg>
-);
+export const VolumeIcon = ({ size = 16, ...p }: IconProps) => <Xp name="volume" size={size} {...p} />;
+export const VolumeMuteIcon = ({ size = 16, ...p }: IconProps) => <Xp name="mute" size={size} {...p} />;
+export const NetworkIcon = ({ size = 16, ...p }: IconProps) => <Xp name="network" size={size} {...p} />;
+export const ShieldIcon = ({ size = 16, ...p }: IconProps) => <Xp name="security" size={size} {...p} />;
+export const ShowDesktopIcon = ({ size = 16, ...p }: IconProps) => <Xp name="desktop" size={size} {...p} />;
+export const IEIcon = ({ size = 16, ...p }: IconProps) => <Xp name="internet-explorer" size={size} {...p} />;
 
-export const PictureIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="pic-sky" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#6fb7ea" />
-        <stop offset="1" stopColor="#c7e6f7" />
-      </linearGradient>
-    </defs>
-    <rect x="3" y="6" width="26" height="20" rx="1.5" fill="#fff" stroke="#7a8794" strokeWidth="0.9" />
-    <rect x="5" y="8" width="22" height="16" fill="url(#pic-sky)" />
-    {/* A hill, a sun and nothing else - at 16px anything more is a smudge */}
-    <circle cx="10" cy="12.5" r="2.2" fill="#ffe07a" />
-    <path d="M5 24l6.5-7 4.5 4.6 4-3.4L27 24z" fill="#5aa84a" />
-  </svg>
-);
+/* ---- Still drawn ---------------------------------------------------------- */
 
 /* Acrobat's document: the same page as every other file, with the red band
  * that made a PDF recognisable across a room in 2004. */
@@ -215,200 +155,6 @@ export const PdfIcon = ({ size = 32, style, className }: IconProps) => (
   </svg>
 );
 
-/* A strip of film. XP used it for every video type, and it still reads at 16px
- * where a play button would look like a button. */
-export const VideoIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="vid-frame" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#8fc4ef" />
-        <stop offset="1" stopColor="#2f6cbf" />
-      </linearGradient>
-    </defs>
-    <rect x="3" y="6" width="26" height="20" rx="1.5" fill="#3b3b3b" stroke="#1d1d1d" strokeWidth="0.9" />
-    <rect x="8" y="9.5" width="16" height="13" fill="url(#vid-frame)" />
-    <path d="M8 9.5h16v4.5c-5.3 1.6-10.7 1.6-16 0z" fill="#fff" opacity="0.35" />
-    {/* sprocket holes, both edges */}
-    <path
-      d="M4.5 8h2v2h-2zM4.5 12h2v2h-2zM4.5 16h2v2h-2zM4.5 20h2v2h-2zM25.5 8h2v2h-2zM25.5 12h2v2h-2zM25.5 16h2v2h-2zM25.5 20h2v2h-2z"
-      fill="#e8e8e8"
-    />
-    <path d="M13.5 12.5v7l6-3.5z" fill="#fff" />
-  </svg>
-);
-
-export const MusicIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="mus-page" x1="0" x2="1" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffffff" />
-        <stop offset="1" stopColor="#e3e8ed" />
-      </linearGradient>
-    </defs>
-    <path d="M7 3h12l6 6v20H7z" fill="url(#mus-page)" stroke="#8794a1" strokeWidth="0.9" />
-    <path d="M19 3v6h6" fill="#cdd7e0" stroke="#8794a1" strokeWidth="0.9" />
-    <path d="M13.5 22.5V12l8-2v10.5" stroke="#2f6cbf" strokeWidth="1.6" fill="none" strokeLinejoin="round" />
-    <ellipse cx="11.5" cy="22.8" rx="2.4" ry="1.8" fill="#2f6cbf" />
-    <ellipse cx="19.5" cy="20.8" rx="2.4" ry="1.8" fill="#2f6cbf" />
-  </svg>
-);
-
-/* Media Player 9's badge: an orange play button on a blue disc. Not the exact
- * logo, but the two colours next to each other are most of the recognition. */
-export const MediaPlayerIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <radialGradient id="wmp-disc" cx="0.35" cy="0.3" r="0.8">
-        <stop offset="0" stopColor="#9fd0ff" />
-        <stop offset="0.55" stopColor="#2f7fd6" />
-        <stop offset="1" stopColor="#0f3f80" />
-      </radialGradient>
-      <linearGradient id="wmp-play" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffd070" />
-        <stop offset="1" stopColor="#f08a12" />
-      </linearGradient>
-    </defs>
-    <circle cx="16" cy="16" r="12.5" fill="url(#wmp-disc)" stroke="#0b2f60" strokeWidth="0.9" />
-    <ellipse cx="12.5" cy="10" rx="6" ry="3.4" fill="#fff" opacity="0.28" />
-    <path d="M12 9.5v13l10.5-6.5z" fill="url(#wmp-play)" stroke="#8a4a05" strokeWidth="0.8" strokeLinejoin="round" />
-  </svg>
-);
-
-/* A reader: the PDF page inside a viewer's frame, so the application and the
- * document it opens do not share an icon. */
-export const ReaderIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="rd-band" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#f0645a" />
-        <stop offset="1" stopColor="#b8221a" />
-      </linearGradient>
-    </defs>
-    <rect x="3" y="4" width="26" height="24" rx="2" fill="#e9eef5" stroke="#6b7d8c" strokeWidth="0.9" />
-    <rect x="3" y="4" width="26" height="4" rx="1.5" fill="#3a8de0" />
-    <rect x="8" y="10.5" width="16" height="15" fill="#fff" stroke="#8794a1" strokeWidth="0.8" />
-    <rect x="8" y="16" width="16" height="4" fill="url(#rd-band)" />
-    <path d="M10.5 13h11M10.5 22.5h8" stroke="#aab6c2" strokeWidth="1" strokeLinecap="round" />
-  </svg>
-);
-
-export const PaintIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="pt-pot" x1="0" x2="1" y1="0" y2="0">
-        <stop offset="0" stopColor="#f2f4f7" />
-        <stop offset="0.45" stopColor="#c3ccd6" />
-        <stop offset="1" stopColor="#8e9aa6" />
-      </linearGradient>
-    </defs>
-    {/* the pot, tipped, with paint running out of it */}
-    <path d="M6 14h14l-1.2 12.5a1.4 1.4 0 0 1-1.4 1.3H8.6a1.4 1.4 0 0 1-1.4-1.3z" fill="url(#pt-pot)" stroke="#5d7386" strokeWidth="0.9" />
-    <ellipse cx="13" cy="14" rx="7" ry="2.3" fill="#e6ebf0" stroke="#5d7386" strokeWidth="0.9" />
-    <path d="M20 16c4 0 6 2.4 6 5.6 0 2.6-1.6 4.4-3.4 4.4" stroke="#5d7386" strokeWidth="1.4" fill="none" />
-    <path d="M13 12c2.6-4.6 6.4-7.4 10.6-8.4l1.6 3.6C21.4 8.4 18.4 10.4 16 13.6z" fill="#e0342c" stroke="#8f2418" strokeWidth="0.8" />
-    <ellipse cx="13" cy="14" rx="4.6" ry="1.4" fill="#e0342c" opacity="0.85" />
-  </svg>
-);
-
-export const ConsoleIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <rect x="3" y="5" width="26" height="22" rx="1.5" fill="#f0efe7" stroke="#6b6a5e" strokeWidth="0.9" />
-    <rect x="5" y="9" width="22" height="16" fill="#000" />
-    {/* C:\> and a cursor block - the whole identity of the icon at any size */}
-    <path d="M8 13h3M8 16h5M8 19h4" stroke="#c0c0c0" strokeWidth="1.3" strokeLinecap="round" />
-    <rect x="14.5" y="18" width="3" height="2" fill="#c0c0c0" />
-    <rect x="5" y="5.5" width="22" height="3" fill="#d6d4c8" />
-  </svg>
-);
-
-export const CardsIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    {/* Two cards, fanned. One card reads as a document; the fan is what says
-        "playing cards" at any size. */}
-    <g transform="rotate(-14 14 18)">
-      <rect x="4" y="7" width="16" height="21" rx="2" fill="#fff" stroke="#5a5a5a" strokeWidth="0.9" />
-      <path d="M12 12.5c1.6-2.4 4.6-1.4 4.6 1 0 2.6-3.4 4.6-4.6 6-1.2-1.4-4.6-3.4-4.6-6 0-2.4 3-3.4 4.6-1z" fill="#c00000" />
-    </g>
-    <g transform="rotate(10 20 18)">
-      <rect x="13" y="6" width="16" height="21" rx="2" fill="#fff" stroke="#5a5a5a" strokeWidth="0.9" />
-      <path d="M21 10.5c1.6 2 4.4 3.8 4.4 6.1 0 1.7-1.4 2.6-2.7 2.1-.7-.3-1.2-.9-1.4-1.6-.2.8.1 2 .9 3.1h-2.4c.8-1.1 1.1-2.3.9-3.1-.2.7-.7 1.3-1.4 1.6-1.3.5-2.7-.4-2.7-2.1 0-2.3 2.8-4.1 4.4-6.1z" fill="#000" />
-    </g>
-  </svg>
-);
-
-export const MineIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <radialGradient id="ms-ball" cx="0.35" cy="0.3" r="0.8">
-        <stop offset="0" stopColor="#7a7a7a" />
-        <stop offset="0.55" stopColor="#2b2b2b" />
-        <stop offset="1" stopColor="#000000" />
-      </radialGradient>
-    </defs>
-    {/* the spikes first, so the ball covers where they meet */}
-    <path
-      d="M16 3v26M3 16h26M7 7l18 18M25 7L7 25"
-      stroke="#1a1a1a"
-      strokeWidth="2.6"
-      strokeLinecap="round"
-    />
-    <circle cx="16" cy="16" r="8.5" fill="url(#ms-ball)" />
-    <ellipse cx="12.8" cy="12.6" rx="2.6" ry="1.8" fill="#fff" opacity="0.75" />
-  </svg>
-);
-
-export const CalculatorIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <rect x="6" y="3" width="20" height="26" rx="2" fill="#e9eef5" stroke="#6b7d8c" strokeWidth="0.9" />
-    <rect x="8.5" y="5.5" width="15" height="5" rx="0.5" fill="#9fd4a0" stroke="#5f8a60" strokeWidth="0.7" />
-    {/* four rows of keys: recognisable as a keypad at 16px, unreadable as
-        anything more detailed */}
-    <g fill="#7f8b98">
-      <rect x="8.5" y="13" width="3.4" height="3.2" rx="0.6" />
-      <rect x="13.3" y="13" width="3.4" height="3.2" rx="0.6" />
-      <rect x="18.1" y="13" width="3.4" height="3.2" rx="0.6" />
-      <rect x="8.5" y="17.6" width="3.4" height="3.2" rx="0.6" />
-      <rect x="13.3" y="17.6" width="3.4" height="3.2" rx="0.6" />
-      <rect x="18.1" y="17.6" width="3.4" height="3.2" rx="0.6" />
-      <rect x="8.5" y="22.2" width="3.4" height="3.2" rx="0.6" />
-      <rect x="13.3" y="22.2" width="3.4" height="3.2" rx="0.6" />
-    </g>
-    <rect x="18.1" y="22.2" width="3.4" height="3.2" rx="0.6" fill="#d9534f" />
-  </svg>
-);
-
-export const DriveIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="dr-body" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#f6f6f1" />
-        <stop offset="0.5" stopColor="#dcd9c8" />
-        <stop offset="1" stopColor="#b4b1a1" />
-      </linearGradient>
-    </defs>
-    <path d="M4 12h24v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="url(#dr-body)" stroke="#7a776a" strokeWidth="0.9" />
-    <path d="M6 6h20l2 6H4z" fill="#eceadb" stroke="#7a776a" strokeWidth="0.9" />
-    <rect x="7" y="16" width="13" height="2.4" rx="1.2" fill="#b9b6a6" />
-    <circle cx="24.5" cy="17.2" r="1.5" fill="#5fb84e" />
-  </svg>
-);
-
-export const InfoIcon = ({ size = 32, style, className }: IconProps) => (
-  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <radialGradient id="in-ball" cx="0.35" cy="0.3" r="0.8">
-        <stop offset="0" stopColor="#9fd0f7" />
-        <stop offset="0.5" stopColor="#2f8ae0" />
-        <stop offset="1" stopColor="#0f4f96" />
-      </radialGradient>
-    </defs>
-    <circle cx="16" cy="16" r="13" fill="url(#in-ball)" stroke="#0d3f79" />
-    <ellipse cx="12.5" cy="10.5" rx="6" ry="3.6" fill="#fff" opacity="0.35" />
-    <circle cx="16" cy="9.6" r="1.9" fill="#fff" />
-    <rect x="14.2" y="13.4" width="3.6" height="10.4" rx="1.6" fill="#fff" />
-  </svg>
-);
-
 export const StartLogoIcon = ({ size = 18, style, className }: IconProps) => (
   <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
     <defs>
@@ -434,148 +180,5 @@ export const StartLogoIcon = ({ size = 18, style, className }: IconProps) => (
     <path d="M15.6 4.3 30 1.6v13.6H15.6z" fill="url(#wf-g)" />
     <path d="M2.5 16.8H14v10.6L2.5 25z" fill="url(#wf-b)" />
     <path d="M15.6 16.8H30v13.6l-14.4-2.7z" fill="url(#wf-y)" />
-  </svg>
-);
-
-/* ---- Notification area ----------------------------------------------------
- * 16px, and drawn for 16px: no gradient survives being squeezed into a third of
- * the space it was designed for, so these are flatter than the icons above on
- * purpose.
- */
-
-export const VolumeIcon = ({ size = 16, style, className }: IconProps) => (
-  <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
-    <rect x="1" y="1" width="14" height="14" rx="2" fill="#1666bd" stroke="#0c4d8a" strokeWidth="0.8" />
-    <path d="M4 6.5h2L8.5 4v8L6 9.5H4z" fill="#fff" />
-    <path d="M10 5.6a3.6 3.6 0 0 1 0 4.8M11.8 4a6 6 0 0 1 0 8" stroke="#fff" strokeWidth="1.1" fill="none" strokeLinecap="round" />
-  </svg>
-);
-
-export const VolumeMuteIcon = ({ size = 16, style, className }: IconProps) => (
-  <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
-    <rect x="1" y="1" width="14" height="14" rx="2" fill="#1666bd" stroke="#0c4d8a" strokeWidth="0.8" />
-    <path d="M3.5 6.5h2L8 4v8L5.5 9.5h-2z" fill="#fff" />
-    {/* The red bar, not a missing speaker: the icon has to stay the same shape
-        so the tray does not reflow when sound is switched off. */}
-    <path d="M10 5.6l4 4.8M14 5.6l-4 4.8" stroke="#ff5a4a" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
-
-export const NetworkIcon = ({ size = 16, style, className }: IconProps) => (
-  <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
-    <rect x="0.5" y="8" width="7" height="5" rx="1" fill="#d8dde3" stroke="#54646f" strokeWidth="0.8" />
-    <rect x="8.5" y="3" width="7" height="5" rx="1" fill="#d8dde3" stroke="#54646f" strokeWidth="0.8" />
-    <path d="M4 8V6h8" stroke="#54646f" strokeWidth="0.9" fill="none" />
-    <circle cx="2.4" cy="10.5" r="0.8" fill="#4caf50" />
-    <circle cx="10.4" cy="5.5" r="0.8" fill="#4caf50" />
-  </svg>
-);
-
-export const ShieldIcon = ({ size = 16, style, className }: IconProps) => (
-  <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
-    <path d="M8 1.2 14 3.4v4.4c0 3.4-2.5 6-6 7.1-3.5-1.1-6-3.7-6-7.1V3.4z" fill="#d33a2a" stroke="#8f2418" strokeWidth="0.8" />
-    <path d="M8 1.2 14 3.4v4.4c0 1.4-.4 2.7-1.2 3.7H8z" fill="#f0d23a" opacity="0.9" />
-    <path d="M5.2 8.2 7.2 10.2l4-4.4" stroke="#fff" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-export const ShowDesktopIcon = ({ size = 16, style, className }: IconProps) => (
-  <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
-    <rect x="1.5" y="2.5" width="13" height="9" rx="1" fill="#3f8ad8" stroke="#0c4d8a" strokeWidth="0.9" />
-    <path d="M1.5 2.5h13v4.2c-4.4 1.3-8.6 1.3-13 0z" fill="#fff" opacity="0.25" />
-    <path d="M8 13.4 5.4 10.4h5.2z" fill="#fff" stroke="#0c4d8a" strokeWidth="0.6" />
-  </svg>
-);
-
-/* ---- Start menu -----------------------------------------------------------
- * Drawn for 24px: the right column of the Start menu is the densest place these
- * appear, and anything fussier than two shapes turns to mud there.
- */
-
-export const DocumentsIcon = ({ size = 24, style, className }: IconProps) => (
-  <svg viewBox="0 0 24 24" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <linearGradient id="dc-f" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stopColor="#ffe08a" />
-        <stop offset="1" stopColor="#e5a327" />
-      </linearGradient>
-    </defs>
-    <path d="M2 5h7l2 2.5h11V20H2z" fill="url(#dc-f)" stroke="#a8741a" strokeWidth="0.8" />
-    <rect x="7" y="2.5" width="10" height="9" fill="#fff" stroke="#8e9aa6" strokeWidth="0.8" />
-    <path d="M9 5h6M9 7h6M9 9h4" stroke="#9fb0c0" strokeWidth="0.9" strokeLinecap="round" />
-    <path d="M2 9h20l-2 11H4z" fill="#ffd97a" stroke="#a8741a" strokeWidth="0.8" />
-  </svg>
-);
-
-export const ControlPanelIcon = ({ size = 24, style, className }: IconProps) => (
-  <svg viewBox="0 0 24 24" style={box(size, style)} className={className} aria-hidden>
-    <rect x="2" y="4" width="20" height="15" rx="2" fill="#e9eef5" stroke="#6b7d8c" strokeWidth="0.9" />
-    <rect x="4" y="6.5" width="7" height="4" rx="1" fill="#3a8de0" />
-    <rect x="13" y="6.5" width="7" height="4" rx="1" fill="#5fb84e" />
-    <rect x="4" y="12.5" width="7" height="4" rx="1" fill="#f0b429" />
-    <rect x="13" y="12.5" width="7" height="4" rx="1" fill="#d9534f" />
-  </svg>
-);
-
-export const HelpIcon = ({ size = 24, style, className }: IconProps) => (
-  <svg viewBox="0 0 24 24" style={box(size, style)} className={className} aria-hidden>
-    <circle cx="12" cy="12" r="9.5" fill="#3a8de0" stroke="#14508f" strokeWidth="0.9" />
-    <ellipse cx="9.5" cy="7.6" rx="4.4" ry="2.6" fill="#fff" opacity="0.3" />
-    <path
-      d="M9.4 9.4a2.7 2.7 0 1 1 3.6 2.5c-.7.3-1 .9-1 1.7v.5"
-      stroke="#fff"
-      strokeWidth="2"
-      fill="none"
-      strokeLinecap="round"
-    />
-    <circle cx="12" cy="17" r="1.3" fill="#fff" />
-  </svg>
-);
-
-export const SearchIcon = ({ size = 24, style, className }: IconProps) => (
-  <svg viewBox="0 0 24 24" style={box(size, style)} className={className} aria-hidden>
-    <circle cx="10" cy="10" r="6" fill="#cfe6fb" stroke="#2f6cbf" strokeWidth="1.6" />
-    <ellipse cx="8.2" cy="7.8" rx="2.6" ry="1.6" fill="#fff" opacity="0.8" />
-    <path d="m14.6 14.6 5.2 5.2" stroke="#4a4a4a" strokeWidth="2.6" strokeLinecap="round" />
-  </svg>
-);
-
-export const RunIcon = ({ size = 24, style, className }: IconProps) => (
-  <svg viewBox="0 0 24 24" style={box(size, style)} className={className} aria-hidden>
-    <rect x="2.5" y="4.5" width="19" height="14" rx="1.5" fill="#e9eef5" stroke="#6b7d8c" strokeWidth="0.9" />
-    <rect x="2.5" y="4.5" width="19" height="3.4" fill="#3a8de0" />
-    <path d="M5.5 11.5 8 13.8l-2.5 2.3" stroke="#2f6cbf" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-    <path d="M9.8 16.2h6" stroke="#2f6cbf" strokeWidth="1.4" strokeLinecap="round" />
-  </svg>
-);
-
-export const LogOffIcon = ({ size = 20, style, className }: IconProps) => (
-  <svg viewBox="0 0 24 24" style={box(size, style)} className={className} aria-hidden>
-    <circle cx="12" cy="12" r="9.5" fill="#e9a33a" stroke="#a86c14" strokeWidth="0.9" />
-    <path d="M12 5.5v6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-    <path d="M7.8 8a5.6 5.6 0 1 0 8.4 0" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-  </svg>
-);
-
-export const ShutdownIcon = ({ size = 20, style, className }: IconProps) => (
-  <svg viewBox="0 0 24 24" style={box(size, style)} className={className} aria-hidden>
-    <circle cx="12" cy="12" r="9.5" fill="#d9534f" stroke="#8f2418" strokeWidth="0.9" />
-    <path d="M12 5.5v6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-    <path d="M7.8 8a5.6 5.6 0 1 0 8.4 0" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-  </svg>
-);
-
-export const IEIcon = ({ size = 16, style, className }: IconProps) => (
-  <svg viewBox="0 0 16 16" style={box(size, style)} className={className} aria-hidden>
-    <defs>
-      <radialGradient id="ie-globe" cx="0.35" cy="0.3" r="0.85">
-        <stop offset="0" stopColor="#bfe4ff" />
-        <stop offset="0.55" stopColor="#3a92e0" />
-        <stop offset="1" stopColor="#14508f" />
-      </radialGradient>
-    </defs>
-    <circle cx="8" cy="8.4" r="5.6" fill="url(#ie-globe)" stroke="#0d3f79" strokeWidth="0.8" />
-    <path d="M2.6 8.4h10.8M8 2.8c2.6 2.8 2.6 8.4 0 11.2M8 2.8c-2.6 2.8-2.6 8.4 0 11.2" stroke="#e8f4ff" strokeWidth="0.7" fill="none" opacity="0.8" />
-    <path d="M1.6 11.2c3.4 1.8 9.6 1.4 13-1.4 1.4-1.2 1.2-2.6-.6-2.2" stroke="#e9b528" strokeWidth="2" fill="none" strokeLinecap="round" />
   </svg>
 );

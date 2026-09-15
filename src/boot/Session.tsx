@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useSessionStore } from "../store/sessionStore";
-import { StartLogoIcon } from "../icons";
+import { RestartIcon, ShutdownIcon, StandByIcon, StartLogoIcon } from "../icons";
 import styles from "./Session.module.css";
 
 const BOOT_MS = 2400;
@@ -100,23 +100,17 @@ export function TurnOffDialog() {
               the shape people remember, and a greyed button is an honest "not
               built" where a two-button row is a silent one. */}
           <button type="button" className={styles.choice} disabled>
-            <span className={styles.choiceIcon} style={{ background: "#d8a33a" }}>
-              ☾
-            </span>
+            <StandByIcon size={46} className={styles.choiceIcon} />
             Stand By
           </button>
 
           <button type="button" className={styles.choice} onClick={turnOff}>
-            <span className={styles.choiceIcon} style={{ background: "#d9534f" }}>
-              ⏻
-            </span>
+            <ShutdownIcon size={46} className={styles.choiceIcon} />
             Turn Off
           </button>
 
           <button type="button" className={styles.choice} onClick={restart}>
-            <span className={styles.choiceIcon} style={{ background: "#5aa84a" }}>
-              ↻
-            </span>
+            <RestartIcon size={46} className={styles.choiceIcon} />
             Restart
           </button>
         </div>
