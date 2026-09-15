@@ -4,6 +4,7 @@ import {
   DocumentsIcon,
   FileIcon,
   FolderIcon,
+  HtmlIcon,
   MusicIcon,
   MyMusicIcon,
   MyPicturesIcon,
@@ -15,6 +16,7 @@ import {
 } from "../icons";
 import { DESKTOP_DIR, MY_DOCUMENTS } from "./seed";
 import { extname, join } from "./path";
+import { isPostEntry } from "../blog/posts";
 
 /* The folders Explorer draws with their own picture. By path, not by name:
  * a folder the visitor makes and calls "My Pictures" on the desktop is a
@@ -43,6 +45,8 @@ export function entryIcon(entry: FsEntry, size = 32) {
   if (mime.startsWith("video/")) return <VideoIcon size={size} />;
   if (mime.startsWith("audio/")) return <MusicIcon size={size} />;
   if (mime === "application/pdf") return <PdfIcon size={size} />;
+  /* A blog post is a page: it opens in the browser, and wears its icon. */
+  if (isPostEntry(entry)) return <HtmlIcon size={size} />;
   /* A .txt is a text document, not Notepad: the application's icon is for
    * the application. XP made the same distinction, and it is the one that
    * lets you tell a shortcut from a file at a glance. */
@@ -60,6 +64,7 @@ export function entryType(entry: FsEntry): string {
   if (mime.startsWith("video/")) return "Video Clip";
   if (mime.startsWith("audio/")) return "Audio File";
   if (mime === "application/pdf") return "PDF Document";
+  if (isPostEntry(entry)) return "Blog Post";
   const ext = extname(entry.path);
   if (ext === ".txt") return "Text Document";
   return ext ? `${ext.slice(1).toUpperCase()} File` : "File";

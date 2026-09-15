@@ -71,6 +71,7 @@ mapping and the formats.
   - **Windows Media Player** — video and audio, the folder is the playlist
   - **PDF Reader** — the browser's renderer in an XP frame, with Save a Copy
   - **Internet Explorer** — the front door: a hand-written `about:me` home page with Work, Projects and Contact; real sites open in a real tab, and anything else gets "The page cannot be displayed"
+  - A blog — Markdown files in `My Documents\My Blog`, read at `about:blog`, with `rss.xml` and `sitemap.xml` generated from the folder at build time and deep links of the form `/#about:blog/<slug>`
   - **Paint**, **Command Prompt**, **Calculator**, **Minesweeper**, **Solitaire**
   - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze
   - **System Properties** — right-click My Computer, or Pause: registered to, build from `/health`, what the browser knows about the machine

@@ -68,6 +68,7 @@ export const RecycleBinIcon = (p: IconProps) => <Xp name="recycle-bin-empty" {..
 export const RecycleBinFullIcon = (p: IconProps) => <Xp name="recycle-bin-full" {...p} />;
 export const NotepadIcon = (p: IconProps) => <Xp name="notepad" {...p} />;
 export const TextDocumentIcon = (p: IconProps) => <Xp name="text-document" {...p} />;
+export const HtmlIcon = (p: IconProps) => <Xp name="html" {...p} />;
 export const FolderIcon = (p: IconProps) => <Xp name="folder" {...p} />;
 export const FolderOpenIcon = (p: IconProps) => <Xp name="folder-open" {...p} />;
 export const FileIcon = (p: IconProps) => <Xp name="document" {...p} />;

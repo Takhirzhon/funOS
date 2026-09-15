@@ -17,6 +17,7 @@ import {
 } from "../icons";
 import { HOME, LINKS, NavigateContext, openExternal, normalizeUrl } from "./ie/site";
 import { pageFor } from "./ie/router";
+import { postUrl, usePosts } from "../blog/posts";
 import styles from "./InternetExplorer.module.css";
 
 type Props = { url?: string; windowId?: string };
@@ -51,10 +52,25 @@ export function InternetExplorer({ url, windowId }: Props) {
     setSidebar((s) => (s === which ? null : which));
 
   const page = pageFor(current);
+  /* A post's caption is its title, which only the post list knows. */
+  const posts = usePosts();
+  const post = current.startsWith("about:blog/") ? posts.find((p) => postUrl(p) === current) : undefined;
+  const title = post ? `${post.title} - Blog` : page.title;
 
   useEffect(() => {
-    if (windowId) setTitle(windowId, `${page.title} - Internet Explorer`);
-  }, [windowId, page.title, setTitle]);
+    if (windowId) setTitle(windowId, `${title} - Internet Explorer`);
+  }, [windowId, title, setTitle]);
+
+  /* The address bar's address is also the site's: about:blog/x becomes
+   * #about:blog/x in the real URL bar, so a page can be linked to from
+   * outside and the desktop opens it on arrival (Desktop.tsx). The home
+   * page clears it - a link to the site is a link to the desktop. */
+  useEffect(() => {
+    const hash = current === HOME ? "" : `#${current}`;
+    if (current.startsWith("about:") && window.location.hash !== hash) {
+      window.history.replaceState(null, "", hash || window.location.pathname);
+    }
+  }, [current]);
 
   const navigate = (to: string) => {
     const target = normalizeUrl(to);

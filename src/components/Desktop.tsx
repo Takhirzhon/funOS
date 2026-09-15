@@ -110,6 +110,21 @@ export function Desktop() {
     return () => clearTimeout(timer);
   }, []);
 
+  /* A deep link. #about:blog/x in the address bar - from the feed, a search
+   * result, or a shared link - opens Internet Explorer on that page once
+   * the desktop is up. Once: the hash is consumed, so a reload with the
+   * window closed does not open it again. */
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash.startsWith("about:")) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    open("internetExplorer", {
+      title: apps.internetExplorer.title,
+      bounds: apps.internetExplorer.defaultSize,
+      props: { url: hash },
+    });
+  }, [open]);
+
   useLayoutEffect(() => {
     const el = fieldRef.current;
     if (!el) return;

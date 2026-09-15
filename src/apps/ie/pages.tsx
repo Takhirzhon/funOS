@@ -4,6 +4,8 @@ import { DESKTOP_DIR, MY_DOCUMENTS } from "../../fs/seed";
 import { join } from "../../fs/path";
 import { launchFile } from "../../fs/open";
 import { EMAIL, LINKS, openExternal, useNavigate } from "./site";
+import { postUrl, usePosts } from "../../blog/posts";
+import { Markdown } from "./Markdown";
 import styles from "./pages.module.css";
 
 /* The home page, as one was in 2004: a table with a menu down the left, a
@@ -38,12 +40,19 @@ function A({ href, children }: { href: string; children: ReactNode }) {
 
 const NAV = [
   ["about:me", "Home"],
+  ["about:blog", "Blog"],
   ["about:work", "Work"],
   ["about:projects", "Projects"],
   ["about:contact", "Contact"],
 ] as const;
 
+/* A date the way a 2004 page wrote one: "16 September 2026". */
+const longDate = (iso: string) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
 function Layout({ url, title, children }: PageProps & { title: string; children: ReactNode }) {
+  /* The Blog entry stays lit on a post's page too. */
+  const section = url.startsWith("about:blog") ? "about:blog" : url;
   return (
     <div className={styles.site}>
       <div className={styles.masthead}>
@@ -53,7 +62,7 @@ function Layout({ url, title, children }: PageProps & { title: string; children:
       <div className={styles.columns}>
         <div className={styles.nav}>
           {NAV.map(([href, label]) => (
-            <div key={href} className={url === href ? `${styles.navItem} ${styles.navCurrent}` : styles.navItem}>
+            <div key={href} className={section === href ? `${styles.navItem} ${styles.navCurrent}` : styles.navItem}>
               <A href={href}>{label}</A>
             </div>
           ))}
@@ -329,6 +338,64 @@ export function ContactPage({ url }: PageProps) {
       ) : (
         <p className={styles.p}>The CV is on the desktop.</p>
       )}
+    </Layout>
+  );
+}
+
+/* The blog: My Documents\My Blog, newest first. Each post is a file the
+ * visitor can also find in Explorer, which is the point of keeping it there. */
+export function BlogPage({ url }: PageProps) {
+  const posts = usePosts();
+  return (
+    <Layout url={url} title="Blog">
+      {posts.length === 0 && <p className={styles.p}>Nothing here yet. Check back soon!</p>}
+      {posts.map((post) => (
+        <div key={post.slug} className={styles.entry}>
+          <div className={styles.entryHead}>
+            <b><A href={postUrl(post)}>{post.title}</A></b>
+            <span className={styles.entryWhen}>{longDate(post.date)}</span>
+          </div>
+          <p className={styles.p}>{post.summary}</p>
+        </div>
+      ))}
+      <p className={styles.small}>
+        Subscribe: <A href="https://khirokhito.tech/rss.xml">rss.xml</A>. The posts are also plain files in
+        My Documents\My Blog.
+      </p>
+    </Layout>
+  );
+}
+
+export function PostPage({ url }: PageProps) {
+  const posts = usePosts();
+  const navigate = useNavigate();
+  const slug = url.slice("about:blog/".length);
+  const post = posts.find((p) => p.slug === slug);
+  if (!post) return <CannotDisplayPage url={url} />;
+  const index = posts.indexOf(post);
+  const newer = posts[index - 1];
+  const older = posts[index + 1];
+  return (
+    <Layout url={url} title={post.title}>
+      <p className={styles.small}>{longDate(post.date)}</p>
+      <div className={styles.post}>
+        <Markdown
+          /* The title is the page's heading already; the post's own first
+             heading, wherever the front matter left it, is dropped. */
+          source={post.body.replace(/^\s*#\s+.*(\r?\n|$)/, "")}
+          link={(href, children) => <A href={href}>{children}</A>}
+        />
+      </div>
+      <hr className={styles.rule} />
+      <p className={styles.small}>
+        {older && <>&larr; <A href={postUrl(older)}>{older.title}</A></>}
+        {older && newer && " · "}
+        {newer && <><A href={postUrl(newer)}>{newer.title}</A> &rarr;</>}
+        {(older || newer) && " · "}
+        <a href="about:blog" className={styles.a} onClick={(e) => { e.preventDefault(); navigate("about:blog"); }}>
+          All posts
+        </a>
+      </p>
     </Layout>
   );
 }

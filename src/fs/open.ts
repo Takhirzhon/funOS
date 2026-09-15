@@ -3,6 +3,7 @@ import { useWindowStore } from "../store/windowStore";
 import { useRecentStore } from "../store/recentStore";
 import { errorDialog } from "../store/dialogStore";
 import { basename } from "./path";
+import { isPostEntry, postUrl } from "../blog/posts";
 
 /* Which application opens a file.
  *
@@ -51,6 +52,18 @@ export function launchFile(entry: FsEntry): void {
       "funOS",
       `Windows cannot open this file:\n\n${name}\n\nIt is not a text file and there is no program here that reads ${entry.mime || "this type"}.`
     );
+    return;
+  }
+
+  /* A blog post is read in the browser, where it is a page; Notepad would
+   * show the Markdown. Explorer's double-click and the Recent list both
+   * come through here, so both get the page. */
+  if (isPostEntry(entry)) {
+    open("internetExplorer", {
+      title: "Internet Explorer",
+      bounds: { width: 780, height: 580 },
+      props: { url: postUrl(entry) },
+    });
     return;
   }
 
