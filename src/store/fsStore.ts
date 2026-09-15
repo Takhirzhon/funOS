@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { idbGet, idbSet } from "../fs/idb";
 import { RECYCLE_BIN, buildSeed } from "../fs/seed";
 import { containsSystemPath, isSystemPath, systemOverlay } from "../fs/system";
+import { useRecentStore } from "./recentStore";
 import {
   basename,
   dirname,
@@ -210,6 +211,9 @@ function relocate(
   }
   set({ entries: next });
   persist(next);
+  /* The recent list follows a rename, or it would point at a name that no
+   * longer exists and drop the file from the menu for being renamed. */
+  useRecentStore.getState().rename(from, to);
   return to;
 }
 

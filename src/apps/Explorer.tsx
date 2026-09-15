@@ -38,6 +38,33 @@ type Props = { path?: string; windowId?: string };
 
 type ViewMode = "thumbnails" | "icons" | "list" | "details";
 
+const VIEWS_KEY = "funos.explorer.views";
+const VIEW_MODES: ViewMode[] = ["thumbnails", "icons", "list", "details"];
+
+const loadViews = (): Record<string, ViewMode> => {
+  try {
+    const raw = localStorage.getItem(VIEWS_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    const out: Record<string, ViewMode> = {};
+    if (parsed && typeof parsed === "object") {
+      for (const [path, mode] of Object.entries(parsed as Record<string, unknown>)) {
+        if (VIEW_MODES.includes(mode as ViewMode)) out[path] = mode as ViewMode;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+};
+
+const saveViews = (views: Record<string, ViewMode>) => {
+  try {
+    localStorage.setItem(VIEWS_KEY, JSON.stringify(views));
+  } catch {
+    /* Private mode. */
+  }
+};
+
 const VIEW_LABELS: Record<ViewMode, string> = {
   thumbnails: "Thumbnails",
   icons: "Icons",
@@ -91,9 +118,18 @@ export function Explorer({ path, windowId }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   const anchor = useRef<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
-  /* Thumbnails: a folder of photographs is what most visitors open, and a
-   * grid of identical picture icons says nothing about them. */
-  const [view, setView] = useState<ViewMode>("thumbnails");
+  /* The view, per folder, remembered: XP kept each folder's view and so
+   * does this, in localStorage. Thumbnails is the default because a folder
+   * of photographs is what most visitors open, and a grid of identical
+   * picture icons says nothing about them. */
+  const [views, setViews] = useState<Record<string, ViewMode>>(loadViews);
+  const view: ViewMode = views[current] ?? "thumbnails";
+  const setView = (mode: ViewMode) =>
+    setViews((prev) => {
+      const next = { ...prev, [current]: mode };
+      saveViews(next);
+      return next;
+    });
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(ancestors(normalize(path ?? MY_DOCUMENTS)))
   );

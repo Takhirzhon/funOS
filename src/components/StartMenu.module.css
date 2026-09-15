@@ -169,6 +169,26 @@
   justify-content: flex-end;
 }
 
+/* My Recent Documents: the row is the anchor, the list opens beside it at
+ * the top, the way a second-level menu does. */
+.recentWrap {
+  position: relative;
+}
+
+.flyoutRight {
+  top: 0;
+  bottom: auto;
+  left: calc(100% - 2px);
+  z-index: 1;
+}
+
+.itemChevron {
+  margin-left: auto;
+  padding-left: 6px;
+  font-size: 8px;
+  color: #4a4a44;
+}
+
 /* The flyout opens to the right of the whole menu and grows upward from the
  * All Programs row, which is where XP puts it - anchored to the bottom so a
  * long program list never runs off the top of the screen.
@@ -277,5 +297,9 @@
     right: 6px;
     bottom: calc(var(--taskbar-height) + 44px);
     max-height: calc(100vh - var(--taskbar-height) - 60px);
+  }
+
+  .flyoutRight {
+    top: auto;
   }
 }

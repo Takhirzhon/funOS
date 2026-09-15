@@ -3,6 +3,12 @@ import { useWindowStore } from "../store/windowStore";
 import { useSessionStore } from "../store/sessionStore";
 import { apps, appIds, type AppId } from "../apps/registry";
 import { run } from "../fs/run";
+import { useRecentStore } from "../store/recentStore";
+import { useFsStore } from "../store/fsStore";
+import { launchFile } from "../fs/open";
+import { entryIcon } from "../fs/icons";
+import { basename } from "../fs/path";
+import { RecentDocumentsIcon } from "../icons";
 import {
   ControlPanelIcon,
   DocumentsIcon,
@@ -57,6 +63,11 @@ export function StartMenu({ onClose }: Props) {
   const logOff = useSessionStore((s) => s.logOff);
   const askTurnOff = useSessionStore((s) => s.askTurnOff);
   const [allOpen, setAllOpen] = useState(false);
+  const [recentOpen, setRecentOpen] = useState(false);
+  const recentPaths = useRecentStore((s) => s.paths);
+  const entries = useFsStore((s) => s.entries);
+  /* Only what still exists. The list is not told about deletions. */
+  const recent = recentPaths.map((p) => entries[p]).filter((e) => e !== undefined);
 
   const launch = (appId: AppId) => {
     const app = apps[appId];
@@ -134,6 +145,38 @@ export function StartMenu({ onClose }: Props) {
             />
           ))}
 
+          {/* My Recent Documents, with its list to the right - the one
+              submenu XP had in this column. Opens on hover like All
+              Programs, and only ever opens on click for the same reason. */}
+          <div
+            className={styles.recentWrap}
+            onMouseEnter={() => setRecentOpen(true)}
+            onMouseLeave={() => setRecentOpen(false)}
+          >
+            <MenuItem
+              icon={<RecentDocumentsIcon size={22} />}
+              label="My Recent Documents"
+              chevron
+              disabled={recent.length === 0}
+              onClick={() => setRecentOpen(true)}
+            />
+            {recentOpen && recent.length > 0 && (
+              <div className={`${styles.flyout} ${styles.flyoutRight}`}>
+                {recent.map((entry) => (
+                  <MenuItem
+                    key={entry.path}
+                    icon={entryIcon(entry, 20)}
+                    label={basename(entry.path)}
+                    onClick={() => {
+                      onClose();
+                      launchFile(entry);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className={styles.sep} />
 
           {tools.map((t) => (
@@ -191,12 +234,15 @@ function MenuItem({
   sub,
   onClick,
   disabled,
+  chevron,
 }: {
   icon: ReactNode;
   label: string;
   sub?: string;
   onClick: () => void;
   disabled?: boolean;
+  /** Has a submenu: the small arrow at the right edge. */
+  chevron?: boolean;
 }) {
   return (
     <button type="button" className={styles.item} onClick={onClick} disabled={disabled}>
@@ -205,6 +251,7 @@ function MenuItem({
         <span className={styles.itemLabel}>{label}</span>
         {sub && <span className={styles.itemSub}>{sub}</span>}
       </span>
+      {chevron && <span className={styles.itemChevron}>▶</span>}
     </button>
   );
 }

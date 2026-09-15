@@ -56,6 +56,47 @@ type Store = {
 let idCounter = 0;
 const nextId = () => `w${++idCounter}`;
 
+/* Where each program's window was last left, by app id. XP remembered this
+ * per window class, which is why Notepad opened where you last had it and
+ * Explorer at whatever size you had dragged it to. localStorage: shell
+ * state, like the icon positions. */
+const MEMORY_KEY = "funos.windows";
+
+const loadMemory = (): Record<string, Bounds> => {
+  try {
+    const raw = localStorage.getItem(MEMORY_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    const out: Record<string, Bounds> = {};
+    if (parsed && typeof parsed === "object") {
+      for (const [id, v] of Object.entries(parsed as Record<string, Partial<Bounds>>)) {
+        if (
+          v &&
+          typeof v.x === "number" &&
+          typeof v.y === "number" &&
+          typeof v.width === "number" &&
+          typeof v.height === "number"
+        ) {
+          out[id] = { x: v.x, y: v.y, width: v.width, height: v.height };
+        }
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+};
+
+const memory: Record<string, Bounds> = loadMemory();
+
+const remember = (appId: string, bounds: Bounds) => {
+  memory[appId] = bounds;
+  try {
+    localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+  } catch {
+    /* Private mode: windows open where they always did. */
+  }
+};
+
 const cascadeOffset = (n: number) => 24 + (n % 8) * 24;
 
 /* The whole desktop: what a maximized window fills.
@@ -99,12 +140,19 @@ export const useWindowStore = create<Store>((set, get) => ({
     const { topZ, windows } = get();
     const newZ = topZ + 1;
     const offset = cascadeOffset(windows.length);
-    const bounds: Bounds = {
-      x: opts.bounds?.x ?? 80 + offset,
-      y: opts.bounds?.y ?? 60 + offset,
-      width: opts.bounds?.width ?? 520,
-      height: opts.bounds?.height ?? 380,
-    };
+    /* The remembered place wins over the app's default, unless the caller
+     * asked for a position outright. A second window of the same program
+     * steps down and right from the first, so they do not stack exactly. */
+    const kept = opts.bounds?.x === undefined ? memory[appId] : undefined;
+    const twins = windows.filter((w) => w.appId === appId).length;
+    const bounds: Bounds = kept
+      ? clamp({ ...kept, x: kept.x + twins * 24, y: kept.y + twins * 24 })
+      : {
+          x: opts.bounds?.x ?? 80 + offset,
+          y: opts.bounds?.y ?? 60 + offset,
+          width: opts.bounds?.width ?? 520,
+          height: opts.bounds?.height ?? 380,
+        };
     /* On a small screen every window opens maximized. A 520px Notepad on a
      * 390px phone is a window with its right third off the screen and its
      * close button with it; maximized, it is Notepad. Restore still works and
@@ -126,10 +174,16 @@ export const useWindowStore = create<Store>((set, get) => ({
   },
 
   close: (id) =>
-    set((s) => ({
-      windows: s.windows.filter((w) => w.id !== id),
-      focusedId: s.focusedId === id ? null : s.focusedId,
-    })),
+    set((s) => {
+      /* The last thing a window does is say where it was. A maximized one
+       * remembers the size it had before, not the whole screen. */
+      const w = s.windows.find((w) => w.id === id);
+      if (w) remember(w.appId, w.maximized ? (w.prevBounds ?? w.bounds) : w.bounds);
+      return {
+        windows: s.windows.filter((w) => w.id !== id),
+        focusedId: s.focusedId === id ? null : s.focusedId,
+      };
+    }),
 
   focus: (id) =>
     set((s) => {
@@ -152,9 +206,12 @@ export const useWindowStore = create<Store>((set, get) => ({
 
   setBounds: (id, bounds) =>
     set((s) => ({
-      windows: s.windows.map((w) =>
-        w.id === id ? { ...w, bounds: { ...w.bounds, ...bounds } } : w
-      ),
+      windows: s.windows.map((w) => {
+        if (w.id !== id) return w;
+        const next = { ...w.bounds, ...bounds };
+        remember(w.appId, next);
+        return { ...w, bounds: next };
+      }),
     })),
 
   setTitle: (id, title) =>

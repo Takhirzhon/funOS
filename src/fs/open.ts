@@ -1,5 +1,6 @@
 import { isBinary, type FsEntry } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
+import { useRecentStore } from "../store/recentStore";
 import { errorDialog } from "../store/dialogStore";
 import { basename } from "./path";
 
@@ -18,6 +19,7 @@ import { basename } from "./path";
 export function launchFile(entry: FsEntry): void {
   const open = useWindowStore.getState().open;
   const name = basename(entry.path);
+  useRecentStore.getState().touch(entry.path);
 
   if (isBinary(entry)) {
     const mime = entry.mime ?? "";

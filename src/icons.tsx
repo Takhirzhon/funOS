@@ -108,6 +108,7 @@ export const DisplayPropertiesIcon = ({ size = 24, ...p }: IconProps) => <Xp nam
 export const HelpIcon = ({ size = 24, ...p }: IconProps) => <Xp name="help" size={size} {...p} />;
 export const SearchIcon = ({ size = 24, ...p }: IconProps) => <Xp name="search" size={size} {...p} />;
 export const RunIcon = ({ size = 24, ...p }: IconProps) => <Xp name="run" size={size} {...p} />;
+export const RecentDocumentsIcon = ({ size = 24, ...p }: IconProps) => <Xp name="recent-documents" size={size} {...p} />;
 export const LogOffIcon = ({ size = 20, ...p }: IconProps) => <Xp name="log-off" size={size} {...p} />;
 export const ShutdownIcon = ({ size = 20, ...p }: IconProps) => <Xp name="power" size={size} {...p} />;
 export const RestartIcon = ({ size = 20, ...p }: IconProps) => <Xp name="restart" size={size} {...p} />;
