@@ -32,3 +32,30 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # The guestbook. nginx in `web` proxies /api/guestbook here by the alias;
+  # nothing else reaches it. The entries live on the named volume, which
+  # `up -d --build` leaves alone - a deploy does not empty the guestbook.
+  # GUESTBOOK_ADMIN_TOKEN comes from deploy/.env on the box (guide section
+  # "The guestbook"); without it DELETE is refused, everything else works.
+  guestbook:
+    build:
+      context: guestbook
+    image: funos-guestbook:latest
+    container_name: funos-guestbook
+    restart: unless-stopped
+    environment:
+      GUESTBOOK_ADMIN_TOKEN: ${GUESTBOOK_ADMIN_TOKEN:-}
+    volumes:
+      - guestbook-data:/data
+    networks:
+      proxy:
+        aliases: [funos-guestbook]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  guestbook-data:

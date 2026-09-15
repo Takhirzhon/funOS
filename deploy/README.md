@@ -179,10 +179,38 @@ refuses everything: the box asks CI *before* it checks out a commit, so the old
 script decides whether the fix gets checked out. One manual reset, and the new
 script takes over from the next tick.
 
+### The guestbook
+
+`deploy/guestbook/` is a second container: one Python file, no dependencies,
+a JSON file on the `guestbook-data` volume. nginx in `web` proxies
+`/api/guestbook` to it by its network alias; it has no route in Traefik and
+no port of its own. `up -d --build` builds it alongside `web` and leaves the
+volume alone, so a deploy keeps the entries.
+
+Moderation is `DELETE` with a token. Put one in `deploy/.env` on the box
+(the file is git-ignored; `auto_deploy.sh`'s `git reset --hard` does not
+touch it):
+
+```bash
+echo "GUESTBOOK_ADMIN_TOKEN=$(openssl rand -hex 24)" > /opt/funos/deploy/.env
+$DC up -d guestbook
+```
+
+Then, to remove an entry (the id is in `GET /api/guestbook`):
+
+```bash
+curl -X DELETE https://khirokhito.tech/api/guestbook/<id> \
+  -H "Authorization: Bearer $(cut -d= -f2 /opt/funos/deploy/.env)"
+```
+
+Without the token the guestbook still takes and shows entries; only DELETE
+is refused. Back up with `$DC cp guestbook:/data/guestbook.json .`.
+
 ## Troubleshooting
 
 | Symptom | Cause |
 |---|---|
+| 502 on `/api/guestbook` only | the `guestbook` container is down or not on the `proxy` network — `$DC ps`, `$DC logs guestbook` |
 | 404 on the hostname | `Host()` typo, invalid YAML in `funos.yml`, or Traefik never reloaded it — force-recreate traefik |
 | 502 Bad Gateway | `url:` in `funos.yml` does not match the network alias, or the port is not the container-internal `80` |
 | 503 Service Unavailable | `funos-web` is not on the `proxy` network, or it is down |

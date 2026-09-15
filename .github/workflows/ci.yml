@@ -162,8 +162,9 @@ jobs:
         #           stopped being measured by anything at all, so one of them
         #           could quietly pull in a 300KB dependency and no gate would
         #           notice. Measured 4KB today; 48KB is generous on purpose.
-        #   maze  - the 3D Maze screensaver, exempted from the line above and
-        #           given its own. It is three.js, it is 126KB gzipped, and
+        #   maze  - the WebGL screensavers (3D Maze, 3D Text), one chunk behind
+        #           src/components/savers/gl.ts, exempted from the line above
+        #           and given its own. It is three.js, it is 126KB gzipped, and
         #           that is the price of real 3D rather than a flat imitation
         #           of it. Raising the general budget to 140 to accommodate one
         #           chunk would have stopped it catching anything at all, which
@@ -203,7 +204,7 @@ jobs:
             case "$name" in index-*) continue ;; esac
             size=$(( $(gzip -9 -c "$file" | wc -c) / 1024 ))
             # The one exemption, measured separately rather than skipped.
-            case "$name" in Maze3D-*) maze=$size; continue ;; esac
+            case "$name" in gl-*) maze=$size; continue ;; esac
             if [ "$size" -gt "$chunk" ]; then
               chunk=$size
               chunk_name=$name
@@ -215,7 +216,7 @@ jobs:
           echo "entry js     (gz): ${js}KB / 120KB"
           echo "entry css    (gz): ${css}KB / 64KB"
           echo "largest app  (gz): ${chunk}KB / 48KB  (${chunk_name})"
-          echo "3D Maze      (gz): ${maze}KB / 160KB  (three.js, loaded on demand)"
+          echo "webgl savers (gz): ${maze}KB / 160KB  (three.js, loaded on demand)"
           echo "first paint  (gz): ${first}KB / 400KB  (js + css + wallpaper)"
           echo "--- context, not gated ---"
           echo "all assets excl. maps: ${total}KB"
@@ -234,7 +235,7 @@ jobs:
             fail=1
           fi
           if [ "$maze" -gt 160 ]; then
-            echo "::error::the 3D Maze chunk is ${maze}KB gzipped, over 160KB - three.js grew, or something else landed in it"
+            echo "::error::the WebGL savers chunk is ${maze}KB gzipped, over 160KB - three.js grew, or something else landed in it"
             fail=1
           fi
           if [ "$first" -gt 400 ]; then
@@ -369,6 +370,35 @@ jobs:
             cat /tmp/js.headers; exit 1
           }
 
+      # The guestbook image, the same way: build it, start it, and check that
+      # it takes an entry and gives it back. No compose here - the two
+      # containers are tested apart, and nginx's lazy upstream (nginx.conf,
+      # /api/guestbook) is what lets `web` above start without this one.
+      - name: Build and smoke test the guestbook image
+        run: |
+          set -euo pipefail
+          docker build -t funos-guestbook:ci deploy/guestbook
+          docker run -d --name funos-guestbook-ci -p 8081:8080 funos-guestbook:ci
+
+          up=0
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8081/health -o /dev/null; then up=1; break; fi
+            sleep 1
+          done
+          if [ "$up" -ne 1 ]; then
+            echo "::error::funos-guestbook never answered on /health"
+            exit 1
+          fi
+
+          curl -fsS -X POST http://127.0.0.1:8081/api/guestbook \
+            -H 'Content-Type: application/json' \
+            -d '{"name":"CI","message":"Signed from the pipeline."}' -o /tmp/gb-post.json
+          grep -q '"Signed from the pipeline."' /tmp/gb-post.json
+          curl -fsS http://127.0.0.1:8081/api/guestbook -o /tmp/gb-list.json
+          grep -q '"name": "CI"' /tmp/gb-list.json
+
       - name: Container logs
         if: failure()
-        run: docker logs funos-ci || true
+        run: |
+          docker logs funos-ci || true
+          docker logs funos-guestbook-ci || true
