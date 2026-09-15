@@ -4,7 +4,8 @@ import { listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { basename, dirname, display, isDriveRoot, join, normalize } from "../fs/path";
 import { entryBytes, entryIcon, entryType, formatBytes } from "../fs/icons";
 import { isSystemPath } from "../fs/system";
-import { ErrorIcon, InfoIcon, QuestionIcon } from "../icons";
+import { ErrorIcon, InfoIcon, QuestionIcon, RunIcon } from "../icons";
+import { runHistory } from "../fs/run";
 import styles from "./Dialog.module.css";
 
 /* The one modal dialog, mounted once in App next to the context menu. */
@@ -53,7 +54,79 @@ type BodyProps = {
 function Body({ request, close }: BodyProps) {
   if (request.kind === "properties") return <Properties request={request} close={close} />;
   if (request.kind === "file") return <FilePicker request={request} close={close} />;
+  if (request.kind === "run") return <Run close={close} />;
   return <Message request={request} close={close} />;
+}
+
+/* ---- Run ------------------------------------------------------------------ */
+
+/* The Run box, as it was: the icon, the sentence, "Open:" and a box that
+ * remembers what you typed last time. Browse... is greyed - there is one
+ * dialog at a time here, and a file picker would replace this one. */
+function Run({ close }: { close: (value: string | boolean | null) => void }) {
+  const [value, setValue] = useState(() => runHistory()[0] ?? "");
+  const [history] = useState(runHistory);
+
+  const focusInput = useCallback((el: HTMLInputElement | null) => {
+    if (!el) return;
+    el.focus();
+    el.select();
+  }, []);
+
+  const accept = () => {
+    if (value.trim()) close(value.trim());
+  };
+
+  return (
+    <div className={`window ${styles.dialog}`}>
+      <TitleBar title="Run" onClose={() => close(null)} />
+      <div className="window-body" style={{ margin: 0 }}>
+        <div className={styles.body}>
+          <RunIcon size={32} className={styles.icon} />
+          <div className={styles.text}>
+            Type the name of a program, folder, document, or Internet resource, and Windows will open it
+            for you.
+          </div>
+        </div>
+        <div className={styles.runRow}>
+          <label htmlFor="run-open">Open:</label>
+          <input
+            id="run-open"
+            ref={focusInput}
+            className={styles.runField}
+            type="text"
+            list="run-history"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                accept();
+              }
+            }}
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <datalist id="run-history">
+            {history.map((h) => (
+              <option key={h} value={h} />
+            ))}
+          </datalist>
+        </div>
+        <div className={styles.buttons}>
+          <button type="button" onClick={accept} disabled={value.trim() === ""}>
+            OK
+          </button>
+          <button type="button" onClick={() => close(null)}>
+            Cancel
+          </button>
+          <button type="button" disabled>
+            Browse...
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ---- prompt / confirm / error --------------------------------------------- */

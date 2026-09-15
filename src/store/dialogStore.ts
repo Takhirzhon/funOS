@@ -18,6 +18,8 @@ export type DialogRequest =
   | { kind: "confirm"; title: string; message: string }
   | { kind: "error"; title: string; message: string }
   | { kind: "properties"; title: string; paths: string[] }
+  /* The Run box. Resolves to the line typed, or null. */
+  | { kind: "run" }
   /* The file picker. `mode` decides the button label and whether an existing
    * name is a warning ("replace?") or the whole point. */
   | {
@@ -112,6 +114,12 @@ export const fileDialog = (
       folder,
       fileName,
     })
+    .then((result) => (typeof result === "string" ? result : null));
+
+export const runDialog = (): Promise<string | null> =>
+  useDialogStore
+    .getState()
+    .ask({ kind: "run" })
     .then((result) => (typeof result === "string" ? result : null));
 
 export const errorDialog = (title: string, message: string): Promise<void> =>

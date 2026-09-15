@@ -66,6 +66,22 @@ export function Taskbar() {
     return () => window.removeEventListener("mousedown", close);
   }, [startOpen]);
 
+  /* Win+Pause opened System Properties. The Win half never reaches a web
+   * page - the host takes it - so Pause on its own does the job here, which
+   * is a key nothing else on this desktop has a use for. */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Pause") return;
+      e.preventDefault();
+      open("systemProperties", {
+        title: apps.systemProperties.title,
+        bounds: apps.systemProperties.defaultSize,
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <>
       {startOpen && <StartMenu onClose={() => setStartOpen(false)} />}

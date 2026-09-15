@@ -73,6 +73,8 @@ mapping and the formats.
   - **Internet Explorer** — the front door: a hand-written `about:me` home page with Work, Projects and Contact; real sites open in a real tab, and anything else gets "The page cannot be displayed"
   - **Paint**, **Command Prompt**, **Calculator**, **Minesweeper**, **Solitaire**
   - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze
+  - **System Properties** — right-click My Computer, or Pause: registered to, build from `/health`, what the browser knows about the machine
+  - **Run…** — `notepad`, `calc`, `mspaint`, `sol`, `winmine`, `sysdm.cpl`, a path, or an address
   - **About funOS**
 
 ## Project layout

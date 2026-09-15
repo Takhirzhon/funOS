@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { useSessionStore } from "../store/sessionStore";
 import { apps, appIds, type AppId } from "../apps/registry";
+import { run } from "../fs/run";
 import {
   ControlPanelIcon,
   DocumentsIcon,
@@ -35,11 +36,11 @@ const places: { appId?: AppId; label: string; icon: ReactNode }[] = [
   { appId: "recycleBin", label: "Recycle Bin", icon: <AppGlyph id="recycleBin" /> },
 ];
 
-const tools: { label: string; icon: ReactNode; appId?: AppId }[] = [
+const tools: { label: string; icon: ReactNode; appId?: AppId; action?: () => void }[] = [
   { label: "Control Panel", icon: <ControlPanelIcon size={22} />, appId: "displayProperties" },
   { label: "Help and Support", icon: <HelpIcon size={22} /> },
   { label: "Search", icon: <SearchIcon size={22} /> },
-  { label: "Run...", icon: <RunIcon size={22} /> },
+  { label: "Run...", icon: <RunIcon size={22} />, action: () => void run() },
 ];
 
 function AppGlyph({ id, size = 22 }: { id: AppId; size?: number }) {
@@ -140,8 +141,14 @@ export function StartMenu({ onClose }: Props) {
               key={t.label}
               icon={t.icon}
               label={t.label}
-              disabled={!t.appId}
-              onClick={() => t.appId && launch(t.appId)}
+              disabled={!t.appId && !t.action}
+              onClick={() => {
+                if (t.appId) launch(t.appId);
+                else if (t.action) {
+                  onClose();
+                  t.action();
+                }
+              }}
             />
           ))}
         </div>

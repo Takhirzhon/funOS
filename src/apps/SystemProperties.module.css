@@ -1,0 +1,143 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+  font-size: 11px;
+}
+
+/* Tabs as in Display Properties - the two dialogs came from the same place. */
+.tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid #919b9c;
+}
+
+.tab {
+  all: unset;
+  padding: 3px 10px 4px;
+  cursor: default;
+  color: #000;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 100%);
+  border: 1px solid #919b9c;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: -1px;
+}
+
+.tab.active {
+  background: #fff;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #fff;
+}
+
+.page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
+  background: #fff;
+}
+
+.general {
+  display: flex;
+  gap: 18px;
+}
+
+/* The logo panel on the left, where XP drew the flag over its name. */
+.logo {
+  flex: none;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.logoBrand {
+  font-family: "Franklin Gothic Medium", "Trebuchet MS", Arial, sans-serif;
+  font-size: 22px;
+  font-weight: bold;
+  color: #1c3f7a;
+  letter-spacing: -0.5px;
+}
+
+.logoEdition {
+  font-size: 10px;
+  color: #1c3f7a;
+}
+
+/* Label, then an indented block of lines - the shape of the General tab
+ * since Windows 95, and the reason it reads as a system dialog. */
+.groups {
+  flex: 1;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.groups dt {
+  font-weight: normal;
+  margin-top: 8px;
+}
+
+.groups dt:first-child {
+  margin-top: 0;
+}
+
+.groups dd {
+  margin: 0 0 0 20px;
+}
+
+.productId {
+  color: #444;
+}
+
+.plain {
+  line-height: 1.5;
+}
+
+.blurb {
+  margin: 0 0 12px;
+  color: #222;
+}
+
+.mono {
+  font-family: "Courier New", monospace;
+  font-size: 10px;
+  color: #444;
+  overflow-wrap: anywhere;
+}
+
+.footer {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.footer button {
+  min-width: 75px;
+  height: 23px;
+}
+
+@media (max-width: 700px) {
+  .general {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tab {
+    padding: 3px 6px 4px;
+  }
+}

@@ -385,7 +385,14 @@ export function Desktop() {
         { kind: "item", label: "Delete", disabled: true },
         { kind: "item", label: "Rename", disabled: true },
         { kind: "separator" },
-        { kind: "item", label: "Properties", disabled: true },
+        {
+          kind: "item",
+          label: "Properties",
+          /* My Computer's properties are the system's - the one Properties
+           * on the desktop that opened something people went looking for. */
+          disabled: item.appId !== "myComputer",
+          onClick: () => launch("systemProperties"),
+        },
       ]);
       return;
     }

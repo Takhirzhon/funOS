@@ -15,6 +15,7 @@ import {
   NotepadIcon,
   PictureViewerIcon,
   ReaderIcon,
+  SystemPropertiesIcon,
 } from "../icons";
 
 export type IconComponent = ComponentType<{
@@ -154,6 +155,15 @@ export const apps = {
     component: app(() => import("./DisplayProperties"), "DisplayProperties"),
     icon: DisplayPropertiesIcon,
     defaultSize: { width: 420, height: 470 },
+    onDesktop: false,
+  },
+  /* Right-click My Computer > Properties, or sysdm.cpl in Run. */
+  systemProperties: {
+    title: "System Properties",
+    label: "System Properties",
+    component: app(() => import("./SystemProperties"), "SystemProperties"),
+    icon: SystemPropertiesIcon,
+    defaultSize: { width: 420, height: 460 },
     onDesktop: false,
   },
   solitaire: {

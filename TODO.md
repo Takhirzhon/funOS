@@ -50,10 +50,6 @@ this; what is left is content and the places it should be reachable from.
       hand from the PDF on the desktop, so the two can drift. When the CV
       changes, that file is the other place to change - or generate the
       Work page from a small JSON next to the PDF in `public/portfolio/`.
-- [ ] **System Properties.** Right-click My Computer > Properties, and
-      Win+Pause. "Registered to: Tokhirzhon Tashmatov", the processor, the
-      RAM, the funOS version from `/health`. Two hundred lines that make the
-      machine belong to someone.
 
 ## Applications
 
@@ -66,10 +62,9 @@ Ordered by ratio of "makes the place feel alive" to effort.
       actually delivers) opens the Applications tab off `windowStore` and a
       Processes tab that lists the same things with made-up memory. End Task
       closes the window. It is the most opened window in XP after Explorer.
-- [ ] **Run…** The Start menu item does nothing. `notepad`, `calc`, `mspaint`,
-      `cmd`, `sol`, `winmine`, `explorer`, `wmplayer` - every name already
-      exists in `apps/registry.ts`; this is a map from the DOS name to the app
-      id and an "cannot find the file" error for everything else.
+- [ ] **Run… Browse.** Greyed, because there is one dialog at a time and a
+      file picker would replace the Run box. Either the picker returns into
+      the box, or Run becomes a window. Win+R never reaches the page.
 - [ ] **Search and Help and Support.** Both are Start menu items with no
       window behind them. Search can be a real search over the VFS - the
       dog is optional, the results list is not. Help can be one page.
