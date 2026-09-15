@@ -337,6 +337,17 @@ export function Explorer({ path, windowId }: Props) {
       e.dataTransfer.setData(PATH_MIME, entry.path);
       e.dataTransfer.effectAllowed = "move";
     },
+    /* A drag that landed where nothing accepted it - the toolbar, another
+     * program's window - ends with no effect and no word, which for a file
+     * that could not have moved anyway reads as "I dragged it and nothing
+     * happened". A target that did accept it has already said why; this is
+     * for the ones that did not. */
+    onDragEnd: (e: ReactDragEvent) => {
+      setDropTarget(null);
+      if (e.dataTransfer.dropEffect === "none" && containsSystemPath(entry.path)) {
+        void accessDenied("move", entry.path);
+      }
+    },
     onDragOver: entry.kind === "dir" ? dragOver(entry.path) : undefined,
     onDragLeave: () => setDropTarget(null),
     onDrop: entry.kind === "dir" ? dropOn(entry.path) : undefined,
@@ -457,6 +468,10 @@ export function Explorer({ path, windowId }: Props) {
               })
             }
             onSelect={navigate}
+            dropTarget={isDropTarget}
+            onDragOverDir={dragOver}
+            onDropDir={dropOn}
+            onDragLeaveDir={() => setDropTarget(null)}
           />
         </div>
 
@@ -532,9 +547,16 @@ type TreeProps = {
   expanded: Set<string>;
   onToggle: (path: string) => void;
   onSelect: (path: string) => void;
+  /* The tree takes drops too - every folder in it is a folder. Handlers are
+   * the list's own, so a drop means the same thing in both places. */
+  dropTarget: (path: string) => boolean;
+  onDragOverDir: (path: string) => (e: ReactDragEvent) => void;
+  onDropDir: (path: string) => (e: ReactDragEvent) => void;
+  onDragLeaveDir: () => void;
 };
 
-function TreeNode({ path, depth, entries, current, expanded, onToggle, onSelect }: TreeProps) {
+function TreeNode(props: TreeProps) {
+  const { path, depth, entries, current, expanded, onToggle, onSelect } = props;
   const children = useMemo(
     () => listEntries(entries, path).filter((e) => e.kind === "dir"),
     [entries, path]
@@ -545,8 +567,16 @@ function TreeNode({ path, depth, entries, current, expanded, onToggle, onSelect 
   return (
     <>
       <div
-        className={path === current ? `${styles.row} ${styles.current}` : styles.row}
+        className={[
+          styles.row,
+          path === current ? styles.current : "",
+          props.dropTarget(path) ? styles.dropTarget : "",
+        ].join(" ")}
         style={{ paddingLeft: depth * 14 }}
+        onDragOver={props.onDragOverDir(path)}
+        onDragLeave={props.onDragLeaveDir}
+        onDrop={props.onDropDir(path)}
+        data-drop-path={path}
       >
         {children.length > 0 ? (
           <button
@@ -573,14 +603,10 @@ function TreeNode({ path, depth, entries, current, expanded, onToggle, onSelect 
       {isOpen &&
         children.map((child) => (
           <TreeNode
+            {...props}
             key={child.path}
             path={child.path}
             depth={depth + 1}
-            entries={entries}
-            current={current}
-            expanded={expanded}
-            onToggle={onToggle}
-            onSelect={onSelect}
           />
         ))}
     </>
