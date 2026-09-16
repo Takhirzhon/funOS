@@ -33,6 +33,13 @@ export const STOP_ERRORS = {
     name: "CRITICAL_OBJECT_TERMINATION",
     params: "(0x00000003, 0x8A1B2C40, 0x8A1B2DB4, 0x805D22DA)",
   },
+  /* The desktop's own code threw and nothing caught it. The one of these
+   * that is not staged. */
+  unhandled: {
+    code: "0x0000001E",
+    name: "KMODE_EXCEPTION_NOT_HANDLED",
+    params: "(0xC0000005, 0x804F8A3C, 0x00000000, 0x00000018)",
+  },
 } satisfies Record<string, StopError>;
 
 const SEEN_KEY = "funos.booted";
