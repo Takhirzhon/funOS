@@ -13,6 +13,7 @@
   min-height: 0;
   overflow: auto;
   padding: 10px;
+  box-sizing: border-box;
 }
 
 .top {
@@ -25,9 +26,13 @@
   flex: 1;
 }
 
+/* The columns run to the bottom of the table, so a card let go below the
+ * last card of a column is still over that column. */
 .columns {
   display: flex;
+  align-items: stretch;
   gap: 10px;
+  min-height: calc(100% - 96px - 28px);
 }
 
 /* A tableau pile is a stack of overlapping cards, so it is a positioning
@@ -54,11 +59,21 @@
   border-radius: 6px;
 }
 
-/* One tile off the sheet of cards.dll bitmaps, at one pixel per pixel. */
+/* One tile off the sheet of cards.dll bitmaps. The sheet is 994 by 480 in
+ * CSS pixels whichever file is drawn: on a screen that is not one device
+ * pixel per CSS pixel the doubled sheet is scaled down, which keeps the
+ * pips even. Nearest-neighbour scaling of the single sheet made the
+ * diamonds ragged at 125%. */
 .sheet {
   background-image: url("/cards/xp.webp");
   background-repeat: no-repeat;
-  image-rendering: pixelated;
+  background-size: 994px 480px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .sheet {
+    background-image: url("/cards/xp@2x.webp");
+  }
 }
 
 .card {
@@ -217,10 +232,7 @@
   box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.45);
 }
 
-/* The selected card is drawn inverted, which is how the game showed it. */
-.selected .face {
-  filter: invert(1);
-}
+
 
 .status {
   flex: none;

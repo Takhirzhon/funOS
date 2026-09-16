@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { MenuBar } from "../components/MenuBar";
 import { playSound } from "../store/soundStore";
@@ -144,16 +144,29 @@ const destinationOf = (source: Source): Destination | null => {
   return null;
 };
 
-/** The pile under a point, read off the `data-drop` the piles carry. */
-const dropAt = (x: number, y: number): Destination | null => {
-  const key = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-drop]")?.dataset.drop;
-  if (!key) return null;
-  const n = Number(key.slice(1));
-  return key[0] === "f" ? { to: "foundation", slot: n } : { to: "tableau", column: n };
+/** The pile the dragged card covers most, as the game judged a drop: by
+ * where the card is, not where the pointer holding it is. A card let go
+ * with its corner on a column lands there, even with the pointer over the
+ * felt below it. */
+const dropFor = (table: HTMLElement, x: number, y: number): Destination | null => {
+  let best: { key: string; area: number } | null = null;
+  for (const el of table.querySelectorAll<HTMLElement>("[data-drop]")) {
+    const r = el.getBoundingClientRect();
+    const w = Math.min(x + CARD_W, r.right) - Math.max(x, r.left);
+    const h = Math.min(y + CARD_H, r.bottom) - Math.max(y, r.top);
+    const area = w > 0 && h > 0 ? w * h : 0;
+    if (area > 0 && (!best || area > best.area)) best = { key: el.dataset.drop ?? "", area };
+  }
+  /* A sliver does not count: a fifth of the card has to be over the pile. */
+  if (!best || best.area < CARD_W * CARD_H * 0.2) return null;
+  const n = Number(best.key.slice(1));
+  return best.key[0] === "f" ? { to: "foundation", slot: n } : { to: "tableau", column: n };
 };
 
 /* The cards are 71 by 96, XP's size; a run fans down by twenty pixels, and
  * a draw of three fans right by twelve. */
+const CARD_W = 71;
+const CARD_H = 96;
 const FAN = 20;
 const WASTE_FAN = 12;
 
@@ -171,13 +184,13 @@ type Drag = {
 
 export function Solitaire() {
   const [table, setTable] = useState<Table>(deal);
-  const [selected, setSelected] = useState<Source | null>(null);
   const [moves, setMoves] = useState(0);
   /* Cards that have just been turned over, so the flip animation plays once
    * and is not replayed on every unrelated re-render. */
   const [flipping, setFlipping] = useState<Set<string>>(new Set());
   const [drag, setDrag] = useState<Drag | null>(null);
   const dragRef = useRef<Drag | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
   const [back, setBack] = useState(loadBack);
   const [choosingBack, setChoosingBack] = useState(false);
   const [options, setOptions] = useState<Options>(loadOptions);
@@ -213,7 +226,6 @@ export function Solitaire() {
     /* Seven cards slapped down, one after another. */
     for (let i = 0; i < 7; i += 1) window.setTimeout(() => playSound("card"), i * 60);
     setTable(deal());
-    setSelected(null);
     setMoves(0);
     setFlipping(new Set());
     setSeconds(0);
@@ -306,7 +318,6 @@ export function Solitaire() {
   const stockSpent = table.stock.length === 0 && options.scoring === "vegas" && passes + 1 >= options.draw;
 
   const drawStock = () => {
-    setSelected(null);
     if (table.stock.length === 0) {
       if (stockSpent || table.waste.length === 0) return;
       playSound("card");
@@ -401,7 +412,6 @@ export function Solitaire() {
       };
     });
     setMoves((m) => m + 1);
-    setSelected(null);
     return true;
   };
 
@@ -414,38 +424,6 @@ export function Solitaire() {
     moveTo({ to: "foundation", slot }, source);
   };
 
-  const sameSource = (a: Source | null, b: Source): boolean => {
-    if (!a) return false;
-    if (a.from !== b.from) return false;
-    if (a.from === "tableau" && b.from === "tableau") {
-      return a.column === b.column && a.index === b.index;
-    }
-    if (a.from === "foundation" && b.from === "foundation") return a.slot === b.slot;
-    return true;
-  };
-
-  /* A click on a card: select it; click the same card to let go; click
-   * another card to put the selection on its pile - or, when the rules say
-   * no, to pick up that card instead, which is what people mean. */
-  const tap = (source: Source) => {
-    if (!selected) {
-      setSelected(source);
-      return;
-    }
-    if (sameSource(selected, source)) {
-      setSelected(null);
-      return;
-    }
-    const destination = destinationOf(source);
-    if (destination && moveTo(destination, selected)) return;
-    setSelected(source);
-  };
-
-  /** A click on the bare pile: the empty column, the foundation's outline. */
-  const tapPile = (destination: Destination) => {
-    if (!selected) return;
-    if (!moveTo(destination, selected)) setSelected(null);
-  };
 
   /* The drag. Pointer events, captured by the card that was pressed, so the
    * run follows the pointer out of the window and back; the drop is a hit
@@ -478,17 +456,14 @@ export function Solitaire() {
     setDrag(dragRef.current);
   };
 
-  const release = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const release = () => {
     const d = dragRef.current;
     dragRef.current = null;
     if (!d) return;
-    if (!d.moved) {
-      tap(d.source);
-      return;
-    }
+    if (!d.moved) return;
     setDrag(null);
-    setSelected(null);
-    const destination = dropAt(e.clientX, e.clientY);
+    const table = tableRef.current;
+    const destination = table ? dropFor(table, d.x, d.y) : null;
     if (destination) moveTo(destination, d.source);
   };
 
@@ -503,7 +478,6 @@ export function Solitaire() {
     const classes = [styles.card];
     if (!card.faceUp) classes.push(styles.down);
     if (flipping.has(card.id)) classes.push(styles.flip);
-    if (source && sameSource(selected, source)) classes.push(styles.selected);
     if (lifted(card)) classes.push(styles.lifted);
 
     return (
@@ -524,10 +498,6 @@ export function Solitaire() {
     );
   };
 
-  /* A click that reached the pile itself, not a card in it. Card presses are
-   * handled on release and must not also count here, or a stale selection
-   * would be moved a second time. */
-  const bare = (e: ReactMouseEvent) => !(e.target as HTMLElement).closest("[data-card]");
 
   return (
     <div className={styles.app}>
@@ -619,7 +589,7 @@ export function Solitaire() {
         </div>
       )}
 
-      <div className={styles.table}>
+      <div className={styles.table} ref={tableRef}>
         <div className={styles.top}>
           {/* Stock */}
           <div className={styles.pile} onClick={drawStock}>
@@ -653,7 +623,6 @@ export function Solitaire() {
               key={SUITS[slot]}
               className={styles.pile}
               data-drop={`f${slot}`}
-              onClick={(e) => bare(e) && tapPile({ to: "foundation", slot })}
             >
               {pile.length === 0 ? (
                 <div className={styles.slot} />
@@ -671,7 +640,6 @@ export function Solitaire() {
               className={styles.pile}
               data-drop={`t${column}`}
               style={{ minHeight: 96 + Math.max(0, pile.length - 1) * FAN }}
-              onClick={(e) => bare(e) && tapPile({ to: "tableau", column })}
             >
               {pile.length === 0 && <div className={styles.slot} />}
               {pile.map((card, index) =>
@@ -710,7 +678,7 @@ export function Solitaire() {
           {options.timed && <span className={styles.statusField}>Time: {seconds}</span>}
           {won && <span className={styles.win}>You win.</span>}
         </span>
-        <span>Drag a card where it goes, or click it and then the pile. Double-click sends it home.</span>
+        <span>Drag a card where it goes. Double-click sends it home.</span>
       </div>
     </div>
   );
@@ -724,7 +692,7 @@ type CardViewProps = {
   fanX?: number;
   onGrab: (e: ReactPointerEvent<HTMLDivElement>, source: Source, card: Card) => void;
   onMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
-  onRelease: (e: ReactPointerEvent<HTMLDivElement>) => void;
+  onRelease: () => void;
   onCancel: () => void;
   onHome: (source: Source) => void;
   back: number;
