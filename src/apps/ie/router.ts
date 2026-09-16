@@ -2,7 +2,9 @@ import type { ComponentType } from "react";
 import { cv } from "virtual:portfolio";
 import {
   BlankPage,
+  BlogArchivePage,
   BlogPage,
+  BlogYearPage,
   CannotDisplayPage,
   ContactPage,
   GuestbookPage,
@@ -32,8 +34,13 @@ export const pageFor = (url: string): Page => {
   if (PAGES[url]) return PAGES[url];
   /* A post. The title is the slug for the caption; the page itself knows
    * the real one once it has found the file. */
+  if (url === "about:blog/archive") return { title: `Blog archive - ${cv.name}`, Component: BlogArchivePage };
   if (url.startsWith("about:blog/")) {
-    return { title: `${url.slice("about:blog/".length)} - Blog`, Component: PostPage };
+    const rest = url.slice("about:blog/".length);
+    /* Four digits is a year, not a post - a post called "2025" would have
+     * to be called something else. */
+    if (/^[0-9]{4}$/.test(rest)) return { title: `Blog: ${rest} - ${cv.name}`, Component: BlogYearPage };
+    return { title: `${rest} - Blog`, Component: PostPage };
   }
   return { title: "Cannot find server", Component: CannotDisplayPage };
 };

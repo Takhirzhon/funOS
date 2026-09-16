@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
 import type { Plugin } from "vite";
 
@@ -64,7 +64,15 @@ export type PortfolioFile = {
   url?: string;
   /** The text itself, for files small enough to ship in the bundle. */
   content?: string;
+  /* A small rendering of an image or a poster frame of a clip, from the
+   * `_thumbs` folder beside it (public/portfolio/README.md). For grids: a
+   * photo page that drew 3.5MB of originals at 100px each draws 300KB. */
+  thumb?: string;
 };
+
+/* A folder of thumbnails is not a folder of files. It is skipped by the
+ * scan and read here, by name, for the file it stands beside. */
+const THUMBS = "_thumbs";
 
 function scan(dir: string, out: PortfolioFile[]): void {
   let names: string[];
@@ -81,7 +89,7 @@ function scan(dir: string, out: PortfolioFile[]): void {
 
     const stat = statSync(full);
     if (stat.isDirectory()) {
-      scan(full, out);
+      if (name !== THUMBS) scan(full, out);
       continue;
     }
 
@@ -97,6 +105,14 @@ function scan(dir: string, out: PortfolioFile[]): void {
        * in development. encodeURI leaves the characters a path may contain
        * alone; the two it must not, it does not know about. */
       file.url = `${URL_BASE}/${encodeURI(rel).replace(/[#?]/g, encodeURIComponent)}`;
+      if (mime.startsWith("image/") || mime.startsWith("video/")) {
+        /* A picture's thumbnail keeps its name; a clip's poster is a JPEG. */
+        const thumbName = mime.startsWith("video/") ? `${name.replace(/\.[^.]+$/, "")}.jpg` : name;
+        const thumbRel = `${rel.slice(0, rel.length - name.length)}${THUMBS}/${thumbName}`;
+        if (existsSync(join(ROOT, thumbRel))) {
+          file.thumb = `${URL_BASE}/${encodeURI(thumbRel).replace(/[#?]/g, encodeURIComponent)}`;
+        }
+      }
     }
     out.push(file);
   }
@@ -254,7 +270,7 @@ ${items}
 
   /* The pages Internet Explorer has, at the addresses the desktop opens
    * them from. Hand-listed, in step with ROUTES in src/apps/ie/site.ts. */
-  const pages = ["/work", "/projects", "/photos", "/guestbook", "/contact", "/blog", "/cv"]
+  const pages = ["/work", "/projects", "/photos", "/guestbook", "/contact", "/blog", "/blog/archive", "/cv"]
     .map(
       (p) => `  <url>
     <loc>${SITE}${p}</loc>

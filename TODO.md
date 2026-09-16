@@ -39,18 +39,18 @@ recruiter on a phone to find the CV in ten seconds. The system layer
 (`fs/system.ts`, `public/portfolio/`) is done and is the mechanism for all of
 this; what is left is content and the places it should be reachable from.
 
-- [ ] **The blog's list is the folder.** Posts are files, which is right,
-      but nothing paginates: at fifty posts about:blog is a long page. A
-      year's worth per page, and an archive, when there is a year's worth.
-- [ ] **Project screenshots.** `about:projects` shows a "click to enlarge"
-      picture for any project whose `screenshot` in `cv.json` names a file in
-      `My Pictures\Projects`. Only funOS has one. Aegis (the GUI), GeoGuard
-      (a map), CoVibeCode and Randevu need theirs taken.
-- [ ] **The photo page loads the originals.** Thumbnails are the full
-      1920px JPEGs scaled down by CSS - about 3.5MB for the page on a phone.
-      A `-thumb` variant next to each photograph, made by the same pillow
-      step that strips the EXIF, would fix it; the page would have to know
-      to hide them from the grid and Explorer would still show them.
+- [ ] **Two project screenshots.** `about:projects` shows a picture for any
+      project whose `screenshot` in `cv.json` names a file in
+      `My Pictures\Projects`. funOS, GeoGuard (the feature-importance chart
+      from its notebook) and CoVibeCode (the app) have theirs. Aegis has no
+      public picture - run the GUI and take one - and Randevu has no public
+      anything; both need the owner.
+- [ ] **Thumbnails are made by hand.** `_thumbs/` beside each picture folder
+      is what the photo page, the home page and Explorer draw; the originals
+      open on click. A new photograph without one is drawn from the original
+      until somebody runs the pillow step in `public/portfolio/README.md`.
+      A pre-commit hook, or the plugin doing it with sharp, would make that
+      automatic - sharp is a native dependency and the reason it is not.
 
 ## Applications
 

@@ -36,6 +36,19 @@ dashes: "Hello, world.md" is `hello-world`. Headings, lists, quotes, fenced
 code, bold, italic, links and images are rendered; links to `about:` pages
 navigate the window, links to real sites open a real tab.
 
+Thumbnails live in a `_thumbs/` folder beside the pictures they stand for,
+same file name (a clip's poster is `<name>.jpg`). The folder is invisible in
+funOS; the build attaches each thumbnail to its file, and the photo page, the
+home page and Explorer's Thumbnails view draw the small file while a click
+opens the original. Make them with pillow after adding a picture:
+
+```python
+im = Image.open(f).convert("RGB"); im.thumbnail((400, 400))
+im.save(os.path.join(folder, "_thumbs", os.path.basename(f)), "JPEG", quality=80, optimize=True)
+```
+
+and a clip's poster with `ffmpeg -ss 1 -i clip.mp4 -frames:v 1 -vf scale=400:-2 _thumbs/clip.jpg`.
+
 Photographs are resized to 1920px on the long side, quality 85, and saved
 without EXIF - iPhone originals carry GPS coordinates, and a portfolio should
 not publish where a picture was taken. `pillow` with `pillow-heif` does all

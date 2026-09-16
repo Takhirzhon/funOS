@@ -7,6 +7,7 @@ declare module "virtual:portfolio" {
     modified: number;
     url?: string;
     content?: string;
+    thumb?: string;
   };
   export const files: PortfolioFile[];
 

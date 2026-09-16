@@ -632,7 +632,7 @@ export function Explorer({ path, windowId }: Props) {
               <button key={entry.path} {...itemProps(entry)} className={stateClasses(entry, styles.item)}>
                 <span className={styles.thumb}>
                   {view === "thumbnails" && isBinary(entry) && entry.mime?.startsWith("image/") ? (
-                    <img className={styles.preview} src={blobUrlFor(entry)} alt="" />
+                    <img className={styles.preview} src={entry.thumb ?? blobUrlFor(entry)} alt="" loading="lazy" />
                   ) : (
                     entryIcon(entry, view === "thumbnails" ? 48 : view === "list" ? 16 : 32)
                   )}

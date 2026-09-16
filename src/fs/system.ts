@@ -79,6 +79,7 @@ export function systemOverlay(): Record<string, FsEntry> {
       content: file.content ?? "",
       mime: file.mime,
       url: file.url,
+      thumb: file.thumb,
       size: file.size,
       created: file.modified,
       modified: file.modified,

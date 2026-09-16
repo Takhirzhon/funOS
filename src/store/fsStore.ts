@@ -47,6 +47,8 @@ export type FsEntry = {
   url?: string;
   /** Byte length of a `url` file, known from the build. Nothing else sets it. */
   size?: number;
+  /** A small rendering of a served picture or clip, for grids. Served too. */
+  thumb?: string;
   /* The Hidden attribute, set from the Properties dialog. Additive, like
    * `bytes`: an entry written before it existed simply is not hidden, which
    * is also what it was. */
