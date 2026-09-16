@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { create } from "zustand";
+import { playSound } from "./soundStore";
 
 export type MenuItem =
   | { kind: "separator" }
@@ -33,6 +34,9 @@ export const useMenuStore = create<MenuStore>((set) => ({
   items: null,
   x: 0,
   y: 0,
-  open: (x, y, items) => set({ x, y, items }),
+  open: (x, y, items) => {
+    playSound("menu");
+    set({ x, y, items });
+  },
   close: () => set((s) => (s.items ? { items: null } : s)),
 }));

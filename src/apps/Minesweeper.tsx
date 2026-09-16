@@ -2,6 +2,7 @@ import { useLayoutEffect, useEffect, useRef, useState, type MouseEvent as ReactM
 import { MenuBar } from "../components/MenuBar";
 import { useWindowStore } from "../store/windowStore";
 import { useMediaQuery, COMPACT } from "../hooks/useMediaQuery";
+import { playSound } from "../store/soundStore";
 import styles from "./Minesweeper.module.css";
 
 type Level = { name: string; cols: number; rows: number; mines: number };
@@ -142,6 +143,7 @@ export function Minesweeper({ windowId }: { windowId?: string }) {
 
   const finish = (final: Cell[], won: boolean) => {
     setStatus(won ? "won" : "lost");
+    playSound(won ? "tada" : "boom");
     /* Losing reveals every mine, which is how you find out where the one you
      * missed actually was. Winning flags the rest instead of opening them. */
     setBoard(

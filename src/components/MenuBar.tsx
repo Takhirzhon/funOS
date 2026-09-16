@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { playSound } from "../store/soundStore";
 import styles from "./MenuBar.module.css";
 
 export type MenuBarItem = { label: string; onClick: () => void; disabled?: boolean };
@@ -34,7 +35,10 @@ export function MenuBar({ menus }: { menus: MenuBarMenu[] }) {
           <button
             type="button"
             className={open === menu.label ? `${styles.title} ${styles.open}` : styles.title}
-            onClick={() => setOpen(open === menu.label ? null : menu.label)}
+            onClick={() => {
+              if (open !== menu.label) playSound("menu");
+              setOpen(open === menu.label ? null : menu.label);
+            }}
             /* Once one menu is open, sliding across the bar opens the others
              * without another click - the behaviour every desktop menu has and
              * that people use without noticing. */

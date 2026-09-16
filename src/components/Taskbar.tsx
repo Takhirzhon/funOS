@@ -199,7 +199,15 @@ export function Taskbar() {
         onMouseDown={(e) => e.stopPropagation()}
         onContextMenu={barMenu}
       >
-        <StartButton open={startOpen} onClick={() => setStartOpen((v) => !v)} />
+        <StartButton
+          open={startOpen}
+          onClick={() =>
+            setStartOpen((v) => {
+              if (!v) play("menu");
+              return !v;
+            })
+          }
+        />
 
         {/* Quick Launch. XP shipped with it enabled and with exactly these two
          * entries, which is the only reason Show Desktop is here rather than in

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { MenuBar } from "../components/MenuBar";
+import { playSound } from "../store/soundStore";
 import styles from "./Solitaire.module.css";
 
 /* Klondike, one card at a time from the stock.
@@ -204,8 +205,13 @@ export function Solitaire() {
     () => table.foundations.every((pile) => pile.length === 13),
     [table.foundations]
   );
+  useEffect(() => {
+    if (won) playSound("tada");
+  }, [won]);
 
   const newGame = (next: Options = options) => {
+    /* Seven cards slapped down, one after another. */
+    for (let i = 0; i < 7; i += 1) window.setTimeout(() => playSound("card"), i * 60);
     setTable(deal());
     setSelected(null);
     setMoves(0);
@@ -303,6 +309,7 @@ export function Solitaire() {
     setSelected(null);
     if (table.stock.length === 0) {
       if (stockSpent || table.waste.length === 0) return;
+      playSound("card");
       setPasses((p) => p + 1);
       if (options.scoring === "standard" && options.draw === 1) setScore((s) => s - 100);
       setFanned(1);
@@ -310,6 +317,7 @@ export function Solitaire() {
       return;
     }
     const n = Math.min(options.draw, table.stock.length);
+    for (let i = 0; i < n; i += 1) window.setTimeout(() => playSound("card"), i * 50);
     setFanned(n);
     setTable((t) => {
       const drawn = t.stock.slice(-n).reverse().map((c) => ({ ...c, faceUp: true }));
@@ -371,6 +379,7 @@ export function Solitaire() {
     }
     if (!fits(cards, destination)) return false;
 
+    playSound("card");
     if (source.from === "waste") setFanned((f) => Math.max(1, f - 1));
     const under = source.from === "tableau" ? table.tableau[source.column][source.index - 1] : undefined;
     credit(source, destination, under !== undefined && !under.faceUp);

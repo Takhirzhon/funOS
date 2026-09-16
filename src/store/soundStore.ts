@@ -24,7 +24,11 @@ export type Voice =
   | "click"
   | "minimize"
   | "restore"
-  | "recycle";
+  | "recycle"
+  | "menu"
+  | "card"
+  | "boom"
+  | "tada";
 
 /** What each voice is called in Sounds and Audio Devices' event list. */
 export const VOICE_EVENTS: Record<Voice, string> = {
@@ -39,6 +43,10 @@ export const VOICE_EVENTS: Record<Voice, string> = {
   minimize: "Minimize",
   restore: "Restore Up",
   recycle: "Empty Recycle Bin",
+  menu: "Menu Popup",
+  card: "Solitaire: Card",
+  boom: "Minesweeper: Mine",
+  tada: "Minesweeper: Won",
 };
 
 const ENABLED_KEY = "funos.sound";
@@ -132,7 +140,32 @@ const VOICES: Record<Voice, Note[]> = {
     { freq: 1046.5, at: 0, length: 0.14, gain: 0.07 },
     { freq: 1318.51, at: 0.1, length: 0.3, gain: 0.07 },
   ],
-  click: [{ freq: 2200, at: 0, length: 0.03, gain: 0.04, type: "square" }],
+  /* Start Navigation: the click with a knock under it, the sound of a
+   * folder opening. It was too quiet to hear as one short square wave. */
+  click: [
+    { freq: 1400, at: 0, length: 0.05, gain: 0.12 },
+    { freq: 260, to: 120, at: 0, length: 0.07, gain: 0.16, type: "sine" },
+  ],
+  /* The Start menu and a context menu: the click without the knock. */
+  menu: [{ freq: 1800, at: 0, length: 0.03, gain: 0.07 }],
+  /* A card put down: a slap of paper, forty milliseconds. */
+  card: [
+    { freq: 2400, at: 0, length: 0.04, gain: 0.2, noise: true },
+    { freq: 500, at: 0, length: 0.05, gain: 0.08, noise: true },
+  ],
+  /* A mine: a thump and a burst of rubble. */
+  boom: [
+    { freq: 90, to: 40, at: 0, length: 0.5, gain: 0.3, type: "sine" },
+    { freq: 300, at: 0, length: 0.35, gain: 0.25, noise: true },
+    { freq: 1200, at: 0.02, length: 0.2, gain: 0.12, noise: true },
+  ],
+  /* Won: three notes up and one to hold. */
+  tada: [
+    { freq: 523.25, at: 0, length: 0.14, gain: 0.1 },
+    { freq: 659.25, at: 0.12, length: 0.14, gain: 0.1 },
+    { freq: 783.99, at: 0.24, length: 0.14, gain: 0.1 },
+    { freq: 1046.5, at: 0.36, length: 0.6, gain: 0.11 },
+  ],
   /* Minimize and Restore Up are the same swoosh, one falling, one rising. */
   minimize: [{ freq: 900, to: 260, at: 0, length: 0.14, gain: 0.05, type: "sine" }],
   restore: [{ freq: 260, to: 900, at: 0, length: 0.14, gain: 0.05, type: "sine" }],

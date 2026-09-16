@@ -137,6 +137,8 @@ export const useWindowStore = create<Store>((set, get) => ({
   focusedId: null,
 
   open: (appId, opts = {}) => {
+    /* Every window opening clicks, the way every folder did. */
+    playSound("click");
     const id = nextId();
     const { topZ, windows } = get();
     const newZ = topZ + 1;
