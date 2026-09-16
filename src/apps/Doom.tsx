@@ -31,8 +31,33 @@ type DosInstance = {
 };
 type DosWindow = Window & {
   emulators?: { pathPrefix: string };
+  /** The on-screen keyboard js-dos brings along, which hooks the document. */
+  SimpleKeyboardInstances?: Record<string, { destroy?: () => void } | undefined>;
   Dos?: (root: HTMLDivElement, options: { emulatorFunction: string; layersOptions?: { optionControls?: string[] } }) => DosInstance;
 };
+
+/* js-dos's on-screen keyboard (simple-keyboard) installs itself as
+ * document.onpointerup with stopMouseUpPropagation on, and never lets go:
+ * every pointerup on the page then stops at the document, and the desktop's
+ * window listener - which ends an icon drag or a marquee - never hears it.
+ * An icon glued to the pointer after a game of DOOM was that. The keyboard
+ * is for touch screens; on anything else the hooks go, and on the way out
+ * the instance is destroyed, which is what daedalOS does too. */
+function unhookKeyboard(w: DosWindow, destroy: boolean) {
+  if (destroy) {
+    for (const kb of Object.values(w.SimpleKeyboardInstances ?? {})) {
+      try {
+        kb?.destroy?.();
+      } catch {
+        /* Already gone. */
+      }
+    }
+  }
+  document.onpointerup = null;
+  document.onmouseup = null;
+  document.ontouchend = null;
+  document.ontouchcancel = null;
+}
 
 const loaded = new Map<string, Promise<void>>();
 
@@ -94,6 +119,7 @@ export function Doom({ windowId }: Props) {
           if (windowId) close(windowId);
         });
         if (coarse) void dos.enableMobileControls();
+        else unhookKeyboard(w, false);
         root.focus({ preventScroll: true });
       } catch {
         if (!cancelled) setStatus("failed");
@@ -104,6 +130,7 @@ export function Doom({ windowId }: Props) {
       cancelled = true;
       void dos?.stop();
       void ci?.exit();
+      unhookKeyboard(window as DosWindow, true);
     };
     /* The instance lives as long as the window; the touch controls are
      * decided when it starts. */

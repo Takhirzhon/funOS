@@ -342,11 +342,16 @@ export function Desktop() {
       }
     };
 
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    /* Capture phase, on the window: nothing below can swallow the release.
+     * A library that stops pointerup at the document (js-dos's on-screen
+     * keyboard did) would otherwise leave the gesture stuck to the pointer. */
+    window.addEventListener("pointermove", onMove, true);
+    window.addEventListener("pointerup", onUp, true);
+    window.addEventListener("pointercancel", onUp, true);
     return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointermove", onMove, true);
+      window.removeEventListener("pointerup", onUp, true);
+      window.removeEventListener("pointercancel", onUp, true);
     };
   }, [select, setPosition, setHoverPath]);
 
