@@ -1,0 +1,14 @@
+.tip {
+  position: fixed;
+  z-index: 27000;
+  max-width: calc(100vw - 8px);
+  padding: 2px 5px;
+  font: 11px var(--font-ui);
+  color: #000;
+  background: #ffffe1;
+  border: 1px solid #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}

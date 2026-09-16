@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
 import { useSoundStore } from "../store/soundStore";
@@ -19,6 +19,8 @@ import {
 } from "../icons";
 import styles from "./Taskbar.module.css";
 
+const TRAY_TIP_KEY = "funos.tray.tip";
+
 export function Taskbar() {
   const windows = useWindowStore((s) => s.windows);
   const focusedId = useWindowStore((s) => s.focusedId);
@@ -36,6 +38,49 @@ export function Taskbar() {
   const autoHide = useShellStore((s) => s.autoHide);
   const quickLaunch = useShellStore((s) => s.quickLaunch);
   const showClock = useShellStore((s) => s.showClock);
+  const hideInactive = useShellStore((s) => s.hideInactive);
+  /* The chevron. Security Center and the network are the inactive ones -
+   * nobody clicks them - and the speaker stays out. Showing them again is a
+   * click on the arrow; they tuck back in a few seconds after the pointer
+   * has left the tray, or at the next press anywhere. */
+  const [trayOpen, setTrayOpen] = useState(false);
+  const trayTimer = useRef<number | undefined>(undefined);
+  const trayLeave = () => {
+    window.clearTimeout(trayTimer.current);
+    trayTimer.current = window.setTimeout(() => setTrayOpen(false), 4000);
+  };
+  const trayEnter = () => window.clearTimeout(trayTimer.current);
+  useEffect(() => {
+    if (!trayOpen) return;
+    const close = () => setTrayOpen(false);
+    window.addEventListener("mousedown", close);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.clearTimeout(trayTimer.current);
+    };
+  }, [trayOpen]);
+  /* The balloon XP put up the first time it hid something, once and never
+   * again - which is what made it feel like the machine noticing you. A
+   * minute in, so it is not the first thing on a fresh desktop. */
+  useEffect(() => {
+    if (!hideInactive) return;
+    let seen = false;
+    try {
+      seen = localStorage.getItem(TRAY_TIP_KEY) === "1";
+    } catch {
+      /* Private mode: it will show again, which is fine. */
+    }
+    if (seen) return;
+    const t = window.setTimeout(() => {
+      try {
+        localStorage.setItem(TRAY_TIP_KEY, "1");
+      } catch {
+        /* Private mode. */
+      }
+      showBalloon("Windows hides inactive icons", "Click the arrow next to the clock to show the icons that you have not used in a while.");
+    }, 60_000);
+    return () => window.clearTimeout(t);
+  }, [hideInactive]);
   /* Auto-hide: the bar slides down to a two-pixel line and comes back when
    * the pointer reaches the bottom of the screen, or while the Start menu
    * is open. A short delay before hiding, so crossing the edge to reach a
@@ -167,7 +212,7 @@ export function Taskbar() {
           <button
             type="button"
             className={styles.quickButton}
-            title="Show the Desktop"
+            data-tip="Show Desktop"
             onClick={minimizeAll}
           >
             <ShowDesktopIcon />
@@ -175,7 +220,7 @@ export function Taskbar() {
           <button
             type="button"
             className={styles.quickButton}
-            title="Launch Internet Explorer Browser"
+            data-tip="Launch Internet Explorer Browser"
             onClick={() =>
               open("internetExplorer", {
                 title: apps.internetExplorer.title,
@@ -204,7 +249,7 @@ export function Taskbar() {
                   e.stopPropagation();
                   openMenu(e.clientX, e.clientY, windowSystemMenu(w));
                 }}
-                title={w.title}
+                data-tip={w.title}
                 className={active ? `${styles.task} ${styles.active}` : styles.task}
               >
                 {Icon && (
@@ -218,18 +263,34 @@ export function Taskbar() {
           })}
         </div>
 
-        <div className={styles.tray}>
+        <div className={styles.tray} onMouseEnter={trayEnter} onMouseLeave={trayLeave}>
+          {hideInactive && (
+            <button
+              type="button"
+              className={trayOpen ? `${styles.chevron} ${styles.chevronOpen}` : styles.chevron}
+              data-tip={trayOpen ? "Hide" : "Show hidden icons"}
+              aria-label={trayOpen ? "Hide inactive icons" : "Show hidden icons"}
+              aria-expanded={trayOpen}
+              onClick={() => setTrayOpen((v) => !v)}
+            >
+              <span className={styles.chevronGlyph} aria-hidden />
+            </button>
+          )}
           <div className={styles.trayIcons}>
-            <span className={styles.trayIcon} title="Security Center">
-              <ShieldIcon />
-            </span>
-            <span className={styles.trayIcon} title="Local Area Connection">
-              <NetworkIcon />
-            </span>
+            {(!hideInactive || trayOpen) && (
+              <>
+                <span className={styles.trayIcon} data-tip="Your computer might be at risk">
+                  <ShieldIcon />
+                </span>
+                <span className={styles.trayIcon} data-tip="Local Area Connection - Speed: 100.0 Mbps, Status: Connected">
+                  <NetworkIcon />
+                </span>
+              </>
+            )}
             <button
               type="button"
               className={styles.trayIcon}
-              title={soundOn ? "Volume - click to mute" : "Volume - click to unmute"}
+              data-tip={soundOn ? "Volume" : "Volume (muted)"}
               onClick={() => {
                 toggleSound();
                 /* Played after the toggle, so switching sound *on* is

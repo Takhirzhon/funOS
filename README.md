@@ -62,7 +62,10 @@ mapping and the formats.
 - Desktop wallpaper (Bliss-inspired SVG)
 - Desktop icons with selection + double-click to open
 - Windows: drag, resize, minimize, maximize, close, focus z-ordering
-- Taskbar with Start button, open-window tabs, and clock
+- Taskbar with Start button, open-window tabs with tooltips, the tray chevron that hides inactive icons, and clock
+- Rename in place: F2, click-pause-click, or the menu, on the desktop and in Explorer
+- Drag and drop everywhere: desktop to Explorer, Explorer to desktop (the file lands where it was let go), between Explorer windows and the tree, onto the Recycle Bin
+- Sounds, synthesized: start-up, log off, exit, Critical Stop, Exclamation, the balloon, minimize and restore, the Recycle Bin - and "Windows is shutting down..." before the black screen
 - Two-column XP-style Start Menu
 - Apps:
   - **Notepad** — File / Edit / Help menus, open / save-as against the virtual file system
@@ -74,7 +77,7 @@ mapping and the formats.
   - A guestbook — `deploy/guestbook/` is a second container (one Python file, a JSON file on a volume) that nginx proxies at `/api/guestbook`; `vite dev` and `vite preview` proxy the same path to a copy started by hand (see `vite.config.ts`)
   - A blog — Markdown files in `My Documents\My Blog`, read at `about:blog`, with `rss.xml` and `sitemap.xml` generated from the folder at build time
   - Deep links — `/work`, `/projects`, `/photos`, `/contact`, `/blog`, `/blog/<slug>` open Internet Explorer on that page once the desktop is up, and `/cv` opens the PDF; the address bar follows Internet Explorer while it is open. The mapping is `ROUTES` in `src/apps/ie/site.ts`; a crawler gets the JSON-LD that `portfolio.plugin.ts` writes into `index.html` from `cv.json`, since the pages are drawn inside a window it never opens
-  - **Paint**, **Command Prompt**, **Calculator**, **Minesweeper**, **Solitaire**
+  - **Paint**, **Command Prompt**, **Calculator**, **Minesweeper** (the window is the size of the board), **Solitaire** (drag the cards, or click; double-click sends one home)
   - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze and 3D Text (the owner's name, on three.js, one lazy chunk for both)
   - **System Properties** — right-click My Computer, or Pause: registered to, build from `/health`, what the browser knows about the machine
   - **Run…** — `notepad`, `calc`, `mspaint`, `sol`, `winmine`, `sysdm.cpl`, `taskmgr`, a path, or an address

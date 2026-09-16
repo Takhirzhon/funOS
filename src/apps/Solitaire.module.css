@@ -60,6 +60,8 @@
   border: 1px solid #4a4a4a;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   cursor: default;
+  /* The drag is pointer events; the browser must not turn it into a scroll. */
+  touch-action: none;
   /* Cards are flipped by rotating them, so both faces have to be positioned in
    * the same box and only one of them visible at a time. */
   transform-style: preserve-3d;
@@ -133,6 +135,34 @@
   font-size: 22px;
   line-height: 1;
   opacity: 0.9;
+}
+
+/* The foundation's outline carries its suit, so you know which is which
+ * before an Ace has gone up. */
+.slotSuit {
+  display: block;
+  padding-top: 34px;
+  text-align: center;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* A card in flight is gone from its pile, not copied. */
+.lifted {
+  visibility: hidden;
+}
+
+/* The run being dragged: over every window, and not something the pointer
+ * can land on, so the drop hit-tests the pile beneath it. */
+.flight {
+  position: fixed;
+  width: 71px;
+  z-index: 100000;
+  pointer-events: none;
+}
+
+.flight .card {
+  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.45);
 }
 
 .selected {

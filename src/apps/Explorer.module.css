@@ -216,6 +216,10 @@
   display: flex;
   cursor: default;
   align-items: center;
+  /* A button does not start a native drag in Chromium, draggable or not,
+   * until it is told to; without this the file could be picked up in a
+   * test that dispatches the events and never with a real mouse. */
+  -webkit-user-drag: element;
 }
 
 .icons .item,

@@ -14,14 +14,32 @@ import { create } from "zustand";
  * gesture is clicking the user tile to log in, which is exactly when the chime
  * should play anyway.
  */
-export type Voice = "startup" | "ding" | "click" | "shutdown";
+export type Voice =
+  | "startup"
+  | "shutdown"
+  | "logoff"
+  | "ding"
+  | "critical"
+  | "exclamation"
+  | "notify"
+  | "click"
+  | "minimize"
+  | "restore"
+  | "recycle";
 
 /** What each voice is called in Sounds and Audio Devices' event list. */
 export const VOICE_EVENTS: Record<Voice, string> = {
   startup: "Start Windows",
   shutdown: "Exit Windows",
+  logoff: "Log Off Windows",
   ding: "Default Beep",
+  critical: "Critical Stop",
+  exclamation: "Exclamation",
+  notify: "System Notification",
   click: "Start Navigation",
+  minimize: "Minimize",
+  restore: "Restore Up",
+  recycle: "Empty Recycle Bin",
 };
 
 const ENABLED_KEY = "funos.sound";
@@ -59,7 +77,17 @@ function audio(): AudioContext | null {
   return context;
 }
 
-type Note = { freq: number; at: number; length: number; gain: number; type?: OscillatorType };
+type Note = {
+  freq: number;
+  at: number;
+  length: number;
+  gain: number;
+  type?: OscillatorType;
+  /** Slides to this pitch over the note's length: the swoosh of a window going down. */
+  to?: number;
+  /** White noise through a band around `freq` instead of a tone: paper crumpling. */
+  noise?: boolean;
+};
 
 /* The startup chime is four notes over a low pad: a rising third, a fifth, and
  * the octave. It is not the real one - it is the shape of the real one, which
@@ -78,12 +106,55 @@ const VOICES: Record<Voice, Note[]> = {
     { freq: 659.25, at: 0.18, length: 0.5, gain: 0.09 },
     { freq: 440.0, at: 0.36, length: 0.9, gain: 0.09 },
   ],
+  /* Log Off is Exit Windows' little sibling: the same fall, quicker. */
+  logoff: [
+    { freq: 659.25, at: 0, length: 0.3, gain: 0.09 },
+    { freq: 523.25, at: 0.14, length: 0.3, gain: 0.09 },
+    { freq: 392.0, at: 0.28, length: 0.6, gain: 0.08 },
+  ],
   ding: [
     { freq: 987.77, at: 0, length: 0.35, gain: 0.12 },
     { freq: 1318.51, at: 0.02, length: 0.3, gain: 0.07 },
   ],
+  /* Critical Stop is two low knocks, the sound of a red X. Nothing else on
+   * the desktop is this low, which is the point: you know it is an error
+   * with the window still behind another one. */
+  critical: [
+    { freq: 196.0, at: 0, length: 0.16, gain: 0.16 },
+    { freq: 130.81, at: 0.14, length: 0.42, gain: 0.16 },
+  ],
+  /* Exclamation: a short rise. Something to look at, not something wrong. */
+  exclamation: [
+    { freq: 587.33, at: 0, length: 0.14, gain: 0.11 },
+    { freq: 880.0, at: 0.12, length: 0.3, gain: 0.1 },
+  ],
+  /* The balloon's two-note chime, up and away. */
+  notify: [
+    { freq: 1046.5, at: 0, length: 0.14, gain: 0.07 },
+    { freq: 1318.51, at: 0.1, length: 0.3, gain: 0.07 },
+  ],
   click: [{ freq: 2200, at: 0, length: 0.03, gain: 0.04, type: "square" }],
+  /* Minimize and Restore Up are the same swoosh, one falling, one rising. */
+  minimize: [{ freq: 900, to: 260, at: 0, length: 0.14, gain: 0.05, type: "sine" }],
+  restore: [{ freq: 260, to: 900, at: 0, length: 0.14, gain: 0.05, type: "sine" }],
+  /* Paper going into a wastebasket: a burst of noise with a bit of a crunch. */
+  recycle: [
+    { freq: 1800, at: 0, length: 0.12, gain: 0.12, noise: true },
+    { freq: 900, at: 0.08, length: 0.22, gain: 0.1, noise: true },
+  ],
 };
+
+let noiseBuffer: AudioBuffer | null = null;
+
+/** A second of white noise, made once. */
+function noise(ctx: AudioContext): AudioBuffer {
+  if (noiseBuffer) return noiseBuffer;
+  const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+  noiseBuffer = buffer;
+  return buffer;
+}
 
 type SoundStore = {
   enabled: boolean;
@@ -135,19 +206,34 @@ export const useSoundStore = create<SoundStore>((set, get) => ({
 
     const now = ctx.currentTime;
     for (const note of VOICES[voice]) {
-      const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = note.type ?? "triangle";
-      osc.frequency.value = note.freq;
+      const start = now + note.at;
 
       /* An envelope, not a bare on/off. A square-edged note clicks at both
        * ends, and the click is louder than the note. */
-      const start = now + note.at;
       gain.gain.setValueAtTime(0, start);
       gain.gain.linearRampToValueAtTime(note.gain * get().volume, start + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + note.length);
+      gain.connect(ctx.destination);
 
-      osc.connect(gain).connect(ctx.destination);
+      if (note.noise) {
+        const src = ctx.createBufferSource();
+        src.buffer = noise(ctx);
+        const band = ctx.createBiquadFilter();
+        band.type = "bandpass";
+        band.frequency.value = note.freq;
+        band.Q.value = 0.7;
+        src.connect(band).connect(gain);
+        src.start(start);
+        src.stop(start + note.length + 0.05);
+        continue;
+      }
+
+      const osc = ctx.createOscillator();
+      osc.type = note.type ?? "triangle";
+      osc.frequency.setValueAtTime(note.freq, start);
+      if (note.to) osc.frequency.exponentialRampToValueAtTime(note.to, start + note.length);
+      osc.connect(gain);
       osc.start(start);
       osc.stop(start + note.length + 0.05);
     }

@@ -73,10 +73,10 @@ export function TaskbarProperties({ windowId }: Props) {
             <fieldset className={styles.group}>
               <legend>Notification area</legend>
               <Box id="tb-clock" label="Show the clock" checked={shell.showClock} onChange={(v) => shell.set({ showClock: v })} />
-              <Box id="tb-inactive" label="Hide inactive icons" checked={false} disabled />
+              <Box id="tb-inactive" label="Hide inactive icons" checked={shell.hideInactive} onChange={(v) => shell.set({ hideInactive: v })} />
               <p className={styles.blurb}>
                 You can keep the notification area uncluttered by hiding icons that you have not clicked
-                recently. There are three; none of them is inactive.
+                recently. The arrow next to the clock shows them again.
               </p>
             </fieldset>
           </>

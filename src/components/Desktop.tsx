@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -25,6 +26,8 @@ import {
 } from "../store/desktopStore";
 import { useMenuStore } from "../store/menuStore";
 import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
+import { RenameBox } from "./RenameBox";
+import { commitRename, mayRename } from "../fs/rename";
 import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
 import { showBalloon } from "../store/balloonStore";
@@ -34,11 +37,10 @@ import { COARSE, useMediaQuery } from "../hooks/useMediaQuery";
 import { DESKTOP_DIR, RECYCLE_BIN } from "../fs/seed";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
-import { accessDenied, containsSystemPath } from "../fs/system";
 import { dropPathAt, useDndStore } from "../store/dndStore";
 import { getDragPaths, isPathDrag } from "../fs/dnd";
 import { moveInto } from "../fs/move";
-import { basename } from "../fs/path";
+import { basename, isInside, join } from "../fs/path";
 import { entryIcon } from "../fs/icons";
 import { CV_PATH, urlForPath } from "../apps/ie/site";
 import { useWallpaperStyle } from "../store/wallpaper";
@@ -77,7 +79,28 @@ export function Desktop() {
   const blurWindows = useWindowStore((s) => s.blur);
   const focusedWindow = useWindowStore((s) => s.focusedId);
   const entries = useFsStore((s) => s.entries);
-  const rename = useFsStore((s) => s.rename);
+  /* The path whose name is being edited in place, if any. */
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const beginRename = useCallback(
+    (path: string) => {
+      void mayRename(path).then((ok) => {
+        if (ok) setRenaming(path);
+      });
+    },
+    []
+  );
+  /* Click, pause, click on a selected icon's name opens the box - XP's
+   * other way in, and the one people find by accident. A click on the name
+   * of the icon that was already the selection starts a short timer; a
+   * double-click, which is what a quick second click was, cancels it. */
+  const wasSole = useRef(false);
+  const renameTimer = useRef<number | undefined>(undefined);
+  const labelClick = (item: Item) => (e: ReactMouseEvent<HTMLSpanElement>) => {
+    if (item.kind !== "file" || coarse || lastMoved.current || e.ctrlKey || e.shiftKey) return;
+    if (!wasSole.current) return;
+    window.clearTimeout(renameTimer.current);
+    renameTimer.current = window.setTimeout(() => beginRename(item.id), 450);
+  };
   const uniquePath = useFsStore((s) => s.uniquePath);
   const positions = useDesktopStore((s) => s.positions);
   const selection = useDesktopStore((s) => s.selection);
@@ -337,6 +360,7 @@ export function Desktop() {
     selected: selectedFiles,
     folder: DESKTOP_DIR,
     onDeleted: (paths) => select(selection.filter((id) => !paths.includes(id))),
+    onRename: (path) => beginRename(path),
   });
 
   const targetsFor = (path: string) =>
@@ -379,6 +403,7 @@ export function Desktop() {
     } else {
       next = [id];
     }
+    wasSole.current = selection.length === 1 && selection[0] === id;
     select(next);
     dragRef.current = {
       id,
@@ -501,19 +526,7 @@ export function Desktop() {
       {
         kind: "item",
         label: "Rename",
-        onClick: () => {
-          void (async () => {
-            if (containsSystemPath(item.entry.path)) {
-              await accessDenied("rename", item.entry.path);
-              return;
-            }
-            const next = await promptDialog("Rename", "New name:", item.label);
-            if (next === null) return;
-            if (rename(item.entry.path, next) === null) {
-              void errorDialog("Rename", "That name is already taken, or is not a legal name.");
-            }
-          })();
-        },
+        onClick: () => beginRename(item.entry.path),
       },
       {
         kind: "item",
@@ -560,6 +573,17 @@ export function Desktop() {
     const internal = getDragPaths(e.dataTransfer);
     if (internal.length) {
       moveInto(internal, DESKTOP_DIR);
+      /* The first one lands where it was let go, the way a dragged icon
+       * does; the rest fall into the free cells after it. A file that was
+       * already on the desktop keeps its cell. */
+      const field = fieldRef.current?.getBoundingClientRect();
+      const first = internal[0];
+      if (field && !isInside(DESKTOP_DIR, first)) {
+        setPosition(
+          join(DESKTOP_DIR, basename(first)),
+          snap({ x: e.clientX - field.left - CELL_W / 2, y: e.clientY - field.top - CELL_H / 2 })
+        );
+      }
       return;
     }
 
@@ -627,7 +651,25 @@ export function Desktop() {
               ghost={item.kind === "file" && isHiddenEntry(item.entry)}
               onPointerDown={beginDrag(item.id)}
               onContextMenu={itemMenu(item)}
-              onOpen={() => openItem(item)}
+              onOpen={() => {
+                window.clearTimeout(renameTimer.current);
+                openItem(item);
+              }}
+              onLabelClick={labelClick(item)}
+              editor={
+                renaming === item.id ? (
+                  <RenameBox
+                    value={item.label}
+                    centered
+                    onCommit={(name) => {
+                      setRenaming(null);
+                      const result = commitRename(item.id, name);
+                      if (result !== item.id) select([result]);
+                    }}
+                    onCancel={() => setRenaming(null)}
+                  />
+                ) : undefined
+              }
               dropPath={item.kind === "app" && item.appId === "recycleBin" ? RECYCLE_BIN : undefined}
               dropTarget={
                 item.kind === "app" &&

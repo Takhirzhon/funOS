@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSessionStore } from "../store/sessionStore";
 import { RestartIcon, ShutdownIcon, StandByIcon, StartLogoIcon } from "../icons";
 import styles from "./Session.module.css";
@@ -137,6 +137,32 @@ export function TurnOffDialog() {
 
 export function GoodbyeScreen() {
   const restart = useSessionStore((s) => s.restart);
+  /* "Windows is shutting down..." on the welcome screen's blue for as long
+   * as the Exit Windows sound takes, and then the black screen. Turning off
+   * was never instant, and the sound over a black screen with the "safe"
+   * message already on it plays like it arrived late. */
+  const [down, setDown] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setDown(true), 2400);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  if (!down) {
+    return (
+      <div className={`${styles.login} ${styles.shuttingDown}`}>
+        <div className={styles.loginTop}>
+          <div className={styles.loginBrand}>
+            <strong>funOS</strong>
+            <span>Professional</span>
+          </div>
+        </div>
+        <div className={styles.loginBand}>
+          <div className={styles.loginPrompt}>Windows is shutting down...</div>
+        </div>
+        <div className={styles.loginBottom} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.goodbye}>

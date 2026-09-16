@@ -99,7 +99,10 @@ export const useSessionStore = create<SessionStore>((set) => ({
     playSound("startup");
     set({ phase: "desktop", turningOff: false });
   },
-  logOff: () => set({ phase: "login", turningOff: false }),
+  logOff: () => {
+    playSound("logoff");
+    set({ phase: "login", turningOff: false });
+  },
 
   askTurnOff: () => set({ turningOff: true }),
   cancelTurnOff: () => set({ turningOff: false }),

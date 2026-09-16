@@ -112,6 +112,16 @@
   color: #dbe6ff;
 }
 
+/* The band without the tile: the message, centred, on its own. */
+.shuttingDown .loginBand {
+  justify-content: center;
+}
+
+.shuttingDown .loginPrompt {
+  margin: 0;
+  font-size: 18px;
+}
+
 .loginBrand {
   text-align: right;
 }

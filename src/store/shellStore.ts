@@ -14,9 +14,11 @@ type Stored = {
   autoHide: boolean;
   quickLaunch: boolean;
   showClock: boolean;
+  /** The tray chevron: icons you have not clicked in a while are tucked away. */
+  hideInactive: boolean;
 };
 
-const DEFAULTS: Stored = { timeZone: "auto", locked: false, autoHide: false, quickLaunch: true, showClock: true };
+const DEFAULTS: Stored = { timeZone: "auto", locked: false, autoHide: false, quickLaunch: true, showClock: true, hideInactive: true };
 
 const validZone = (z: unknown): z is string => {
   if (typeof z !== "string") return false;
@@ -39,6 +41,7 @@ const load = (): Stored => {
       autoHide: p.autoHide === true,
       quickLaunch: p.quickLaunch !== false,
       showClock: p.showClock !== false,
+      hideInactive: p.hideInactive !== false,
     };
   } catch {
     return DEFAULTS;
@@ -61,8 +64,8 @@ export const useShellStore = create<ShellStore>((set, get) => ({
   ...load(),
   set: (patch) => {
     set(patch);
-    const { timeZone, locked, autoHide, quickLaunch, showClock } = { ...get(), ...patch };
-    save({ timeZone, locked, autoHide, quickLaunch, showClock });
+    const { timeZone, locked, autoHide, quickLaunch, showClock, hideInactive } = { ...get(), ...patch };
+    save({ timeZone, locked, autoHide, quickLaunch, showClock, hideInactive });
   },
 }));
 

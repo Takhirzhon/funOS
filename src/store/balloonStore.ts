@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { playSound } from "./soundStore";
 
 /* Balloon tips - the things that popped out of the tray to tell you about
  * unused desktop icons.
@@ -32,6 +33,7 @@ export const useBalloonStore = create<BalloonStore>((set) => ({
     clearTimeout(hideTimer);
     const id = (nextId += 1);
     set({ current: { id, title, body, anchor } });
+    playSound("notify");
     /* Ten seconds, which is XP's. Long enough to read twice and short enough
      * that an ignored balloon goes away on its own. */
     hideTimer = setTimeout(() => {

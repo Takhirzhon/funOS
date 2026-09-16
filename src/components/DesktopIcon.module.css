@@ -84,6 +84,12 @@
   border: 1px solid transparent;
 }
 
+/* Above its neighbours, so a long name in the box is not under the next
+ * icon's label. */
+.editing {
+  z-index: 2;
+}
+
 .selected .label {
   background: #316ac5;
   border: 1px dotted #fff;

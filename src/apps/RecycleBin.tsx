@@ -2,6 +2,7 @@ import { useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { listEntries, useFsStore } from "../store/fsStore";
 import { useMenuStore } from "../store/menuStore";
 import { confirmDialog, errorDialog, propertiesDialog } from "../store/dialogStore";
+import { playSound } from "../store/soundStore";
 import { RECYCLE_BIN } from "../fs/seed";
 import { basename, dirname, display } from "../fs/path";
 import { entryIcon, entryType } from "../fs/icons";
@@ -50,6 +51,7 @@ export function RecycleBin() {
     );
     if (ok) {
       emptyBin();
+      playSound("recycle");
       setSelected(null);
     }
   };

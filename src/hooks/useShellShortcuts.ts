@@ -21,17 +21,19 @@ type Options = {
   folder: string;
   /** Called after a successful delete, so the caller can clear its selection. */
   onDeleted?: (paths: string[]) => void;
+  /** F2, with exactly one thing selected: open the rename box on it. */
+  onRename?: (path: string) => void;
 };
 
-export function useShellShortcuts({ active, selected, folder, onDeleted }: Options) {
+export function useShellShortcuts({ active, selected, folder, onDeleted, onRename }: Options) {
   /* The listener is installed once per activation and reads everything else
    * through a ref. Putting `selected` in the dependency array would tear the
    * listener down and build it up again on every click.
    */
-  const latest = useRef({ selected, folder, onDeleted });
+  const latest = useRef({ selected, folder, onDeleted, onRename });
   useEffect(() => {
-    latest.current = { selected, folder, onDeleted };
-  }, [selected, folder, onDeleted]);
+    latest.current = { selected, folder, onDeleted, onRename };
+  }, [selected, folder, onDeleted, onRename]);
 
   useEffect(() => {
     if (!active) return;
@@ -45,7 +47,7 @@ export function useShellShortcuts({ active, selected, folder, onDeleted }: Optio
       if (useDialogStore.getState().request) return;
       if (useMenuStore.getState().items) return;
 
-      const { selected: paths, folder: target, onDeleted: done } = latest.current;
+      const { selected: paths, folder: target, onDeleted: done, onRename: rename } = latest.current;
       const clipboard = useClipboardStore.getState();
 
       if (e.ctrlKey && !e.altKey) {
@@ -65,6 +67,12 @@ export function useShellShortcuts({ active, selected, folder, onDeleted }: Optio
           pasteInto(target);
           return;
         }
+        return;
+      }
+
+      if (e.key === "F2" && paths.length === 1 && rename) {
+        e.preventDefault();
+        rename(paths[0]);
         return;
       }
 

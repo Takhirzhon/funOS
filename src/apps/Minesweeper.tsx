@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useLayoutEffect, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { MenuBar } from "../components/MenuBar";
+import { useWindowStore } from "../store/windowStore";
+import { useMediaQuery, COMPACT } from "../hooks/useMediaQuery";
 import styles from "./Minesweeper.module.css";
 
 type Level = { name: string; cols: number; rows: number; mines: number };
@@ -88,8 +90,33 @@ function openFrom(board: Cell[], level: Level, start: number): Cell[] {
   return next;
 }
 
-export function Minesweeper() {
+export function Minesweeper({ windowId }: { windowId?: string }) {
   const [level, setLevel] = useState(LEVELS[0]);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const setBounds = useWindowStore((s) => s.setBounds);
+  const compact = useMediaQuery(COMPACT);
+
+  /* The window is the size of the board, as it was: Minesweeper never had
+   * empty space around it, and changing the level changed the window. The
+   * chrome is measured rather than assumed, so the title bar and menu can be
+   * restyled without the board losing its bottom row. */
+  useLayoutEffect(() => {
+    const frame = frameRef.current;
+    const win = frame?.closest<HTMLElement>(".window");
+    const app = frame?.parentElement;
+    if (!frame || !win || !app || !windowId || compact) return;
+    const maximized = useWindowStore.getState().windows.find((w) => w.id === windowId)?.maximized;
+    if (maximized) return;
+    /* Where the board ends inside the app, plus the app's padding, plus
+     * whatever the window wraps around the app. */
+    const a = app.getBoundingClientRect();
+    const f = frame.getBoundingClientRect();
+    const pad = 6;
+    setBounds(windowId, {
+      width: Math.ceil(f.right - a.left + app.scrollLeft + pad + (win.offsetWidth - app.offsetWidth)),
+      height: Math.ceil(f.bottom - a.top + app.scrollTop + pad + (win.offsetHeight - app.offsetHeight)),
+    });
+  }, [level, windowId, compact, setBounds]);
   const [board, setBoard] = useState(() => makeBoard(LEVELS[0]));
   const [status, setStatus] = useState<Status>("ready");
   const [seconds, setSeconds] = useState(0);
@@ -175,7 +202,7 @@ export function Minesweeper() {
         ]}
       />
 
-      <div className={styles.frame}>
+      <div className={styles.frame} ref={frameRef}>
         <div className={styles.head}>
           <span className={styles.counter}>{digits(level.mines - flags)}</span>
           <button type="button" className={styles.face} onClick={() => reset()} title="New game">

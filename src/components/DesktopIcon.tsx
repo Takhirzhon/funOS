@@ -30,6 +30,10 @@ type Props = {
   onDragOver?: (e: ReactDragEvent<HTMLButtonElement>) => void;
   onDragLeave?: (e: ReactDragEvent<HTMLButtonElement>) => void;
   onDrop?: (e: ReactDragEvent<HTMLButtonElement>) => void;
+  /** A click that landed on the name itself, for click-pause-click renaming. */
+  onLabelClick?: (e: ReactMouseEvent<HTMLSpanElement>) => void;
+  /** The rename box, drawn where the name was. */
+  editor?: ReactNode;
 };
 
 /* Selection and position are props, not local state.
@@ -57,11 +61,25 @@ export function DesktopIcon({
   onDragOver,
   onDragLeave,
   onDrop,
+  onLabelClick,
+  editor,
 }: Props) {
   const classes = [styles.icon];
   if (selected || dropTarget) classes.push(styles.selected);
   if (dragging) classes.push(styles.dragging);
   if (cut || ghost) classes.push(styles.cut);
+
+  /* While the name is being edited the icon is a plain box around a text
+   * field, not a button: a text field inside a button is not a thing a
+   * browser has to support, and one of them does not. */
+  if (editor) {
+    return (
+      <div className={`${classes.join(" ")} ${styles.editing}`} style={{ transform: `translate(${x}px, ${y}px)` }}>
+        <span className={styles.glyph}>{icon}</span>
+        {editor}
+      </div>
+    );
+  }
 
   return (
     <button
@@ -81,7 +99,9 @@ export function DesktopIcon({
       }}
     >
       <span className={styles.glyph}>{icon}</span>
-      <span className={styles.label}>{label}</span>
+      <span className={styles.label} onClick={onLabelClick}>
+        {label}
+      </span>
     </button>
   );
 }

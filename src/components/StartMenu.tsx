@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { useSessionStore } from "../store/sessionStore";
 import { apps, appIds, type AppId } from "../apps/registry";
@@ -69,6 +69,17 @@ export function StartMenu({ onClose }: Props) {
   /* Only what still exists. The list is not told about deletions. */
   const recent = recentPaths.map((p) => entries[p]).filter((e) => e !== undefined);
 
+  const hoverTimer = useRef<number | undefined>(undefined);
+  const showAll = (on: boolean) => {
+    window.clearTimeout(hoverTimer.current);
+    setAllOpen(on);
+  };
+  const hover = (on: boolean) => {
+    window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => setAllOpen(on), on ? 250 : 400);
+  };
+  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
+
   const launch = (appId: AppId) => {
     const app = apps[appId];
     open(appId, { title: app.title, bounds: app.defaultSize });
@@ -76,7 +87,14 @@ export function StartMenu({ onClose }: Props) {
   };
 
   return (
-    <div className={styles.menu} onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      className={styles.menu}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        /* A press on anything but All Programs and its list shuts the list. */
+        if (allOpen && !(e.target as HTMLElement).closest(`.${styles.allPrograms}`)) showAll(false);
+      }}
+    >
       <div className={styles.header}>
         <div className={styles.avatar}>U</div>
         <div className={styles.userName}>User</div>
@@ -96,7 +114,17 @@ export function StartMenu({ onClose }: Props) {
 
           <div className={styles.sep} />
 
-          <div className={styles.allPrograms}>
+          <div
+            className={styles.allPrograms}
+            /* The flyout follows the pointer the way XP's did: it opens a
+             * moment after the pointer arrives, stays while the pointer is
+             * on the button or the list, and goes a moment after it leaves
+             * for another item. The delays are what let the pointer cross
+             * the corner between the button and the list without the list
+             * vanishing under it. */
+            onMouseEnter={() => hover(true)}
+            onMouseLeave={() => hover(false)}
+          >
             <button
               type="button"
               className={
@@ -106,13 +134,9 @@ export function StartMenu({ onClose }: Props) {
               }
               /* Opens, never toggles. A tap on a touch screen arrives as a
                * synthetic mouseenter and then a click; a toggle here opened the
-               * flyout and shut it again in the same gesture. XP's button does
-               * not close the list either - the menu closing does that. */
-              onClick={() => setAllOpen(true)}
-              /* Opens on hover as well as on click, like the real one. It does
-               * not close on leave: the flyout is to the right, and the pointer
-               * has to cross the gap to reach it. */
-              onMouseEnter={() => setAllOpen(true)}
+               * flyout and shut it again in the same gesture. A press anywhere
+               * else in the menu is what closes it. */
+              onClick={() => showAll(true)}
             >
               All Programs
               <span className={styles.chevron}>▶</span>

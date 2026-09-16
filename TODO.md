@@ -67,20 +67,13 @@ Ordered by ratio of "makes the place feel alive" to effort.
 Each of these is small. Together they are the difference between "a theme"
 and "that is XP".
 
-- [ ] **Rename in place.** Click a selected icon, pause, click again - or F2 -
-      and the label becomes an edit box on the spot. Both the desktop and
-      Explorer rename through a prompt dialog today, which is what a Mac did.
-- [ ] **The tray chevron.** The arrow that hides inactive icons, and the
-      "Windows can hide inactive icons" balloon the first time. The tray has
-      two icons and no chevron, which is a tray from a fresh install that
-      nobody has used.
-- [ ] **Sounds, the rest of them.** Start-up and ding exist. Check that the
-      Critical Stop plays on an error dialog and not just a ding, and that
-      the shutdown sound plays over GoodbyeScreen - that one is the sound
-      people remember.
-- [ ] **Tooltips on task buttons.** The title bar cuts a long caption with
-      an ellipsis now; the task button still clips, and has no tooltip to
-      show the rest.
+- [ ] **Balloon anchors.** The balloon always points at the clock. It should
+      point at the icon it is about - the speaker for the mute balloon, the
+      chevron for the hidden-icons one - which is a `left` computed from the
+      icon's box and nothing else.
+- [ ] **Solitaire's options.** Draw three, Vegas scoring, the timer, and the
+      card backs to choose from. Draw one with no score is the version
+      nobody actually played.
 
 ---
 
@@ -154,6 +147,12 @@ HTML5 drag and drop, because it is moving a file into a *folder* and has to
 accept files from the host OS. They meet through a `data-drop-path` attribute
 and `document.elementFromPoint`. Converting either one to the other loses
 something real — check `store/dndStore.ts` before trying.
+
+**A `<button>` does not drag in Chromium unless told to.** A draggable button
+starts no native drag with a real mouse - only with synthetic events, which is
+why the headless tests passed for weeks while Explorer-to-desktop did nothing
+for anyone with a hand. `-webkit-user-drag: element` on `.item` is the fix;
+keep it when the item's styles are next rewritten.
 
 ---
 

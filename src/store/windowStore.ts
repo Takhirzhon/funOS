@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { playSound } from "./soundStore";
 import { COMPACT, matches } from "../hooks/useMediaQuery";
 
 export type Bounds = { x: number; y: number; width: number; height: number };
@@ -189,6 +190,7 @@ export const useWindowStore = create<Store>((set, get) => ({
     set((s) => {
       const w = s.windows.find((w) => w.id === id);
       if (!w) return s;
+      if (w.minimized) playSound("restore");
       const newZ = s.topZ + 1;
       return {
         topZ: newZ,
@@ -245,13 +247,15 @@ export const useWindowStore = create<Store>((set, get) => ({
       }),
     })),
 
-  minimize: (id) =>
+  minimize: (id) => {
+    playSound("minimize");
     set((s) => ({
       windows: s.windows.map((w) =>
         w.id === id ? { ...w, minimized: true } : w
       ),
       focusedId: s.focusedId === id ? null : s.focusedId,
-    })),
+    }));
+  },
 
   /* Show the Desktop. Minimizes rather than hides, so the task buttons stay put
    * and clicking one brings its window back - which is what the real button

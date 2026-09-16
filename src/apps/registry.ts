@@ -51,7 +51,7 @@ export type AppComponent = ComponentType<Record<string, unknown>>;
 const app = (load: () => Promise<Record<string, unknown>>, name: string): AppComponent =>
   lazy(async () => ({ default: (await load())[name] as AppComponent }));
 
-type AppDef = {
+export type AppDef = {
   /** Window caption. */
   title: string;
   /** Shorter name for the desktop and the Start menu, where the caption is too long. */
@@ -59,6 +59,8 @@ type AppDef = {
   component: AppComponent;
   icon: IconComponent;
   defaultSize: { width: number; height: number };
+  /** Smaller than the usual floor, for a window that is sized to its content. */
+  minSize?: { width: number; height: number };
   /** Whether it gets a desktop icon. Everything appears in the Start menu. */
   onDesktop: boolean;
 };
@@ -155,7 +157,9 @@ export const apps = {
     label: "Minesweeper",
     component: app(() => import("./Minesweeper"), "Minesweeper"),
     icon: MineIcon,
-    defaultSize: { width: 340, height: 420 },
+    /* The Beginner board; the game resizes its window to the level. */
+    defaultSize: { width: 176, height: 276 },
+    minSize: { width: 120, height: 120 },
     onDesktop: false,
   },
   displayProperties: {

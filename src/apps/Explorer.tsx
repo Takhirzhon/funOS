@@ -3,6 +3,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ButtonHTMLAttributes,
   type DragEvent as ReactDragEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
@@ -13,6 +14,8 @@ import { useThemeStore } from "../store/themeStore";
 import { useMenuStore } from "../store/menuStore";
 import { useDndStore } from "../store/dndStore";
 import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
+import { RenameBox } from "../components/RenameBox";
+import { commitRename, mayRename } from "../fs/rename";
 import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
 import { deletePaths } from "../fs/trash";
@@ -96,7 +99,6 @@ export function Explorer({ path, windowId }: Props) {
   const entries = useFsStore((s) => s.entries);
   const mkdir = useFsStore((s) => s.mkdir);
   const writeFile = useFsStore((s) => s.writeFile);
-  const rename = useFsStore((s) => s.rename);
   const uniquePath = useFsStore((s) => s.uniquePath);
   const openMenu = useMenuStore((s) => s.open);
   /* Highlighting a folder that a *desktop* drag is hovering over. HTML5 drag
@@ -203,22 +205,26 @@ export function Explorer({ path, windowId }: Props) {
     }
   };
 
-  const renameEntry = async (entry: FsEntry) => {
-    if (containsSystemPath(entry.path)) {
-      await accessDenied("rename", entry.path);
-      return;
-    }
-    const next = await promptDialog("Rename", "New name:", basename(entry.path));
-    if (next === null) return;
-    const result = rename(entry.path, next);
-    if (result === null) {
-      void errorDialog(
-        "Rename",
-        `Cannot rename ${basename(entry.path)}: a file with that name already exists, or the name contains an illegal character.`
-      );
-      return;
-    }
-    setSelected([result]);
+  /* Renaming in place: the box over the name, opened from the menu, F2, or
+   * a click on the name of something already selected - after the pause
+   * that says it is not a double-click. */
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const beginRename = (path: string) => {
+    void mayRename(path).then((ok) => {
+      if (ok) setRenaming(path);
+    });
+  };
+  const wasSole = useRef(false);
+  const renameTimer = useRef<number | undefined>(undefined);
+  const labelClick = (entry: FsEntry) => (e: ReactMouseEvent) => {
+    if (coarse || e.ctrlKey || e.shiftKey || !wasSole.current) return;
+    window.clearTimeout(renameTimer.current);
+    renameTimer.current = window.setTimeout(() => beginRename(entry.path), 450);
+  };
+  const finishRename = (path: string, name: string) => {
+    setRenaming(null);
+    const result = commitRename(path, name);
+    if (result !== path) setSelected([result]);
   };
 
   /* The three click gestures of every file list.
@@ -246,6 +252,7 @@ export function Explorer({ path, windowId }: Props) {
       return;
     }
     anchor.current = path;
+    wasSole.current = selected.length === 1 && selected[0] === path;
     setSelected([path]);
   };
 
@@ -264,6 +271,7 @@ export function Explorer({ path, windowId }: Props) {
     selected,
     folder: current,
     onDeleted: (paths) => setSelected((prev) => prev.filter((p) => !paths.includes(p))),
+    onRename: beginRename,
   });
 
   const backgroundMenu = (e: ReactMouseEvent) => {
@@ -322,7 +330,7 @@ export function Explorer({ path, windowId }: Props) {
         onClick: () => pasteInto(entry.path),
       },
       { kind: "separator" },
-      { kind: "item", label: "Rename", onClick: () => void renameEntry(entry) },
+      { kind: "item", label: "Rename", onClick: () => beginRename(entry.path) },
       { kind: "item", label: "Delete", onClick: () => void deleteEntry(entry) },
       ...(entry.mime?.startsWith("image/")
         ? [
@@ -467,7 +475,10 @@ export function Explorer({ path, windowId }: Props) {
       e.stopPropagation();
       selectOn(e, entry.path);
     },
-    onDoubleClick: () => openEntry(entry),
+    onDoubleClick: () => {
+      window.clearTimeout(renameTimer.current);
+      openEntry(entry);
+    },
     /* A finger opens with one tap; see useMediaQuery for why. */
     onClick: coarse ? () => openEntry(entry) : undefined,
     onContextMenu: itemMenu(entry),
@@ -627,20 +638,26 @@ export function Explorer({ path, windowId }: Props) {
                 <span>Date Modified</span>
               </div>
               {items.map((entry) => (
-                <button key={entry.path} {...itemProps(entry)} className={stateClasses(entry, styles.detailRow)}>
+                <ItemRoot key={entry.path} editing={renaming === entry.path} {...itemProps(entry)} className={stateClasses(entry, styles.detailRow)}>
                   <span className={styles.cellName}>
                     {entryIcon(entry, 16)}
-                    <span className={styles.ellipsis}>{basename(entry.path)}</span>
+                    {renaming === entry.path ? (
+                      <RenameBox value={basename(entry.path)} onCommit={(name) => finishRename(entry.path, name)} onCancel={() => setRenaming(null)} />
+                    ) : (
+                      <span className={styles.ellipsis} onClick={labelClick(entry)}>
+                        {basename(entry.path)}
+                      </span>
+                    )}
                   </span>
                   <span className={styles.cellSize}>{sizeLabel(entry)}</span>
                   <span className={styles.ellipsis}>{entryType(entry)}</span>
                   <span className={styles.ellipsis}>{dateLabel(entry.modified)}</span>
-                </button>
+                </ItemRoot>
               ))}
             </>
           ) : (
             items.map((entry) => (
-              <button key={entry.path} {...itemProps(entry)} className={stateClasses(entry, styles.item)}>
+              <ItemRoot key={entry.path} editing={renaming === entry.path} {...itemProps(entry)} className={stateClasses(entry, styles.item)}>
                 <span className={styles.thumb}>
                   {view === "thumbnails" && isBinary(entry) && entry.mime?.startsWith("image/") ? (
                     <img className={styles.preview} src={entry.thumb ?? blobUrlFor(entry)} alt="" loading="lazy" />
@@ -648,8 +665,14 @@ export function Explorer({ path, windowId }: Props) {
                     entryIcon(entry, view === "thumbnails" ? 48 : view === "list" ? 16 : 32)
                   )}
                 </span>
-                <span className={styles.itemLabel}>{basename(entry.path)}</span>
-              </button>
+                {renaming === entry.path ? (
+                  <RenameBox value={basename(entry.path)} centered={view !== "list"} onCommit={(name) => finishRename(entry.path, name)} onCancel={() => setRenaming(null)} />
+                ) : (
+                  <span className={styles.itemLabel} onClick={labelClick(entry)}>
+                    {basename(entry.path)}
+                  </span>
+                )}
+              </ItemRoot>
             ))
           )}
         </div>
@@ -663,6 +686,32 @@ export function Explorer({ path, windowId }: Props) {
         </div>
         <div className={styles.statusField}>My Computer</div>
       </div>
+    </div>
+  );
+}
+
+/* An item is a button, except while its name is being edited, when it is a
+ * box with a text field in it: a field inside a button is not something
+ * every browser will focus. The editing box keeps the item's look and its
+ * drop handlers and drops the click, drag and selection ones. */
+type ItemRootProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  editing: boolean;
+  "data-path"?: string;
+  "data-drop-path"?: string;
+};
+
+function ItemRoot({ editing, children, ...props }: ItemRootProps) {
+  if (!editing) {
+    return (
+      <button type="button" {...props}>
+        {children}
+      </button>
+    );
+  }
+  const { className, style } = props;
+  return (
+    <div className={className} style={style} data-path={props["data-path"]} data-drop-path={props["data-drop-path"]}>
+      {children}
     </div>
   );
 }

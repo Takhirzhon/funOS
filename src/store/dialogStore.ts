@@ -60,7 +60,9 @@ export const useDialogStore = create<DialogStore>((set, get) => ({
       if (previous) previous(null);
       /* The ding belongs to the error dialog rather than to each caller: it is
        * the dialog that is the error, and forty call sites would forget. */
-      if (request.kind === "error") playSound("ding");
+      /* The red X gets Critical Stop; a question gets the Exclamation. */
+      if (request.kind === "error") playSound("critical");
+      else if (request.kind === "confirm") playSound("exclamation");
       set((s) => ({ request, resolve, seq: s.seq + 1 }));
     }),
 

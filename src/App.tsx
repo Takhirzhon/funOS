@@ -1,6 +1,7 @@
 import "./App.css";
 import { Desktop } from "./components/Desktop";
 import { Window } from "./components/Window";
+import { Tooltip } from "./components/Tooltip";
 import { Taskbar } from "./components/Taskbar";
 import { ContextMenu } from "./components/ContextMenu";
 import { Dialog } from "./components/Dialog";
@@ -39,6 +40,7 @@ export default function App() {
           should win against everything else on screen. */}
       <Dialog />
       <Balloon />
+      <Tooltip />
       {turningOff && <TurnOffDialog />}
       {/* Above the dialog layer: a screensaver a dialog could cover would be
           one that failed to save the screen. */}

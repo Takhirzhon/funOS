@@ -3,7 +3,7 @@ import { Rnd } from "react-rnd";
 import { TASKBAR_HEIGHT, useWindowStore, type WindowState } from "../store/windowStore";
 import { useMenuStore } from "../store/menuStore";
 import { windowSystemMenu } from "./windowSystemMenu";
-import { apps } from "../apps/registry";
+import { apps, type AppDef } from "../apps/registry";
 import styles from "./Window.module.css";
 
 type Props = { window: WindowState };
@@ -61,7 +61,7 @@ export function Window({ window: w }: Props) {
   const focusedId = useWindowStore((s) => s.focusedId);
   const openMenu = useMenuStore((s) => s.open);
 
-  const app = apps[w.appId as keyof typeof apps];
+  const app = apps[w.appId as keyof typeof apps] as AppDef | undefined;
   if (!app) return null;
   const Body = app.component;
 
@@ -83,8 +83,8 @@ export function Window({ window: w }: Props) {
     <Rnd
       size={{ width: w.bounds.width, height: w.bounds.height }}
       position={{ x: w.bounds.x, y: w.bounds.y }}
-      minWidth={MIN_W}
-      minHeight={MIN_H}
+      minWidth={app?.minSize?.width ?? MIN_W}
+      minHeight={app?.minSize?.height ?? MIN_H}
       bounds="parent"
       dragHandleClassName="title-bar"
       cancel=".title-bar-controls,.title-bar-controls *"
