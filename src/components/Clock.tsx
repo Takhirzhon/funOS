@@ -37,6 +37,7 @@ export function Clock() {
        does; it is the one way most people ever found that dialog. */
     <div
       className={styles.clock}
+      data-tray="clock"
       title={now.toLocaleDateString("en-US", { dateStyle: "full", timeZone: zone })}
       onDoubleClick={() => open("dateTime", { title: apps.dateTime.title, bounds: apps.dateTime.defaultSize })}
     >

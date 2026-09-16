@@ -13,7 +13,9 @@ export type Balloon = {
   id: number;
   title: string;
   body: string;
-  /** Which tray icon it points at, so the tail lands under the right one. */
+  /** The `data-tray` name of the icon it points at, so the tail lands under
+   * that one: "volume", "chevron", "clock". Anything else, or nothing, is
+   * the clock. */
   anchor?: string;
 };
 

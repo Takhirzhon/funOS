@@ -1,0 +1,41 @@
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #000;
+}
+
+/* The emulator draws its canvas into this and sizes it to the box, keeping
+ * DOOM's 4:3; the box takes everything above the hint. */
+.screen {
+  flex: 1;
+  min-height: 0;
+  outline: none;
+}
+
+.note {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: #c0c0c0;
+  font: 11px var(--font-ui);
+  text-align: center;
+  pointer-events: none;
+}
+
+.hint {
+  flex: none;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 8px;
+  background: var(--luna-face);
+  border-top: 1px solid #d5d2c4;
+  font-size: 10px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -62,18 +62,6 @@ Ordered by ratio of "makes the place feel alive" to effort.
       clock's 12/24-hour format; Power Options could own the screen saver's
       timer. Each is an afternoon and each is a window somebody opened.
 
-## The details nobody asks for and everybody notices
-
-Each of these is small. Together they are the difference between "a theme"
-and "that is XP".
-
-- [ ] **Balloon anchors.** The balloon always points at the clock. It should
-      point at the icon it is about - the speaker for the mute balloon, the
-      chevron for the hidden-icons one - which is a `left` computed from the
-      icon's box and nothing else.
-- [ ] **Solitaire's options.** Draw three, Vegas scoring, the timer. Draw
-      one with no score is the version nobody actually played.
-
 ---
 
 ## Constraints that are still binding
@@ -146,6 +134,13 @@ HTML5 drag and drop, because it is moving a file into a *folder* and has to
 accept files from the host OS. They meet through a `data-drop-path` attribute
 and `document.elementFromPoint`. Converting either one to the other loses
 something real — check `store/dndStore.ts` before trying.
+
+**DOOM is not in the bundle, and must not be.** js-dos (DOSBox in
+WebAssembly, GPL-2.0) and the shareware `doom.jsdos` live under `public/doom/`
+as plain files, loaded by `src/apps/Doom.tsx` with script tags the first time
+the window opens. Importing the emulator would put two megabytes through the
+chunk budget and fail CI; the game is id's shareware, redistributable as
+shipped, and is the only thing under `public/` that is not ours.
 
 **A `<button>` does not drag in Chromium unless told to.** A draggable button
 starts no native drag with a real mouse - only with synthetic events, which is

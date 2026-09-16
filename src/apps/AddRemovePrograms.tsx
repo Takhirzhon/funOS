@@ -16,6 +16,7 @@ import styles from "./AddRemovePrograms.module.css";
 const SIZES: Partial<Record<AppId, string>> = {
   paint: "2.4 KB",
   solitaire: "2.1 KB",
+  doom: "4.2 MB",
   explorer: "3.7 KB",
   internetExplorer: "7.0 KB",
   mediaPlayer: "2.1 KB",

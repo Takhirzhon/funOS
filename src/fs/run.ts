@@ -21,6 +21,7 @@ const PROGRAMS: Record<string, AppId> = {
   cmd: "commandPrompt",
   command: "commandPrompt",
   sol: "solitaire",
+  doom: "doom",
   winmine: "minesweeper",
   explorer: "explorer",
   wmplayer: "mediaPlayer",

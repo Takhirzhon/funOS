@@ -3,6 +3,7 @@ import { RecycleBinAppIcon } from "./appIcons";
 import {
   CalculatorIcon,
   CardsIcon,
+  DoomIcon,
   DateTimeIcon,
   AudioDevicesIcon,
   TaskbarStartMenuIcon,
@@ -259,6 +260,15 @@ export const apps = {
     component: app(() => import("./Solitaire"), "Solitaire"),
     icon: CardsIcon,
     defaultSize: { width: 700, height: 520 },
+    onDesktop: false,
+  },
+  doom: {
+    title: "DOOM",
+    label: "DOOM",
+    component: app(() => import("./Doom"), "Doom"),
+    icon: DoomIcon,
+    /* 640 by 400 of game, the hint line, and the frame. */
+    defaultSize: { width: 648, height: 466 },
     onDesktop: false,
   },
   calculator: {

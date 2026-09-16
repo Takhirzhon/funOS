@@ -77,7 +77,7 @@ export function Taskbar() {
       } catch {
         /* Private mode. */
       }
-      showBalloon("Windows hides inactive icons", "Click the arrow next to the clock to show the icons that you have not used in a while.");
+      showBalloon("Windows hides inactive icons", "Click the arrow next to the clock to show the icons that you have not used in a while.", "chevron");
     }, 60_000);
     return () => window.clearTimeout(t);
   }, [hideInactive]);
@@ -268,6 +268,7 @@ export function Taskbar() {
             <button
               type="button"
               className={trayOpen ? `${styles.chevron} ${styles.chevronOpen}` : styles.chevron}
+              data-tray="chevron"
               data-tip={trayOpen ? "Hide" : "Show hidden icons"}
               aria-label={trayOpen ? "Hide inactive icons" : "Show hidden icons"}
               aria-expanded={trayOpen}
@@ -279,10 +280,10 @@ export function Taskbar() {
           <div className={styles.trayIcons}>
             {(!hideInactive || trayOpen) && (
               <>
-                <span className={styles.trayIcon} data-tip="Your computer might be at risk">
+                <span className={styles.trayIcon} data-tray="security" data-tip="Your computer might be at risk">
                   <ShieldIcon />
                 </span>
-                <span className={styles.trayIcon} data-tip="Local Area Connection - Speed: 100.0 Mbps, Status: Connected">
+                <span className={styles.trayIcon} data-tray="network" data-tip="Local Area Connection - Speed: 100.0 Mbps, Status: Connected">
                   <NetworkIcon />
                 </span>
               </>
@@ -290,6 +291,7 @@ export function Taskbar() {
             <button
               type="button"
               className={styles.trayIcon}
+              data-tray="volume"
               data-tip={soundOn ? "Volume" : "Volume (muted)"}
               onClick={() => {
                 toggleSound();
@@ -301,7 +303,8 @@ export function Taskbar() {
                   soundOn ? "Sound is off" : "Sound is on",
                   soundOn
                     ? "Click the speaker again to turn it back on."
-                    : "Sounds are synthesized, not sampled - there is no audio file in this build."
+                    : "Sounds are synthesized, not sampled - there is no audio file in this build.",
+                  "volume"
                 );
               }}
             >

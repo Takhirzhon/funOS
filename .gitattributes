@@ -36,3 +36,7 @@ Dockerfile      text eol=lf
 *.ogg           binary
 *.wav           binary
 *.m4a           binary
+# DOS in the browser: the emulator and the game it runs.
+*.wasm          binary
+*.jsdos         binary
+public/doom/**  -text

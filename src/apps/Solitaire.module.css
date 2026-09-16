@@ -151,6 +151,43 @@
   outline-color: #0a246a;
 }
 
+.optionsRow {
+  display: flex;
+  gap: 10px;
+}
+
+.optionsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 110px;
+  margin: 0;
+  padding: 4px 8px 8px;
+  border: 1px solid #d5d2c4;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.optionsChecks {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+/* Room for the fan of three to the right of the waste. */
+.wasteWide {
+  width: 95px;
+}
+
+.statusField {
+  display: inline-block;
+  min-width: 70px;
+}
+
 .deckButtons {
   display: flex;
   justify-content: flex-end;

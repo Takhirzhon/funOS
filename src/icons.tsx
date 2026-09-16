@@ -160,6 +160,39 @@ export const EmailIcon = ({ size = 28, ...p }: IconProps) => <Xp name="email" si
 
 /* ---- Still drawn ---------------------------------------------------------- */
 
+/* DOOM's: the letters on a slab of the metal every wall in it was made of.
+ * The game's own icon is id's; this is the shape of it. */
+export const DoomIcon = ({ size = 32, style, className }: IconProps) => (
+  <svg viewBox="0 0 32 32" style={box(size, style)} className={className} aria-hidden>
+    <defs>
+      <linearGradient id="doom-slab" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#6b6b6b" />
+        <stop offset="1" stopColor="#242424" />
+      </linearGradient>
+      <linearGradient id="doom-fire" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stopColor="#ffd25a" />
+        <stop offset="0.45" stopColor="#ff6a00" />
+        <stop offset="1" stopColor="#8c0d00" />
+      </linearGradient>
+    </defs>
+    <rect x="2" y="3" width="28" height="26" rx="2" fill="url(#doom-slab)" stroke="#111" />
+    <rect x="3.5" y="4.5" width="25" height="23" rx="1.5" fill="none" stroke="#8d8d8d" strokeWidth="0.8" opacity="0.6" />
+    <text
+      x="16"
+      y="21.5"
+      textAnchor="middle"
+      fontFamily="Impact, 'Arial Black', sans-serif"
+      fontSize="12.5"
+      fontWeight="900"
+      fill="url(#doom-fire)"
+      stroke="#3a0600"
+      strokeWidth="0.5"
+    >
+      DOOM
+    </text>
+  </svg>
+);
+
 /* Acrobat's document: the same page as every other file, with the red band
  * that made a PDF recognisable across a room in 2004. */
 export const PdfIcon = ({ size = 32, style, className }: IconProps) => (

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { MenuBar } from "../components/MenuBar";
 import styles from "./Solitaire.module.css";
@@ -34,6 +34,42 @@ const at = (col: number, row: number) => ({ backgroundPosition: `${-col * 71}px 
 const faceAt = (card: Card) => at(card.rank - 1, SHEET_ROW[card.suit]);
 const backAt = (back: number) => at(back, 4);
 const MARKER = at(BACKS, 4);
+/* The X: the stock is spent and the rules allow no more passes. */
+const SPENT = at(BACKS + 1, 4);
+
+/* Game > Options, as XP had them. Draw three turns three cards at a time
+ * and fans them; Standard scoring is the one everyone saw; Vegas starts you
+ * fifty-two dollars down and pays five a card, with the passes through the
+ * deck limited to one (draw one) or three (draw three). */
+type Options = {
+  draw: 1 | 3;
+  scoring: "standard" | "vegas" | "none";
+  timed: boolean;
+  /** Vegas: the dollars carry over from deal to deal. */
+  keepScore: boolean;
+};
+const OPTIONS_KEY = "funos.sol.options";
+const DEFAULT_OPTIONS: Options = { draw: 1, scoring: "standard", timed: true, keepScore: false };
+const loadOptions = (): Options => {
+  try {
+    const p = JSON.parse(localStorage.getItem(OPTIONS_KEY) ?? "{}") as Partial<Options>;
+    return {
+      draw: p.draw === 3 ? 3 : 1,
+      scoring: p.scoring === "vegas" || p.scoring === "none" ? p.scoring : "standard",
+      timed: p.timed !== false,
+      keepScore: p.keepScore === true,
+    };
+  } catch {
+    return DEFAULT_OPTIONS;
+  }
+};
+const saveOptions = (o: Options) => {
+  try {
+    localStorage.setItem(OPTIONS_KEY, JSON.stringify(o));
+  } catch {
+    /* Private mode. */
+  }
+};
 
 type Card = {
   id: string;
@@ -115,8 +151,10 @@ const dropAt = (x: number, y: number): Destination | null => {
   return key[0] === "f" ? { to: "foundation", slot: n } : { to: "tableau", column: n };
 };
 
-/* The cards are 71 by 96, XP's size; a run fans down by twenty pixels. */
+/* The cards are 71 by 96, XP's size; a run fans down by twenty pixels, and
+ * a draw of three fans right by twelve. */
 const FAN = 20;
+const WASTE_FAN = 12;
 
 type Drag = {
   source: Source;
@@ -141,6 +179,17 @@ export function Solitaire() {
   const dragRef = useRef<Drag | null>(null);
   const [back, setBack] = useState(loadBack);
   const [choosingBack, setChoosingBack] = useState(false);
+  const [options, setOptions] = useState<Options>(loadOptions);
+  /* The dialog edits a copy; OK applies it. */
+  const [draft, setDraft] = useState<Options | null>(null);
+  const [score, setScore] = useState(() => (loadOptions().scoring === "vegas" ? -52 : 0));
+  const [seconds, setSeconds] = useState(0);
+  /* Passes made through the stock, for Vegas' limit. */
+  const [passes, setPasses] = useState(0);
+  /* How many of the waste's top cards are fanned out: the last draw's,
+   * fewer as they are played. */
+  const [fanned, setFanned] = useState(1);
+  const started = moves > 0 || table.waste.length > 0;
   const chooseBack = (n: number) => {
     setBack(n);
     setChoosingBack(false);
@@ -156,11 +205,69 @@ export function Solitaire() {
     [table.foundations]
   );
 
-  const newGame = () => {
+  const newGame = (next: Options = options) => {
     setTable(deal());
     setSelected(null);
     setMoves(0);
     setFlipping(new Set());
+    setSeconds(0);
+    setPasses(0);
+    setFanned(1);
+    /* Vegas: the ante again, on top of whatever was kept. Anything else
+     * starts from nothing. */
+    setScore((s) => (next.scoring === "vegas" ? (next.keepScore ? s : 0) - 52 : 0));
+  };
+
+  /* The clock: from the first move to the win, a second at a time, and in
+   * Standard scoring two points off every ten seconds - which is what made
+   * people play fast. */
+  useEffect(() => {
+    if (!options.timed || !started || won) return;
+    const t = window.setInterval(() => {
+      setSeconds((s) => {
+        const next = s + 1;
+        if (options.scoring === "standard" && next % 10 === 0) setScore((sc) => sc - 2);
+        return next;
+      });
+    }, 1000);
+    return () => window.clearInterval(t);
+  }, [options.timed, options.scoring, started, won]);
+
+  /** Points for a move, by the scoring in force. */
+  const credit = (source: Source, destination: Destination, turnedOver: boolean) => {
+    if (options.scoring === "none") return;
+    let delta = 0;
+    if (options.scoring === "vegas") {
+      if (destination.to === "foundation") delta += 5;
+      if (source.from === "foundation") delta -= 5;
+    } else {
+      if (destination.to === "foundation") delta += 10;
+      else if (source.from === "waste") delta += 5;
+      if (source.from === "foundation") delta -= 15;
+      if (turnedOver) delta += 5;
+    }
+    /* The last card home wins, and a timed Standard win pays a bonus:
+     * 700,000 over the seconds it took, for anything over half a minute. */
+    if (
+      destination.to === "foundation" &&
+      options.scoring === "standard" &&
+      options.timed &&
+      seconds > 30 &&
+      table.foundations.reduce((n, pile) => n + pile.length, 0) + 1 === 52
+    ) {
+      delta += Math.floor(700000 / seconds);
+    }
+    if (delta) setScore((s) => s + delta);
+  };
+
+  const applyOptions = () => {
+    if (!draft) return;
+    const changed = draft.draw !== options.draw || draft.scoring !== options.scoring;
+    setOptions(draft);
+    saveOptions(draft);
+    setDraft(null);
+    /* The deck and the scoring are the game; changing them is a new one. */
+    if (changed) newGame(draft);
   };
 
   const flip = (id: string) => {
@@ -187,17 +294,27 @@ export function Solitaire() {
     return table.tableau[source.column].slice(source.index);
   };
 
+  /* Vegas allows one pass with draw one and three with draw three; the
+   * others turn the waste over as often as you like, and Standard with draw
+   * one charges a hundred points for it. */
+  const stockSpent = table.stock.length === 0 && options.scoring === "vegas" && passes + 1 >= options.draw;
+
   const drawStock = () => {
     setSelected(null);
+    if (table.stock.length === 0) {
+      if (stockSpent || table.waste.length === 0) return;
+      setPasses((p) => p + 1);
+      if (options.scoring === "standard" && options.draw === 1) setScore((s) => s - 100);
+      setFanned(1);
+      setTable((t) => ({ ...t, stock: [...t.waste].reverse().map((c) => ({ ...c, faceUp: false })), waste: [] }));
+      return;
+    }
+    const n = Math.min(options.draw, table.stock.length);
+    setFanned(n);
     setTable((t) => {
-      if (t.stock.length === 0) {
-        /* Turning the waste back over is unlimited here, as it is in Windows
-         * Solitaire with draw-one. */
-        return { ...t, stock: [...t.waste].reverse().map((c) => ({ ...c, faceUp: false })), waste: [] };
-      }
-      const card = { ...t.stock[t.stock.length - 1], faceUp: true };
-      flip(card.id);
-      return { ...t, stock: t.stock.slice(0, -1), waste: [...t.waste, card] };
+      const drawn = t.stock.slice(-n).reverse().map((c) => ({ ...c, faceUp: true }));
+      drawn.forEach((c) => flip(c.id));
+      return { ...t, stock: t.stock.slice(0, -n), waste: [...t.waste, ...drawn] };
     });
   };
 
@@ -254,6 +371,9 @@ export function Solitaire() {
     }
     if (!fits(cards, destination)) return false;
 
+    if (source.from === "waste") setFanned((f) => Math.max(1, f - 1));
+    const under = source.from === "tableau" ? table.tableau[source.column][source.index - 1] : undefined;
+    credit(source, destination, under !== undefined && !under.faceUp);
     setTable((t) => {
       const stripped = removeFrom(t, source);
       if (destination.to === "foundation") {
@@ -370,7 +490,7 @@ export function Solitaire() {
     setDrag(null);
   };
 
-  const renderCard = (card: Card, source: Source | null, offset: number, key: string) => {
+  const renderCard = (card: Card, source: Source | null, offset: number, key: string, fanX = 0) => {
     const classes = [styles.card];
     if (!card.faceUp) classes.push(styles.down);
     if (flipping.has(card.id)) classes.push(styles.flip);
@@ -384,6 +504,7 @@ export function Solitaire() {
         source={source}
         className={classes.join(" ")}
         offset={offset}
+        fanX={fanX}
         onGrab={grab}
         onMove={move}
         onRelease={release}
@@ -406,8 +527,9 @@ export function Solitaire() {
           {
             label: "Game",
             items: [
-              { label: "Deal", onClick: newGame },
+              { label: "Deal", onClick: () => newGame() },
               { label: "Deck...", onClick: () => setChoosingBack(true) },
+              { label: "Options...", onClick: () => setDraft(options) },
             ],
           },
         ]}
@@ -441,12 +563,59 @@ export function Solitaire() {
         </div>
       )}
 
+      {/* Options: draw, scoring, the clock; the same box as the deck's. */}
+      {draft && (
+        <div className={styles.deckDialog} role="dialog" aria-label="Options">
+          <div className={styles.deckTitle}>Options</div>
+          <div className={styles.optionsRow}>
+            <fieldset className={styles.optionsGroup}>
+              <legend>Draw</legend>
+              <div className={styles.field}>
+                <input type="radio" id="sol-draw1" name="sol-draw" checked={draft.draw === 1} onChange={() => setDraft({ ...draft, draw: 1 })} />
+                <label htmlFor="sol-draw1">Draw one</label>
+              </div>
+              <div className={styles.field}>
+                <input type="radio" id="sol-draw3" name="sol-draw" checked={draft.draw === 3} onChange={() => setDraft({ ...draft, draw: 3 })} />
+                <label htmlFor="sol-draw3">Draw three</label>
+              </div>
+            </fieldset>
+            <fieldset className={styles.optionsGroup}>
+              <legend>Scoring</legend>
+              {(["standard", "vegas", "none"] as const).map((mode) => (
+                <div className={styles.field} key={mode}>
+                  <input type="radio" id={`sol-score-${mode}`} name="sol-score" checked={draft.scoring === mode} onChange={() => setDraft({ ...draft, scoring: mode })} />
+                  <label htmlFor={`sol-score-${mode}`}>{mode === "standard" ? "Standard" : mode === "vegas" ? "Vegas" : "None"}</label>
+                </div>
+              ))}
+            </fieldset>
+          </div>
+          <div className={styles.optionsChecks}>
+            <div className={styles.field}>
+              <input type="checkbox" id="sol-timed" checked={draft.timed} onChange={(e) => setDraft({ ...draft, timed: e.target.checked })} />
+              <label htmlFor="sol-timed">Timed game</label>
+            </div>
+            <div className={styles.field}>
+              <input type="checkbox" id="sol-keep" checked={draft.keepScore} disabled={draft.scoring !== "vegas"} onChange={(e) => setDraft({ ...draft, keepScore: e.target.checked })} />
+              <label htmlFor="sol-keep">Keep score</label>
+            </div>
+          </div>
+          <div className={styles.deckButtons}>
+            <button type="button" onClick={applyOptions}>
+              OK
+            </button>
+            <button type="button" onClick={() => setDraft(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className={styles.table}>
         <div className={styles.top}>
           {/* Stock */}
           <div className={styles.pile} onClick={drawStock}>
             {table.stock.length === 0 ? (
-              <div className={`${styles.slot} ${styles.sheet}`} style={MARKER} />
+              <div className={`${styles.slot} ${styles.sheet}`} style={stockSpent ? SPENT : MARKER} />
             ) : (
               <div className={`${styles.card} ${styles.down}`} style={{ top: 0 }}>
                 <div className={`${styles.face} ${styles.sheet}`} style={backAt(back)} />
@@ -455,12 +624,16 @@ export function Solitaire() {
             )}
           </div>
 
-          {/* Waste */}
-          <div className={styles.pile}>
+          {/* Waste: the last draw fanned to the right, the top one playable. */}
+          <div className={options.draw === 3 ? `${styles.pile} ${styles.wasteWide}` : styles.pile}>
             {table.waste.length === 0 ? (
               <div className={styles.slot} />
             ) : (
-              renderCard(table.waste[table.waste.length - 1], { from: "waste" }, 0, "waste")
+              table.waste
+                .slice(-Math.min(fanned, table.waste.length))
+                .map((card, i, fan) =>
+                  renderCard(card, i === fan.length - 1 ? { from: "waste" } : null, 0, card.id, i * WASTE_FAN)
+                )
             )}
           </div>
 
@@ -522,7 +695,10 @@ export function Solitaire() {
 
       <div className={styles.status}>
         <span>
-          {moves} move{moves === 1 ? "" : "s"}
+          {options.scoring !== "none" && (
+            <span className={styles.statusField}>Score: {options.scoring === "vegas" ? `$${score}` : score}</span>
+          )}
+          {options.timed && <span className={styles.statusField}>Time: {seconds}</span>}
           {won && <span className={styles.win}>You win.</span>}
         </span>
         <span>Drag a card where it goes, or click it and then the pile. Double-click sends it home.</span>
@@ -536,6 +712,7 @@ type CardViewProps = {
   source: Source | null;
   className: string;
   offset: number;
+  fanX?: number;
   onGrab: (e: ReactPointerEvent<HTMLDivElement>, source: Source, card: Card) => void;
   onMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onRelease: (e: ReactPointerEvent<HTMLDivElement>) => void;
@@ -544,12 +721,12 @@ type CardViewProps = {
   back: number;
 };
 
-function CardView({ card, source, className, offset, onGrab, onMove, onRelease, onCancel, onHome, back }: CardViewProps) {
+function CardView({ card, source, className, offset, fanX = 0, onGrab, onMove, onRelease, onCancel, onHome, back }: CardViewProps) {
   return (
     <div
       data-card
       className={className}
-      style={{ top: offset }}
+      style={{ top: offset, left: fanX }}
       onPointerDown={source ? (e) => onGrab(e, source, card) : undefined}
       onPointerMove={onMove}
       onPointerUp={onRelease}
