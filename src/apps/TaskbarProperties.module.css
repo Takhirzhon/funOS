@@ -1,0 +1,131 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+  font-size: 11px;
+}
+
+.tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid #919b9c;
+}
+
+.tab {
+  all: unset;
+  padding: 3px 10px 4px;
+  cursor: default;
+  color: #000;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 100%);
+  border: 1px solid #919b9c;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: -1px;
+}
+
+.tab.active {
+  background: #fff;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #fff;
+}
+
+.page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  background: #fff;
+}
+
+.group {
+  margin: 0 0 12px;
+  padding: 6px 10px 8px;
+  border: 1px solid #d0d0bf;
+  border-radius: 3px;
+}
+
+.group legend {
+  color: #0046d5;
+  padding: 0 3px;
+}
+
+/* A strip of the taskbar, drawn small, so the boxes below have something
+ * to change. */
+.preview {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  margin-bottom: 8px;
+  padding: 0 4px 0 0;
+  background: var(--luna-taskbar);
+  border: 1px solid #0a3290;
+  font-size: 9px;
+  color: #fff;
+}
+
+.previewStart {
+  padding: 0 10px 0 6px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background: var(--luna-start);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  font-weight: bold;
+}
+
+.previewQuick {
+  width: 26px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+.previewTask {
+  width: 60px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+
+.previewTray {
+  margin-left: auto;
+  height: 100%;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0 4px;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+.blurb {
+  margin: 6px 0 4px;
+  line-height: 1.45;
+  color: #333;
+}
+
+.footer {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.footer button {
+  min-width: 75px;
+  height: 23px;
+}

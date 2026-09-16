@@ -56,17 +56,11 @@ this; what is left is content and the places it should be reachable from.
 
 Ordered by ratio of "makes the place feel alive" to effort.
 
-- [ ] **Control Panel's other applets.** Seventeen of the twenty-three say,
-      honestly, what they would have done and that this computer has no such
-      part. Date and Time could set the clock's time zone; Sounds could pick
-      a scheme; Taskbar and Start Menu could lock the taskbar and hide the
-      Quick Launch bar. Each is an afternoon and each is a window somebody
-      opened in 2004.
-- [ ] **Search: the dog.** The Search Companion works and has no animated
-      character in the corner. Rover was optional then too.
-- [ ] **A real track in My Music.** The visualiser has something to draw now;
-      what it draws is a generated ambient sketch. A real one, with the
-      rights to put it here, would be better.
+- [ ] **Control Panel's remaining applets.** Fourteen of the twenty-three
+      still say, honestly, what they would have done. Mouse could set the
+      double-click speed the desktop actually uses; Regional could pick the
+      clock's 12/24-hour format; Power Options could own the screen saver's
+      timer. Each is an afternoon and each is a window somebody opened.
 
 ## The details nobody asks for and everybody notices
 

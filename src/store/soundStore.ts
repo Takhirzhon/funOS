@@ -14,9 +14,27 @@ import { create } from "zustand";
  * gesture is clicking the user tile to log in, which is exactly when the chime
  * should play anyway.
  */
-type Voice = "startup" | "ding" | "click" | "shutdown";
+export type Voice = "startup" | "ding" | "click" | "shutdown";
+
+/** What each voice is called in Sounds and Audio Devices' event list. */
+export const VOICE_EVENTS: Record<Voice, string> = {
+  startup: "Start Windows",
+  shutdown: "Exit Windows",
+  ding: "Default Beep",
+  click: "Start Navigation",
+};
 
 const ENABLED_KEY = "funos.sound";
+const VOLUME_KEY = "funos.sound.volume";
+
+const loadVolume = (): number => {
+  try {
+    const v = Number(localStorage.getItem(VOLUME_KEY));
+    return Number.isFinite(v) && v > 0 && v <= 1 ? v : 1;
+  } catch {
+    return 1;
+  }
+};
 
 const loadEnabled = (): boolean => {
   try {
@@ -69,12 +87,32 @@ const VOICES: Record<Voice, Note[]> = {
 
 type SoundStore = {
   enabled: boolean;
+  /** 0..1, the Volume tab's slider, multiplied into every note. */
+  volume: number;
   toggle: () => void;
+  setEnabled: (enabled: boolean) => void;
+  setVolume: (volume: number) => void;
   play: (voice: Voice) => void;
 };
 
 export const useSoundStore = create<SoundStore>((set, get) => ({
   enabled: loadEnabled(),
+  volume: loadVolume(),
+
+  setEnabled: (enabled) => {
+    if (get().enabled === enabled) return;
+    get().toggle();
+  },
+
+  setVolume: (volume) => {
+    const v = Math.max(0, Math.min(1, volume));
+    set({ volume: v });
+    try {
+      localStorage.setItem(VOLUME_KEY, String(v));
+    } catch {
+      /* Private mode. */
+    }
+  },
 
   toggle: () =>
     set((s) => {
@@ -106,7 +144,7 @@ export const useSoundStore = create<SoundStore>((set, get) => ({
        * ends, and the click is louder than the note. */
       const start = now + note.at;
       gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(note.gain, start + 0.02);
+      gain.gain.linearRampToValueAtTime(note.gain * get().volume, start + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + note.length);
 
       osc.connect(gain).connect(ctx.destination);

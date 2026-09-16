@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { effectiveZone, useShellStore } from "../store/shellStore";
+import { useWindowStore } from "../store/windowStore";
+import { apps } from "../apps/registry";
 import styles from "./Taskbar.module.css";
 
-const fmt = (d: Date) => {
-  const h = d.getHours();
-  const m = d.getMinutes();
-  const ampm = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
+/* "1:23 PM", in the zone Date and Time Properties chose. */
+const fmt = (d: Date, zone: string) => {
+  try {
+    return d.toLocaleTimeString("en-US", { timeZone: zone, hour: "numeric", minute: "2-digit" });
+  } catch {
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }
 };
 
 /* The clock draws no background of its own: it sits inside the tray, and the
@@ -15,6 +19,8 @@ const fmt = (d: Date) => {
  */
 export function Clock() {
   const [now, setNow] = useState(() => new Date());
+  const zone = effectiveZone(useShellStore((s) => s.timeZone));
+  const open = useWindowStore((s) => s.open);
 
   useEffect(() => {
     /* Ticking every 15s rather than every second. The display has minute
@@ -27,8 +33,14 @@ export function Clock() {
   }, []);
 
   return (
-    <div className={styles.clock} title={now.toLocaleDateString(undefined, { dateStyle: "full" })}>
-      {fmt(now)}
+    /* Double-clicking the clock opened Date and Time Properties. It still
+       does; it is the one way most people ever found that dialog. */
+    <div
+      className={styles.clock}
+      title={now.toLocaleDateString("en-US", { dateStyle: "full", timeZone: zone })}
+      onDoubleClick={() => open("dateTime", { title: apps.dateTime.title, bounds: apps.dateTime.defaultSize })}
+    >
+      {fmt(now, zone)}
     </div>
   );
 }

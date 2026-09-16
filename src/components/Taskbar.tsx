@@ -8,6 +8,7 @@ import { apps, type AppId } from "../apps/registry";
 import { StartButton } from "./StartButton";
 import { StartMenu } from "./StartMenu";
 import { Clock } from "./Clock";
+import { useShellStore } from "../store/shellStore";
 import {
   IEIcon,
   NetworkIcon,
@@ -31,6 +32,35 @@ export function Taskbar() {
   const toggleSound = useSoundStore((s) => s.toggle);
   const play = useSoundStore((s) => s.play);
   const [startOpen, setStartOpen] = useState(false);
+  const locked = useShellStore((s) => s.locked);
+  const autoHide = useShellStore((s) => s.autoHide);
+  const quickLaunch = useShellStore((s) => s.quickLaunch);
+  const showClock = useShellStore((s) => s.showClock);
+  /* Auto-hide: the bar slides down to a two-pixel line and comes back when
+   * the pointer reaches the bottom of the screen, or while the Start menu
+   * is open. A short delay before hiding, so crossing the edge to reach a
+   * task button does not snatch it away. */
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (!autoHide) return;
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
+    const onMove = (e: PointerEvent) => {
+      const nearEdge = e.clientY >= document.documentElement.clientHeight - 3;
+      const overBar = e.clientY >= document.documentElement.clientHeight - 30;
+      if (nearEdge) {
+        clearTimeout(hideTimer);
+        setRevealed(true);
+      } else if (!overBar) {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => setRevealed(false), 400);
+      }
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => {
+      clearTimeout(hideTimer);
+      window.removeEventListener("pointermove", onMove);
+    };
+  }, [autoHide]);
 
   /* The taskbar's own menu. Everything here acts on every window at once,
    * which is exactly what distinguishes it from the task button's menu. */
@@ -61,7 +91,7 @@ export function Taskbar() {
       { kind: "item", label: "Show the Desktop", disabled: none, onClick: minimizeAll },
       { kind: "separator" },
       { kind: "item", label: "Task Manager", onClick: () => launch("taskManager") },
-      { kind: "item", label: "Properties", disabled: true },
+      { kind: "item", label: "Properties", onClick: () => launch("taskbarProperties") },
     ]);
   };
 
@@ -120,7 +150,7 @@ export function Taskbar() {
     <>
       {startOpen && <StartMenu onClose={() => setStartOpen(false)} />}
       <div
-        className={styles.bar}
+        className={[styles.bar, autoHide && !revealed && !startOpen ? styles.hidden : ""].join(" ")}
         onMouseDown={(e) => e.stopPropagation()}
         onContextMenu={barMenu}
       >
@@ -130,7 +160,9 @@ export function Taskbar() {
          * entries, which is the only reason Show Desktop is here rather than in
          * the tray: it is a Quick Launch shortcut, not a notification.
          */}
-        <div className={styles.grip} aria-hidden />
+        {quickLaunch && (
+          <>
+        {!locked && <div className={styles.grip} aria-hidden />}
         <div className={styles.quickLaunch}>
           <button
             type="button"
@@ -154,7 +186,9 @@ export function Taskbar() {
             <IEIcon />
           </button>
         </div>
-        <div className={styles.grip} aria-hidden />
+          </>
+        )}
+        {!locked && <div className={styles.grip} aria-hidden />}
 
         <div className={styles.tasks}>
           {windows.map((w) => {
@@ -213,7 +247,7 @@ export function Taskbar() {
               {soundOn ? <VolumeIcon /> : <VolumeMuteIcon />}
             </button>
           </div>
-          <Clock />
+          {showClock && <Clock />}
         </div>
       </div>
     </>

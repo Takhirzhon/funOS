@@ -1,0 +1,160 @@
+.rover {
+  position: relative;
+  width: 150px;
+  margin: 6px auto 0;
+}
+
+/* The speech bubble, over his head. */
+.bubble {
+  position: relative;
+  margin: 0 4px 6px;
+  padding: 5px 7px;
+  background: #fff;
+  border: 1px solid #8a8a7a;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #000;
+  box-shadow: 1px 1px 2px #0002;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  bottom: -7px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid #fff;
+  filter: drop-shadow(0 1px 0 #8a8a7a);
+}
+
+.dog {
+  display: block;
+  width: 104px;
+  height: 95px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+/* The tail wags from its root; the head lifts and turns a little; the
+ * eyes blink every few seconds. Slow while waiting, quick while searching,
+ * and a whole-dog bounce when something is found. */
+.tail {
+  transform-origin: 92px 70px;
+  animation: wag 1.4s ease-in-out infinite;
+}
+
+.head {
+  transform-origin: 50px 60px;
+  animation: idleHead 5s ease-in-out infinite;
+}
+
+.eyes {
+  transform-origin: 50px 38px;
+  animation: blink 4.5s infinite;
+}
+
+.brow {
+  opacity: 0;
+}
+
+.searching .tail {
+  animation-duration: 0.45s;
+}
+
+.searching .head {
+  animation: sniff 0.7s ease-in-out infinite;
+}
+
+.searching .brow {
+  opacity: 1;
+}
+
+.searching .earL,
+.searching .earR {
+  animation: perk 0.7s ease-in-out infinite;
+  transform-origin: 26px 30px;
+}
+
+.searching .earR {
+  transform-origin: 74px 30px;
+}
+
+.found .dog {
+  animation: bounce 0.6s ease-out 2;
+}
+
+.found .tail {
+  animation-duration: 0.35s;
+}
+
+@keyframes wag {
+  from {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+  to {
+    transform: rotate(-14deg);
+  }
+}
+
+@keyframes idleHead {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  80% {
+    transform: rotate(-4deg) translateY(1px);
+  }
+  90% {
+    transform: rotate(3deg) translateY(0);
+  }
+}
+
+@keyframes sniff {
+  0%,
+  100% {
+    transform: rotate(-3deg) translateY(4px);
+  }
+  50% {
+    transform: rotate(3deg) translateY(6px);
+  }
+}
+
+@keyframes perk {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-10deg) translateY(-3px);
+  }
+}
+
+@keyframes blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  70% {
+    transform: translateY(-4px);
+  }
+}

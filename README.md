@@ -68,7 +68,7 @@ mapping and the formats.
   - **Notepad** — File / Edit / Help menus, open / save-as against the virtual file system
   - **Explorer** and **My Computer** — a real file system in IndexedDB, four views, drag and drop, Recycle Bin
   - **Windows Picture Viewer** — with Previous / Next through the folder
-  - **Windows Media Player** — video and audio, the folder is the playlist
+  - **Windows Media Player** — video and audio, the folder is the playlist, Bars for anything without a picture; My Music has Beethoven's Eroica Scherzo by the Czech National Symphony Orchestra (Musopen Symphony, public domain)
   - **PDF Reader** — the browser's renderer in an XP frame, with Save a Copy
   - **Internet Explorer** — the front door: a hand-written `about:me` home page with Work, Projects, Photos, Guestbook and Contact, drawn from `public/portfolio/cv.json` and the files in My Pictures; real sites open in a real tab, and anything else gets "The page cannot be displayed"
   - A guestbook — `deploy/guestbook/` is a second container (one Python file, a JSON file on a volume) that nginx proxies at `/api/guestbook`; `vite dev` and `vite preview` proxy the same path to a copy started by hand (see `vite.config.ts`)
@@ -78,8 +78,8 @@ mapping and the formats.
   - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze and 3D Text (the owner's name, on three.js, one lazy chunk for both)
   - **System Properties** — right-click My Computer, or Pause: registered to, build from `/health`, what the browser knows about the machine
   - **Run…** — `notepad`, `calc`, `mspaint`, `sol`, `winmine`, `sysdm.cpl`, `taskmgr`, a path, or an address
-  - **Control Panel** — classic view, twenty-three applets; Display (themes, desktop background from any picture, screen savers), System, Folder Options, Add or Remove Programs open; the rest say what they would have done
-  - **Search** and **Help and Support** — the Search Companion over the file system, and one help page with the shortcuts
+  - **Control Panel** — classic view, twenty-three applets; Display (themes, desktop background from any picture, screen savers), System, Folder Options, Add or Remove Programs, Date and Time (the clock's zone), Sounds (scheme, volume, the events list), Taskbar and Start Menu (lock, auto-hide, Quick Launch, the clock) open; the rest say what they would have done
+  - **Search** and **Help and Support** — the Search Companion over the file system, with a dog, and one help page with the shortcuts
   - **Task Manager** — Applications (real), Processes (the windows as their .exe names, plus every XP machine's svchost.exe), Performance with a measured CPU graph. Ending csrss.exe does what it did.
   - A blue screen — `crash` at the Command Prompt or in Run, the memory dump, any key to reboot
   - **About funOS**

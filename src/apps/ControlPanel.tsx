@@ -1,7 +1,6 @@
 import { useState, type ComponentType } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { errorDialog } from "../store/dialogStore";
-import { useSoundStore } from "../store/soundStore";
 import { apps, type AppId } from "./registry";
 import { useMediaQuery, COARSE } from "../hooks/useMediaQuery";
 import {
@@ -36,8 +35,8 @@ import styles from "./ControlPanel.module.css";
  * it looked once you had switched it away from the category page - which
  * everyone did.
  *
- * Six of them open something. The rest are here because a Control Panel
- * with six icons is not the Control Panel; each of those says, honestly,
+ * Nine of them open something. The rest are here because a Control Panel
+ * with nine icons is not the Control Panel; each of those says, honestly,
  * what it would have done and that this computer does not have the part.
  */
 type Applet = {
@@ -50,8 +49,6 @@ type Applet = {
 
 export function ControlPanel() {
   const open = useWindowStore((s) => s.open);
-  const soundOn = useSoundStore((s) => s.enabled);
-  const toggleSound = useSoundStore((s) => s.toggle);
   const coarse = useMediaQuery(COARSE);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -63,7 +60,7 @@ export function ControlPanel() {
     { label: "Accessibility Options", blurb: "Adjust your computer settings for vision, hearing, and mobility.", Icon: AccessibilityIcon, open: missing("Accessibility Options", "StickyKeys, FilterKeys, SoundSentry, High Contrast and the rest of the accessibility features.") },
     { label: "Add Hardware", blurb: "Installs and troubleshoots hardware.", Icon: AddHardwareIcon, open: missing("Add Hardware Wizard", "The wizard looks for hardware that is not yet installed.") },
     { label: "Add or Remove Programs", blurb: "Install or remove programs and Windows components.", Icon: AddRemoveProgramsIcon, open: () => launch("addRemovePrograms") },
-    { label: "Date and Time", blurb: "Set the date, time, and time zone for your computer.", Icon: DateTimeIcon, open: () => void errorDialog("Date and Time Properties", `It is ${new Date().toLocaleString()}.\n\nThe clock is your computer's; there is nothing here to set.`) },
+    { label: "Date and Time", blurb: "Set the date, time, and time zone for your computer.", Icon: DateTimeIcon, open: () => launch("dateTime") },
     { label: "Display", blurb: "Change the appearance of your desktop, such as the background, screen saver, colors, font sizes, and screen resolution.", Icon: DisplayPropertiesIcon, open: () => launch("displayProperties") },
     { label: "Folder Options", blurb: "Customize the display of files and folders, change file associations, and make network files available offline.", Icon: FolderOptionsIcon, open: () => launch("folderOptions") },
     { label: "Fonts", blurb: "Add, change, and manage fonts on your computer.", Icon: FontsIcon, open: missing("Fonts", "Tahoma, Trebuchet MS, Franklin Gothic Medium, Verdana, Lucida Console. The ones this desktop draws with.") },
@@ -79,9 +76,9 @@ export function ControlPanel() {
     { label: "Scanners and Cameras", blurb: "Add, remove, and configure scanners and cameras.", Icon: ScannersCamerasIcon, open: missing("Scanners and Cameras", "No scanners or cameras are installed. Pictures arrive by dropping them on the desktop.") },
     { label: "Scheduled Tasks", blurb: "Schedule computer tasks to run automatically.", Icon: ScheduledTasksIcon, open: missing("Scheduled Tasks", "One task: the screen saver, when you have been away for a while.") },
     { label: "Security Center", blurb: "View your current security status and access security settings.", Icon: SecurityCenterIcon, open: () => void errorDialog("Windows Security Center", "Firewall: ON (your browser's). Automatic Updates: ON (every deploy). Virus Protection: not needed - nothing here can run.") },
-    { label: "Sounds and Audio Devices", blurb: "Change the sound scheme for your computer, or configure the settings for your speakers and recording devices.", Icon: AudioDevicesIcon, open: () => { toggleSound(); void errorDialog("Sounds and Audio Devices", `Sounds are now ${soundOn ? "off" : "on"}.\n\nThe speaker in the notification area does the same thing.`); } },
+    { label: "Sounds and Audio Devices", blurb: "Change the sound scheme for your computer, or configure the settings for your speakers and recording devices.", Icon: AudioDevicesIcon, open: () => launch("sounds") },
     { label: "System", blurb: "See information about your computer system, and change settings for hardware, performance, and automatic updates.", Icon: SystemPropertiesIcon, open: () => launch("systemProperties") },
-    { label: "Taskbar and Start Menu", blurb: "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear.", Icon: TaskbarStartMenuIcon, open: missing("Taskbar and Start Menu Properties", "Lock the taskbar, auto-hide, show Quick Launch, Start menu style.") },
+    { label: "Taskbar and Start Menu", blurb: "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear.", Icon: TaskbarStartMenuIcon, open: () => launch("taskbarProperties") },
     { label: "User Accounts", blurb: "Change user account settings and passwords for people who share this computer.", Icon: UserAccountsIcon, open: () => launch("systemProperties") },
   ];
 

@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useFsStore, type FsEntry } from "../store/fsStore";
 import { useWindowStore } from "../store/windowStore";
 import { launchFile } from "../fs/open";
@@ -8,6 +8,7 @@ import { DESKTOP_DIR, HOME, MY_DOCUMENTS } from "../fs/seed";
 import { DRIVE } from "../fs/path";
 import { SearchIcon } from "../icons";
 import { useMediaQuery, COARSE } from "../hooks/useMediaQuery";
+import { Rover } from "./Rover";
 import styles from "./Search.module.css";
 
 /* Search Results - the Search Companion, minus the dog.
@@ -26,6 +27,18 @@ const PLACES: { path: string; label: string }[] = [
   { path: DRIVE, label: "Local Disk (C:)" },
 ];
 
+/* Rover is on by default, and off is remembered - the real one had
+ * "Change preferences > Without an animated screen character", and some
+ * people used it first thing. */
+const ROVER_KEY = "funos.search.rover";
+const loadRover = (): boolean => {
+  try {
+    return localStorage.getItem(ROVER_KEY) !== "0";
+  } catch {
+    return true;
+  }
+};
+
 const sizeLabel = (entry: FsEntry) =>
   entry.kind === "dir" ? "" : `${Math.max(1, Math.ceil(entryBytes(entry) / 1024))} KB`;
 
@@ -38,6 +51,20 @@ export function Search() {
   const [place, setPlace] = useState(MY_DOCUMENTS);
   const [query, setQuery] = useState<{ name: string; phrase: string; place: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [rover, setRover] = useState(loadRover);
+  /* The search is instant; the dog sniffs for a moment anyway, because a
+   * search that takes no time does not look like one. */
+  const [mood, setMood] = useState<"idle" | "searching" | "found">("idle");
+  useEffect(() => {
+    if (mood !== "searching") return;
+    const t = setTimeout(() => setMood("found"), 900);
+    return () => clearTimeout(t);
+  }, [mood]);
+  useEffect(() => {
+    if (mood !== "found") return;
+    const t = setTimeout(() => setMood("idle"), 1500);
+    return () => clearTimeout(t);
+  }, [mood]);
 
   const results = useMemo(() => {
     if (!query) return [];
@@ -55,6 +82,17 @@ export function Search() {
     e.preventDefault();
     setQuery({ name, phrase, place });
     setSelected(null);
+    setMood("searching");
+  };
+
+  const toggleRover = () => {
+    const next = !rover;
+    setRover(next);
+    try {
+      localStorage.setItem(ROVER_KEY, next ? "1" : "0");
+    } catch {
+      /* Private mode. */
+    }
   };
 
   const openResult = (entry: FsEntry) => {
@@ -104,6 +142,24 @@ export function Search() {
         <p className={styles.sideText}>
           A word or phrase looks inside text files only. Pictures, clips and the PDF are found by name.
         </p>
+
+        {rover && (
+          <Rover
+            mood={mood}
+            line={
+              mood === "searching"
+                ? "Searching..."
+                : mood === "found"
+                  ? query && results.length
+                    ? `I found ${results.length} thing${results.length === 1 ? "" : "s"}!`
+                    : "Nothing here. Try another name?"
+                  : "What do you want to search for?"
+            }
+          />
+        )}
+        <button type="button" className={styles.link} onClick={toggleRover}>
+          {rover ? "Without an animated screen character" : "With an animated screen character"}
+        </button>
       </form>
 
       <div className={styles.main}>

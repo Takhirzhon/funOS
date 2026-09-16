@@ -14,6 +14,16 @@
   z-index: 9999;
 }
 
+/* Auto-hide: slid down to a two-pixel line. The transition is the one XP
+ * had - quick, and the same on the way back. */
+.bar {
+  transition: transform 0.15s ease-out;
+}
+
+.hidden {
+  transform: translateY(calc(var(--taskbar-height) - 2px));
+}
+
 /* The highlight along the very top edge. One pixel, drawn over the gradient
  * rather than added as a border so it cannot change the element's height and
  * push the 30px bar to 31.

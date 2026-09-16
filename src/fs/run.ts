@@ -29,6 +29,8 @@ const PROGRAMS: Record<string, AppId> = {
   "desk.cpl": "displayProperties",
   control: "controlPanel",
   "appwiz.cpl": "addRemovePrograms",
+  "timedate.cpl": "dateTime",
+  "mmsys.cpl": "sounds",
   helpctr: "helpAndSupport",
   "sysdm.cpl": "systemProperties",
   winver: "about",
