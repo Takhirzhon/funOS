@@ -14,7 +14,26 @@ import styles from "./Solitaire.module.css";
 const SUITS = ["♠", "♥", "♦", "♣"] as const;
 type Suit = (typeof SUITS)[number];
 
-const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+/* The cards are the bitmaps out of cards.dll, 71 by 96, on one sheet:
+ * four rows of thirteen faces in the DLL's order - clubs, diamonds, hearts,
+ * spades - and a fifth row of the twelve backs and the "O" that marks an
+ * empty stock. Drawn at one pixel per pixel; they were never meant to
+ * scale, and pixelated is what they looked like. */
+const SHEET_ROW: Record<Suit, number> = { "♣": 0, "♦": 1, "♥": 2, "♠": 3 };
+const BACKS = 12;
+const BACK_KEY = "funos.sol.back";
+const loadBack = (): number => {
+  try {
+    const n = Number(localStorage.getItem(BACK_KEY));
+    return Number.isInteger(n) && n >= 0 && n < BACKS ? n : 0;
+  } catch {
+    return 0;
+  }
+};
+const at = (col: number, row: number) => ({ backgroundPosition: `${-col * 71}px ${-row * 96}px` });
+const faceAt = (card: Card) => at(card.rank - 1, SHEET_ROW[card.suit]);
+const backAt = (back: number) => at(back, 4);
+const MARKER = at(BACKS, 4);
 
 type Card = {
   id: string;
@@ -120,6 +139,17 @@ export function Solitaire() {
   const [flipping, setFlipping] = useState<Set<string>>(new Set());
   const [drag, setDrag] = useState<Drag | null>(null);
   const dragRef = useRef<Drag | null>(null);
+  const [back, setBack] = useState(loadBack);
+  const [choosingBack, setChoosingBack] = useState(false);
+  const chooseBack = (n: number) => {
+    setBack(n);
+    setChoosingBack(false);
+    try {
+      localStorage.setItem(BACK_KEY, String(n));
+    } catch {
+      /* Private mode. */
+    }
+  };
 
   const won = useMemo(
     () => table.foundations.every((pile) => pile.length === 13),
@@ -359,6 +389,7 @@ export function Solitaire() {
         onRelease={release}
         onCancel={cancel}
         onHome={sendHome}
+        back={back}
       />
     );
   };
@@ -370,18 +401,56 @@ export function Solitaire() {
 
   return (
     <div className={styles.app}>
-      <MenuBar menus={[{ label: "Game", items: [{ label: "Deal", onClick: newGame }] }]} />
+      <MenuBar
+        menus={[
+          {
+            label: "Game",
+            items: [
+              { label: "Deal", onClick: newGame },
+              { label: "Deck...", onClick: () => setChoosingBack(true) },
+            ],
+          },
+        ]}
+      />
+
+      {/* Select Card Back: the twelve, in a box over the table. */}
+      {choosingBack && (
+        <div className={styles.deckDialog} role="dialog" aria-label="Select Card Back">
+          <div className={styles.deckTitle}>Select Card Back</div>
+          <div className={styles.deckGrid}>
+            {Array.from({ length: BACKS }, (_, n) => (
+              <button
+                key={n}
+                type="button"
+                className={n === back ? `${styles.deckChoice} ${styles.deckChosen}` : styles.deckChoice}
+                onClick={() => chooseBack(n)}
+                aria-label={`Card back ${n + 1}`}
+              >
+                <span className={styles.sheet} style={backAt(n)} />
+              </button>
+            ))}
+          </div>
+          <div className={styles.deckButtons}>
+            <button type="button" onClick={() => setChoosingBack(false)}>
+              OK
+            </button>
+            <button type="button" onClick={() => setChoosingBack(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className={styles.table}>
         <div className={styles.top}>
           {/* Stock */}
           <div className={styles.pile} onClick={drawStock}>
             {table.stock.length === 0 ? (
-              <div className={styles.slot} />
+              <div className={`${styles.slot} ${styles.sheet}`} style={MARKER} />
             ) : (
               <div className={`${styles.card} ${styles.down}`} style={{ top: 0 }}>
-                <div className={styles.face} />
-                <div className={styles.back} />
+                <div className={`${styles.face} ${styles.sheet}`} style={backAt(back)} />
+                <div className={`${styles.back} ${styles.sheet}`} style={backAt(back)} />
               </div>
             )}
           </div>
@@ -405,9 +474,7 @@ export function Solitaire() {
               onClick={(e) => bare(e) && tapPile({ to: "foundation", slot })}
             >
               {pile.length === 0 ? (
-                <div className={styles.slot}>
-                  <span className={styles.slotSuit}>{SUITS[slot]}</span>
-                </div>
+                <div className={styles.slot} />
               ) : (
                 renderCard(pile[pile.length - 1], { from: "foundation", slot }, 0, `f${slot}`)
               )}
@@ -446,7 +513,7 @@ export function Solitaire() {
           <div className={styles.flight} style={{ left: drag.x, top: drag.y }}>
             {drag.cards.map((card, i) => (
               <div key={card.id} className={styles.card} style={{ top: i * FAN }}>
-                <CardFaces card={card} />
+                <CardFaces card={card} back={back} />
               </div>
             ))}
           </div>,
@@ -474,9 +541,10 @@ type CardViewProps = {
   onRelease: (e: ReactPointerEvent<HTMLDivElement>) => void;
   onCancel: () => void;
   onHome: (source: Source) => void;
+  back: number;
 };
 
-function CardView({ card, source, className, offset, onGrab, onMove, onRelease, onCancel, onHome }: CardViewProps) {
+function CardView({ card, source, className, offset, onGrab, onMove, onRelease, onCancel, onHome, back }: CardViewProps) {
   return (
     <div
       data-card
@@ -488,22 +556,16 @@ function CardView({ card, source, className, offset, onGrab, onMove, onRelease, 
       onPointerCancel={onCancel}
       onDoubleClick={() => source && card.faceUp && onHome(source)}
     >
-      <CardFaces card={card} />
+      <CardFaces card={card} back={back} />
     </div>
   );
 }
 
-function CardFaces({ card }: { card: Card }) {
+function CardFaces({ card, back }: { card: Card; back: number }) {
   return (
     <>
-      <div className={`${styles.face} ${isRed(card.suit) ? styles.red : styles.black}`}>
-        <span className={styles.corner}>
-          <span>{RANKS[card.rank - 1]}</span>
-          <span>{card.suit}</span>
-        </span>
-        <span className={styles.pip}>{card.suit}</span>
-      </div>
-      <div className={styles.back} />
+      <div className={`${styles.face} ${styles.sheet}`} style={faceAt(card)} />
+      <div className={`${styles.back} ${styles.sheet}`} style={backAt(back)} />
     </>
   );
 }

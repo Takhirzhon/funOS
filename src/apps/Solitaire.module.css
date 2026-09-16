@@ -1,4 +1,5 @@
 .app {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -49,16 +50,20 @@
 
 /* An empty space: the outline of a card, not a card. */
 .slot {
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid #006000;
+  border-radius: 6px;
+}
+
+/* One tile off the sheet of cards.dll bitmaps, at one pixel per pixel. */
+.sheet {
+  background-image: url("/cards/xp.webp");
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
 }
 
 .card {
   position: absolute;
   left: 0;
-  background: #fff;
-  border: 1px solid #4a4a4a;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   cursor: default;
   /* The drag is pointer events; the browser must not turn it into a scroll. */
   touch-action: none;
@@ -75,30 +80,11 @@
 .back {
   position: absolute;
   inset: 0;
-  border-radius: 4px;
   backface-visibility: hidden;
-  overflow: hidden;
 }
 
-.face {
-  background: #fff;
-  padding: 3px 4px;
-  font-weight: bold;
-  line-height: 1.05;
-}
-
-/* The back pattern, which is the one part of a card you look at most of the
- * game. Two crossed gradients get the blue lattice at a fraction of the cost
- * of a bitmap.
- */
 .back {
   transform: rotateY(180deg);
-  background-color: #2b5fb0;
-  background-image:
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 6px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 6px);
-  border: 3px solid #fff;
-  border-radius: 5px;
 }
 
 .down {
@@ -118,33 +104,62 @@
   }
 }
 
-.red { color: #c00000; }
-.black { color: #000000; }
-
-.corner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1;
-}
-
-.pip {
+/* Select Card Back, as a box over the table rather than a window of its
+ * own: it was modal to the game and nothing else. */
+.deckDialog {
   position: absolute;
-  right: 4px;
-  bottom: 3px;
-  font-size: 22px;
-  line-height: 1;
-  opacity: 0.9;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 8px 10px 10px;
+  background: var(--luna-face);
+  border: 1px solid #0a246a;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
 }
 
-/* The foundation's outline carries its suit, so you know which is which
- * before an Ace has gone up. */
-.slotSuit {
+.deckTitle {
+  margin: -8px -10px 8px;
+  padding: 3px 8px;
+  background: linear-gradient(to right, #0a246a, #a6caf0);
+  color: #fff;
+  font-weight: bold;
+}
+
+.deckGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 71px);
+  gap: 6px;
+}
+
+.deckChoice {
+  all: unset;
+  width: 71px;
+  height: 96px;
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  cursor: default;
+}
+
+.deckChoice .sheet {
   display: block;
-  padding-top: 34px;
-  text-align: center;
-  font-size: 22px;
-  color: rgba(255, 255, 255, 0.35);
+  width: 71px;
+  height: 96px;
+}
+
+.deckChosen {
+  outline-color: #0a246a;
+}
+
+.deckButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.deckButtons button {
+  min-width: 70px;
 }
 
 /* A card in flight is gone from its pile, not copied. */
@@ -165,9 +180,9 @@
   box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.45);
 }
 
-.selected {
-  outline: 2px solid #ffd700;
-  outline-offset: -2px;
+/* The selected card is drawn inverted, which is how the game showed it. */
+.selected .face {
+  filter: invert(1);
 }
 
 .status {

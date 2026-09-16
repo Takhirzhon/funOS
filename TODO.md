@@ -71,9 +71,8 @@ and "that is XP".
       point at the icon it is about - the speaker for the mute balloon, the
       chevron for the hidden-icons one - which is a `left` computed from the
       icon's box and nothing else.
-- [ ] **Solitaire's options.** Draw three, Vegas scoring, the timer, and the
-      card backs to choose from. Draw one with no score is the version
-      nobody actually played.
+- [ ] **Solitaire's options.** Draw three, Vegas scoring, the timer. Draw
+      one with no score is the version nobody actually played.
 
 ---
 
