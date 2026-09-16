@@ -270,7 +270,7 @@ ${items}
 
   /* The pages Internet Explorer has, at the addresses the desktop opens
    * them from. Hand-listed, in step with ROUTES in src/apps/ie/site.ts. */
-  const pages = ["/work", "/projects", "/photos", "/guestbook", "/contact", "/blog", "/blog/archive", "/cv"]
+  const pages = ["/work", "/projects", "/photos", "/guestbook", "/contact", "/blog", "/cv"]
     .map(
       (p) => `  <url>
     <loc>${SITE}${p}</loc>

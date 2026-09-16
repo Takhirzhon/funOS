@@ -643,15 +643,11 @@ export function GuestbookPage({ url }: PageProps) {
   );
 }
 
-/* The blog: My Documents\My Blog, newest first. Each post is a file the
- * visitor can also find in Explorer, which is the point of keeping it there.
- *
- * A year's worth per page. about:blog is the latest year that has anything
- * in it; the archive lists every year with a count, and about:blog/<year>
- * is that year. At one post this is a page with one post and an archive
- * with one line - which is also the shape it keeps at a hundred. */
-const yearOf = (p: { date: string }) => p.date.slice(0, 4);
-
+/* The blog: My Documents\My Blog, newest first, all of it on one page.
+ * Each post is a file the visitor can also find in Explorer, which is the
+ * point of keeping it there. One list, not a year per page: a reader who
+ * has to find and click an archive link is a reader who did not. At a
+ * hundred posts this is a long page, which a blog is. */
 function PostList({ posts }: { posts: ReturnType<typeof usePosts> }) {
   return (
     <>
@@ -668,85 +664,18 @@ function PostList({ posts }: { posts: ReturnType<typeof usePosts> }) {
   );
 }
 
-function BlogFoot({ years, current }: { years: [string, number][]; current?: string }) {
-  return (
-    <p className={styles.small}>
-      {years.length > 1 && (
-        <>
-          Archive:{" "}
-          {years.map(([y, n], i) => (
-            <span key={y}>
-              {i > 0 && " · "}
-              {y === current ? <b>{y}</b> : <A href={`about:blog/${y}`}>{y}</A>} ({n})
-            </span>
-          ))}
-          {" · "}
-        </>
-      )}
-      <A href="about:blog/archive">All posts</A>. Subscribe: <A href="https://khirokhito.tech/rss.xml">rss.xml</A>.
-      The posts are also plain files in My Documents\My Blog.
-    </p>
-  );
-}
-
-const yearsOf = (posts: ReturnType<typeof usePosts>): [string, number][] => {
-  const counts = new Map<string, number>();
-  for (const p of posts) counts.set(yearOf(p), (counts.get(yearOf(p)) ?? 0) + 1);
-  return [...counts.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-};
-
 export function BlogPage({ url }: PageProps) {
   const posts = usePosts();
-  const years = yearsOf(posts);
-  const latest = years[0]?.[0];
-  const shown = latest ? posts.filter((p) => yearOf(p) === latest) : [];
   return (
     <Layout url={url} title="Blog">
       {posts.length === 0 && <p className={styles.p}>Nothing here yet. Check back soon!</p>}
-      <PostList posts={shown} />
-      {posts.length > 0 && <BlogFoot years={years} current={latest} />}
-    </Layout>
-  );
-}
-
-export function BlogYearPage({ url }: PageProps) {
-  const posts = usePosts();
-  const year = url.slice("about:blog/".length);
-  const shown = posts.filter((p) => yearOf(p) === year);
-  if (shown.length === 0) return <CannotDisplayPage url={url} />;
-  return (
-    <Layout url={url} title={`Blog: ${year}`}>
-      <PostList posts={shown} />
-      <BlogFoot years={yearsOf(posts)} current={year} />
-    </Layout>
-  );
-}
-
-export function BlogArchivePage({ url }: PageProps) {
-  const posts = usePosts();
-  const years = yearsOf(posts);
-  return (
-    <Layout url={url} title="Blog archive">
-      {posts.length === 0 && <p className={styles.p}>Nothing here yet.</p>}
-      {years.map(([year, n]) => (
-        <div key={year} className={styles.entry}>
-          <h2 className={styles.h2}>
-            <A href={`about:blog/${year}`}>{year}</A> <span className={styles.entryWhen}>({n})</span>
-          </h2>
-          <ul className={styles.list}>
-            {posts
-              .filter((p) => yearOf(p) === year)
-              .map((p) => (
-                <li key={p.slug}>
-                  <span className={styles.entryWhen}>{longDate(p.date)}</span> &mdash; <A href={postUrl(p)}>{p.title}</A>
-                </li>
-              ))}
-          </ul>
-        </div>
-      ))}
-      <p className={styles.small}>
-        <A href="about:blog">Latest</A>. Subscribe: <A href="https://khirokhito.tech/rss.xml">rss.xml</A>.
-      </p>
+      <PostList posts={posts} />
+      {posts.length > 0 && (
+        <p className={styles.small}>
+          {posts.length} post{posts.length === 1 ? "" : "s"}. Subscribe: <A href="https://khirokhito.tech/rss.xml">rss.xml</A>.
+          The posts are also plain files in My Documents\My Blog.
+        </p>
+      )}
     </Layout>
   );
 }
