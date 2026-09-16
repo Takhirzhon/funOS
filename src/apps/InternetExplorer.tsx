@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useWindowStore } from "../store/windowStore";
 import { errorDialog } from "../store/dialogStore";
+import { playSound } from "../store/soundStore";
 import { MenuBar } from "../components/MenuBar";
 import {
   BackIcon,
@@ -85,6 +86,7 @@ export function InternetExplorer({ url, windowId }: Props) {
   const navigate = (to: string) => {
     const target = normalizeUrl(to);
     setEdited(null);
+    playSound("click");
     if (target === current) {
       setGeneration((g) => g + 1);
       return;
@@ -97,6 +99,7 @@ export function InternetExplorer({ url, windowId }: Props) {
 
   const go = (delta: number) => {
     setEdited(null);
+    playSound("click");
     setHistory((h) => {
       const index = h.index + delta;
       return h.stack[index] ? { ...h, index } : h;

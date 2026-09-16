@@ -7,12 +7,11 @@ import { create } from "zustand";
  * convincing startup chime out of four sine waves and about forty lines, and
  * the file it costs is this one.
  *
- * Muted by default, and not only out of politeness: browsers refuse to start an
- * AudioContext before the page has been interacted with. A desktop that tried
- * to play a chime at load would print a console warning and nothing else, so
- * the first gesture is what creates the context - and on this desktop the first
- * gesture is clicking the user tile to log in, which is exactly when the chime
- * should play anyway.
+ * On by default, as XP's was; the speaker in the tray turns it off. Browsers
+ * refuse to start an AudioContext before the page has been interacted with,
+ * so the first gesture is what creates the context - and on this desktop the
+ * first gesture is clicking the user tile to log in, which is exactly when
+ * the chime should play anyway.
  */
 export type Voice =
   | "startup"
@@ -56,9 +55,9 @@ const loadVolume = (): number => {
 
 const loadEnabled = (): boolean => {
   try {
-    return localStorage.getItem(ENABLED_KEY) === "1";
+    return localStorage.getItem(ENABLED_KEY) !== "0";
   } catch {
-    return false;
+    return true;
   }
 };
 

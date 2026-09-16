@@ -20,6 +20,7 @@ import { useClipboardStore } from "../store/clipboardStore";
 import { pasteInto } from "../fs/clipboard";
 import { deletePaths } from "../fs/trash";
 import { useShellShortcuts } from "../hooks/useShellShortcuts";
+import { playSound } from "../store/soundStore";
 import { COARSE, useMediaQuery } from "../hooks/useMediaQuery";
 import { useWindowStore } from "../store/windowStore";
 import {
@@ -154,6 +155,8 @@ export function Explorer({ path, windowId }: Props) {
   );
 
   const arriveAt = (target: string) => {
+    /* Start Navigation: the click every folder made. */
+    playSound("click");
     setAddress(display(target));
     setSelected([]);
     setExpanded((prev) => new Set([...prev, ...ancestors(target)]));

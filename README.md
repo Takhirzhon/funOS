@@ -65,7 +65,7 @@ mapping and the formats.
 - Taskbar with Start button, open-window tabs with tooltips, the tray chevron that hides inactive icons, and clock; balloons point at the icon they are about
 - Rename in place: F2, click-pause-click, or the menu, on the desktop and in Explorer
 - Drag and drop everywhere: desktop to Explorer, Explorer to desktop (the file lands where it was let go), between Explorer windows and the tree, onto the Recycle Bin
-- Sounds, synthesized: start-up, log off, exit, Critical Stop, Exclamation, the balloon, minimize and restore, the Recycle Bin - and "Windows is shutting down..." before the black screen
+- Sounds, synthesized and on by default (the tray speaker mutes): start-up, log off, exit, Critical Stop, Exclamation, the balloon, Start Navigation on every folder and page, minimize and restore, the Recycle Bin - and "Windows is shutting down..." before the black screen
 - Two-column XP-style Start Menu
 - Apps:
   - **Notepad** — File / Edit / Help menus, open / save-as against the virtual file system
