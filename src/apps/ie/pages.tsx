@@ -3,7 +3,7 @@ import { blobUrlFor, listEntries, useFsStore, type FsEntry } from "../../store/f
 import { DESKTOP_DIR, MY_DOCUMENTS } from "../../fs/seed";
 import { basename, join } from "../../fs/path";
 import { launchFile } from "../../fs/open";
-import { confirmDialog, promptDialog } from "../../store/dialogStore";
+import { confirmDialog, errorDialog, promptDialog } from "../../store/dialogStore";
 import { EMAIL, LINKS, openExternal, useNavigate } from "./site";
 import { postUrl, usePosts } from "../../blog/posts";
 import { Markdown } from "./Markdown";
@@ -436,6 +436,26 @@ const readToken = (): string => {
     return "";
   }
 };
+const storeToken = (t: string) => {
+  try {
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* Private mode: the token lasts the page. */
+  }
+};
+
+/** Whether the server takes this token. "down" when it cannot be asked. */
+async function checkToken(t: string): Promise<boolean | "down"> {
+  try {
+    const r = await fetch(`${GUESTBOOK_API}/owner`, { headers: { Authorization: `Bearer ${t}` } });
+    if (r.ok) return true;
+    if (r.status === 403) return false;
+    return "down";
+  } catch {
+    return "down";
+  }
+}
 
 export function GuestbookPage({ url }: PageProps) {
   const [entries, setEntries] = useState<GuestbookEntry[] | null | "down">(null);
@@ -446,17 +466,47 @@ export function GuestbookPage({ url }: PageProps) {
   const [note, setNote] = useState<string | null>(null);
   const [token, setToken] = useState(readToken);
 
+  /* The token is believed only once the server has taken it: a typo used
+   * to "sign in" and put a Delete on every entry that did nothing. */
   const becomeOwner = async () => {
-    const t = await promptDialog("Guestbook", "The admin token (empty to sign out):", token, "OK");
-    if (t === null) return;
-    try {
-      if (t.trim()) localStorage.setItem(TOKEN_KEY, t.trim());
-      else localStorage.removeItem(TOKEN_KEY);
-    } catch {
-      /* Private mode: the token lasts the page. */
+    const typed = await promptDialog("Guestbook", "The admin token (empty to sign out):", token, "OK");
+    if (typed === null) return;
+    const t = typed.trim();
+    if (!t) {
+      storeToken("");
+      setToken("");
+      return;
     }
-    setToken(t.trim());
+    const ok = await checkToken(t);
+    if (ok === "down") {
+      void errorDialog("Guestbook", "The guestbook server is not answering, so the token cannot be checked.");
+      return;
+    }
+    if (!ok) {
+      void errorDialog("Guestbook", "That is not the token.");
+      return;
+    }
+    storeToken(t);
+    setToken(t);
   };
+
+  /* A token kept from an earlier visit is checked again on the way in, and
+   * dropped if the server no longer takes it. */
+  useEffect(() => {
+    if (!token) return;
+    let live = true;
+    void checkToken(token).then((ok) => {
+      if (live && ok === false) {
+        storeToken("");
+        setToken("");
+      }
+    });
+    return () => {
+      live = false;
+    };
+    /* Once, for the token the page opened with. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const remove = async (id: string) => {
     if (!(await confirmDialog("Guestbook", "Delete this entry? It cannot be restored."))) return;
@@ -466,16 +516,18 @@ export function GuestbookPage({ url }: PageProps) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (r.status === 403) {
-        setNote("The guestbook refused that token.");
+        storeToken("");
+        setToken("");
+        void errorDialog("Guestbook", "The guestbook refused that token. You are signed out.");
         return;
       }
       if (!r.ok) {
-        setNote("The guestbook did not delete that. Try again in a moment.");
+        void errorDialog("Guestbook", "The guestbook did not delete that. Try again in a moment.");
         return;
       }
       setEntries((was) => (Array.isArray(was) ? was.filter((e) => e.id !== id) : was));
     } catch {
-      setNote("The guestbook server is not answering.");
+      void errorDialog("Guestbook", "The guestbook server is not answering.");
     }
   };
 

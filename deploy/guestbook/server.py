@@ -9,6 +9,9 @@ nginx in deploy/nginx.conf at /api/guestbook and is never public on its own.
     GET    /api/guestbook          the last hundred entries, newest first
     POST   /api/guestbook          {"name", "message", "website"} -> the entry
     DELETE /api/guestbook/<id>     Authorization: Bearer $GUESTBOOK_ADMIN_TOKEN
+    GET    /api/guestbook/owner    Authorization: Bearer ...  -> 200, or 403
+                                   (the page checks a token before it
+                                   believes it, so a typo does not sign in)
 
 What keeps it from filling with junk, in order of how much it does:
 
@@ -113,9 +116,16 @@ class Handler(BaseHTTPRequestHandler):
         first = forwarded.split(",")[0].strip()
         return first or self.client_address[0]
 
+    def _is_owner(self) -> bool:
+        auth = self.headers.get("Authorization", "")
+        return bool(TOKEN) and secrets.compare_digest(auth, f"Bearer {TOKEN}")
+
     def do_GET(self) -> None:  # noqa: N802 - http.server's naming
         if self.path == "/health":
             self._json(200, {"status": "ok"})
+            return
+        if self.path.rstrip("/") == "/api/guestbook/owner":
+            self._json(200 if self._is_owner() else 403, {"ok": self._is_owner()})
             return
         if self.path.rstrip("/") != "/api/guestbook":
             self._json(404, {"error": "not found"})
@@ -172,8 +182,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self.path.startswith(prefix):
             self._json(404, {"error": "not found"})
             return
-        auth = self.headers.get("Authorization", "")
-        if not TOKEN or not secrets.compare_digest(auth, f"Bearer {TOKEN}"):
+        if not self._is_owner():
             self._json(403, {"error": "no"})
             return
         entry_id = self.path[len(prefix):]
