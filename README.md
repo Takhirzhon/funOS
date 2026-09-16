@@ -78,7 +78,7 @@ mapping and the formats.
   - A blog — Markdown files in `My Documents\My Blog`, read at `about:blog`, with `rss.xml` and `sitemap.xml` generated from the folder at build time
   - Deep links — `/work`, `/projects`, `/photos`, `/contact`, `/blog`, `/blog/<slug>` open Internet Explorer on that page once the desktop is up, and `/cv` opens the PDF; the address bar follows Internet Explorer while it is open. The mapping is `ROUTES` in `src/apps/ie/site.ts`; a crawler gets the JSON-LD that `portfolio.plugin.ts` writes into `index.html` from `cv.json`, since the pages are drawn inside a window it never opens
   - **Paint**, **Command Prompt**, **Calculator**, **Minesweeper** (the window is the size of the board), **Solitaire** (the cards.dll bitmaps, all twelve backs under Game > Deck; Draw one/three, Standard and Vegas scoring, the timer; drag the cards, or click; double-click sends one home)
-  - **DOOM** — the 1995 shareware episode in DOSBox compiled to WebAssembly (js-dos 7), four megabytes under `/doom/` fetched on first open; keys go to the game only while its window has focus
+  - **DOOM** — on the desktop; the 1995 shareware episode in DOSBox compiled to WebAssembly (js-dos 7), four megabytes under `/doom/` fetched on first open; keys go to the game only while its window has focus
   - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze and 3D Text (the owner's name, on three.js, one lazy chunk for both)
   - **System Properties** — right-click My Computer, or Pause: registered to, build from `/health`, what the browser knows about the machine
   - **Run…** — `notepad`, `calc`, `mspaint`, `sol`, `winmine`, `doom`, `sysdm.cpl`, `taskmgr`, a path, or an address

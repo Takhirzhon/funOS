@@ -262,15 +262,6 @@ export const apps = {
     defaultSize: { width: 700, height: 520 },
     onDesktop: false,
   },
-  doom: {
-    title: "DOOM",
-    label: "DOOM",
-    component: app(() => import("./Doom"), "Doom"),
-    icon: DoomIcon,
-    /* 640 by 400 of game, the hint line, and the frame. */
-    defaultSize: { width: 648, height: 466 },
-    onDesktop: false,
-  },
   calculator: {
     title: "Calculator",
     label: "Calculator",
@@ -285,6 +276,17 @@ export const apps = {
     component: app(() => import("./Notepad"), "Notepad"),
     icon: NotepadIcon,
     defaultSize: { width: 520, height: 380 },
+    onDesktop: true,
+  },
+  doom: {
+    title: "DOOM",
+    label: "DOOM",
+    component: app(() => import("./Doom"), "Doom"),
+    icon: DoomIcon,
+    /* 640 by 400 of game, the hint line, and the frame. */
+    defaultSize: { width: 648, height: 466 },
+    /* On the desktop, after the shortcuts every XP desktop had: the one
+     * icon there that is a game, which is what a 2004 desktop had too. */
     onDesktop: true,
   },
   about: {
