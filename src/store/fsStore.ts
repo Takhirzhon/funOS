@@ -47,6 +47,10 @@ export type FsEntry = {
   url?: string;
   /** Byte length of a `url` file, known from the build. Nothing else sets it. */
   size?: number;
+  /* The Hidden attribute, set from the Properties dialog. Additive, like
+   * `bytes`: an entry written before it existed simply is not hidden, which
+   * is also what it was. */
+  hidden?: boolean;
   /* Where this came from, set only on the top entry of something in the Recycle
    * Bin. Children of a recycled folder do not carry one - restoring the folder
    * brings them with it, and a per-child path would be a second copy of the
@@ -121,6 +125,8 @@ type FsStore = {
 
   /** "New Folder", then "New Folder (2)" - the first free name in `dir`. */
   uniquePath: (dir: string, name: string) => string;
+  /** The Hidden attribute. Refused for system files, like everything else. */
+  setHidden: (path: string, hidden: boolean) => boolean;
 };
 
 /* Writes are batched. Typing in Notepad fires one per keystroke, and each one
@@ -150,26 +156,30 @@ const persist = (entries: Record<string, FsEntry>) => {
  * created. Subscribing to `entries` and calling this is the version that
  * actually updates.
  */
-/* Hidden, by path rather than by a flag on the entry.
+/* Hidden, two ways.
  *
- * There is no way to mark a file hidden from the UI, so a per-entry attribute
- * would be a field nothing ever sets. What actually needs hiding is the
- * machinery - the Recycle Bin's storage - and that lives at a known path. A
- * rule also covers entries that were written to IndexedDB before this existed,
- * where a flag would have needed a migration to reach them.
+ * By path for the machinery - the Recycle Bin's storage lives at a known
+ * place, and a rule reaches entries written before any flag existed. By the
+ * entry's own attribute for everything else, which is the Hidden checkbox in
+ * Properties. "Show hidden files and folders" (store/folderOptions.ts)
+ * reveals the second kind; nothing reveals the first except the bin itself.
  */
 export const isHiddenPath = (path: string): boolean =>
   path === RECYCLE_BIN || isInside(RECYCLE_BIN, path);
 
+export const isHiddenEntry = (entry: FsEntry): boolean => entry.hidden === true || isHiddenPath(entry.path);
+
 export function listEntries(
   entries: Record<string, FsEntry>,
   dir: string,
-  includeHidden = false
+  includeHidden: boolean | "attribute" = false
 ): FsEntry[] {
   const parent = normalize(dir);
   return Object.values(entries)
     .filter((e) => e.path !== parent && dirname(e.path) === parent)
-    .filter((e) => includeHidden || !isHiddenPath(e.path))
+    .filter((e) =>
+      includeHidden === true ? true : includeHidden === "attribute" ? !isHiddenPath(e.path) : !isHiddenEntry(e)
+    )
     .sort(sortEntries);
 }
 
@@ -469,6 +479,18 @@ export const useFsStore = create<FsStore>((set, get) => ({
     }
     set({ entries: next });
     persist(next);
+  },
+
+  setHidden: (path, hidden) => {
+    const target = normalize(path);
+    const { entries } = get();
+    const entry = entries[target];
+    if (!entry || isDriveRoot(target) || isSystemPath(target)) return false;
+    if ((entry.hidden === true) === hidden) return true;
+    const next = { ...entries, [target]: { ...entry, hidden: hidden || undefined } };
+    set({ entries: next });
+    persist(next);
+    return true;
   },
 
   uniquePath: (dir, name) => {

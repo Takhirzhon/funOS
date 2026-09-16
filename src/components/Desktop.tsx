@@ -9,7 +9,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useWindowStore } from "../store/windowStore";
-import { listEntries, useFsStore, type FsEntry } from "../store/fsStore";
+import { isHiddenEntry, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
+import { useFolderOptions } from "../store/folderOptions";
 import { apps, appIds, type AppId } from "../apps/registry";
 import { DesktopIcon } from "./DesktopIcon";
 import {
@@ -34,7 +35,8 @@ import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
 import { accessDenied, containsSystemPath } from "../fs/system";
 import { dropPathAt, useDndStore } from "../store/dndStore";
-import { PATH_MIME } from "../fs/dnd";
+import { getDragPaths, isPathDrag } from "../fs/dnd";
+import { moveInto } from "../fs/move";
 import { basename } from "../fs/path";
 import { entryIcon } from "../fs/icons";
 import { CV_PATH, urlForPath } from "../apps/ie/site";
@@ -49,7 +51,11 @@ type Item =
   | { id: string; kind: "app"; appId: AppId; label: string }
   | { id: string; kind: "file"; entry: FsEntry; label: string };
 
-type Drag = { id: string; offsetX: number; offsetY: number; pos: Pos; moved: boolean };
+/* One gesture, possibly many icons. `id` is the one under the pointer and
+ * `pos` is where it is; `ids` is everything that moves with it - the
+ * selection, when the gesture started on a member of it. The others follow
+ * at the offset they had from the anchor when the drag began. */
+type Drag = { id: string; ids: string[]; offsetX: number; offsetY: number; pos: Pos; moved: boolean };
 type Marquee = { x0: number; y0: number; x1: number; y1: number };
 
 const normaliseRect = (m: Marquee) => ({
@@ -69,7 +75,6 @@ export function Desktop() {
   const blurWindows = useWindowStore((s) => s.blur);
   const focusedWindow = useWindowStore((s) => s.focusedId);
   const entries = useFsStore((s) => s.entries);
-  const move = useFsStore((s) => s.move);
   const rename = useFsStore((s) => s.rename);
   const uniquePath = useFsStore((s) => s.uniquePath);
   const positions = useDesktopStore((s) => s.positions);
@@ -81,6 +86,7 @@ export function Desktop() {
   const setHoverPath = useDndStore((s) => s.setHoverPath);
   const clipboardPaths = useClipboardStore((s) => s.paths);
   const clipboardMode = useClipboardStore((s) => s.mode);
+  const showHidden = useFolderOptions((s) => s.showHidden);
   const cutToClipboard = useClipboardStore((s) => s.cut);
   const copyToClipboard = useClipboardStore((s) => s.copy);
 
@@ -165,7 +171,7 @@ export function Desktop() {
       appId,
       label: apps[appId].label,
     }));
-    const files: Item[] = listEntries(entries, DESKTOP_DIR).map((entry) => ({
+    const files: Item[] = listEntries(entries, DESKTOP_DIR, showHidden ? "attribute" : false).map((entry) => ({
       /* Keyed by path, and shortcuts are keyed by appId. They cannot collide:
        * every path starts with "C:/". */
       id: entry.path,
@@ -174,7 +180,7 @@ export function Desktop() {
       label: basename(entry.path),
     }));
     return [...shortcuts, ...files];
-  }, [entries]);
+  }, [entries, showHidden]);
 
   /* Where each icon goes.
    *
@@ -250,7 +256,7 @@ export function Desktop() {
          * Only a file can land somewhere else: an application shortcut has no
          * path to move, and its id is an app id rather than one starting "C:".
          */
-        setHoverPath(d.id.startsWith("C:") ? dropPathAt(e.clientX, e.clientY) : null);
+        setHoverPath(d.ids.some((id) => id.startsWith("C:")) ? dropPathAt(e.clientX, e.clientY) : null);
         return;
       }
 
@@ -283,26 +289,22 @@ export function Desktop() {
       lastMoved.current = d?.moved ?? false;
       if (d) {
         const target = useDndStore.getState().hoverPath;
-        if (d.moved && target && containsSystemPath(d.id)) {
-          /* It stays; Windows still lets you drag it before saying so. */
-          void accessDenied("move", d.id);
-        } else if (d.moved && target === RECYCLE_BIN) {
-          /* Onto the bin. Recycled rather than moved, so Restore knows where
-           * it came from. */
-          if (useFsStore.getState().recycle(d.id) === null) {
-            void errorDialog("Recycle Bin", `Cannot send '${basename(d.id)}' to the Recycle Bin.`);
-          }
-        } else if (d.moved && target) {
-          /* Dropped into a folder somewhere else on screen. The icon's stored
-           * position is deliberately not updated - it is leaving. */
-          if (useFsStore.getState().move(d.id, target) === null) {
-            void errorDialog(
-              "Move",
-              `Cannot move '${basename(d.id)}' there: something with that name already exists.`
-            );
-          }
+        if (d.moved && target) {
+          /* Dropped into a folder somewhere else on screen - or the bin. The
+           * files go; the shortcuts in the same selection stay where they
+           * were. Stored positions are deliberately not updated: the files
+           * are leaving, and the shortcuts did not move. */
+          moveInto(d.ids.filter((id) => id.startsWith("C:")), target);
         } else if (d.moved) {
-          setPosition(d.id, snap(d.pos));
+          /* Every icon in the gesture moves by the same amount and snaps on
+           * its own. */
+          const anchor = layoutRef.current[d.id];
+          const dx = d.pos.x - anchor.x;
+          const dy = d.pos.y - anchor.y;
+          for (const id of d.ids) {
+            const from = layoutRef.current[id];
+            if (from) setPosition(id, snap({ x: from.x + dx, y: from.y + dy }));
+          }
         }
         dragRef.current = null;
         setDrag(null);
@@ -363,21 +365,27 @@ export function Desktop() {
     const rect = fieldRef.current?.getBoundingClientRect();
     if (!rect) return;
     const pos = layout[id];
+    /* Ctrl adds to the selection; anything else starts a new one. Dragging a
+     * member of a multiple selection must not collapse it to one icon - and
+     * it drags the whole selection. */
+    let next: string[];
+    if (e.ctrlKey) {
+      next = selection.includes(id) ? selection.filter((s) => s !== id) : [...selection, id];
+    } else if (selection.includes(id)) {
+      next = selection;
+    } else {
+      next = [id];
+    }
+    select(next);
     dragRef.current = {
       id,
+      ids: next.includes(id) ? next : [id],
       offsetX: e.clientX - rect.left - pos.x,
       offsetY: e.clientY - rect.top - pos.y,
       pos,
       moved: false,
     };
     setDrag(dragRef.current);
-    /* Ctrl adds to the selection; anything else starts a new one. Dragging a
-     * member of a multiple selection must not collapse it to one icon. */
-    if (e.ctrlKey) {
-      select(selection.includes(id) ? selection.filter((s) => s !== id) : [...selection, id]);
-    } else if (!selection.includes(id)) {
-      select([id]);
-    }
   };
 
   const beginMarquee = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -524,7 +532,7 @@ export function Desktop() {
    * carries real File objects and means "import this".
    */
   const onDragOver = (e: ReactDragEvent<HTMLDivElement>) => {
-    if (!e.dataTransfer.types.includes(PATH_MIME) && !e.dataTransfer.types.includes("Files")) {
+    if (!isPathDrag(e.dataTransfer) && !e.dataTransfer.types.includes("Files")) {
       return;
     }
     e.preventDefault();
@@ -536,16 +544,9 @@ export function Desktop() {
     e.preventDefault();
     setDropActive(false);
 
-    const internal = e.dataTransfer.getData(PATH_MIME);
-    if (internal) {
-      if (containsSystemPath(internal)) {
-        void accessDenied("move", internal);
-      } else if (move(internal, DESKTOP_DIR) === null) {
-        void errorDialog(
-          "Move",
-          `Cannot move '${basename(internal)}' to the desktop: something with that name is already there.`
-        );
-      }
+    const internal = getDragPaths(e.dataTransfer);
+    if (internal.length) {
+      moveInto(internal, DESKTOP_DIR);
       return;
     }
 
@@ -558,7 +559,7 @@ export function Desktop() {
   /* Dropping a file from Explorer onto the Recycle Bin icon. Stops before
    * the field's own handler, which would move the file onto the desktop. */
   const binDragOver = (e: ReactDragEvent<HTMLButtonElement>) => {
-    if (!e.dataTransfer.types.includes(PATH_MIME)) return;
+    if (!isPathDrag(e.dataTransfer)) return;
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
@@ -569,13 +570,7 @@ export function Desktop() {
     e.stopPropagation();
     setBinHover(false);
     setDropActive(false);
-    const source = e.dataTransfer.getData(PATH_MIME);
-    if (!source) return;
-    if (containsSystemPath(source)) {
-      void accessDenied("delete", source);
-    } else if (useFsStore.getState().recycle(source) === null) {
-      void errorDialog("Recycle Bin", `Cannot send '${basename(source)}' to the Recycle Bin.`);
-    }
+    moveInto(getDragPaths(e.dataTransfer), RECYCLE_BIN);
   };
 
   return (
@@ -595,8 +590,14 @@ export function Desktop() {
            * to hit-testing - applied on the first press, the button under the
            * cursor vanishes before pointerup, the click lands on the field, and
            * no double-click ever reaches the icon. */
-          const isDragging = drag?.id === item.id && drag.moved;
-          const pos = isDragging ? drag.pos : layout[item.id];
+          const isDragging = drag !== null && drag.moved && drag.ids.includes(item.id);
+          const pos =
+            isDragging && drag
+              ? {
+                  x: layout[item.id].x + (drag.pos.x - layout[drag.id].x),
+                  y: layout[item.id].y + (drag.pos.y - layout[drag.id].y),
+                }
+              : layout[item.id];
           return (
             <DesktopIcon
               key={item.id}
@@ -610,6 +611,7 @@ export function Desktop() {
               y={pos.y}
               dragging={isDragging}
               cut={clipboardMode === "cut" && clipboardPaths.includes(item.id)}
+              ghost={item.kind === "file" && isHiddenEntry(item.entry)}
               onPointerDown={beginDrag(item.id)}
               onContextMenu={itemMenu(item)}
               onOpen={() => openItem(item)}
@@ -617,7 +619,7 @@ export function Desktop() {
               dropTarget={
                 item.kind === "app" &&
                 item.appId === "recycleBin" &&
-                (binHover || (hoverPath === RECYCLE_BIN && drag?.id !== item.id))
+                (binHover || (hoverPath === RECYCLE_BIN && !drag?.ids.includes(item.id)))
               }
               onDragOver={item.kind === "app" && item.appId === "recycleBin" ? binDragOver : undefined}
               onDragLeave={item.kind === "app" && item.appId === "recycleBin" ? () => setBinHover(false) : undefined}

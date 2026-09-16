@@ -26,14 +26,10 @@ Merging to main deploys, so nothing here counts as done until it is on
 Small leftovers from the parts that are otherwise finished. Each one is a place
 where the shape exists and the behaviour does not.
 
-- [ ] **Marquee selection inside Explorer.** The desktop has it; the file list
-      does not, so a range there needs Shift+click.
-- [ ] **A user-settable hidden attribute.** Hiding is a rule about known system
-      paths, which covers `C:\RECYCLER` and nothing else. A per-entry flag plus
-      a "Show hidden files" toggle is the real version.
-- [ ] **Drag a multiple selection.** Both drag systems move the one item the
-      gesture started on. The clipboard understands a list now; dragging does
-      not.
+- [ ] **Marquee with Ctrl.** Explorer's marquee replaces the selection, or
+      starts from an empty one with Ctrl held; the desktop's replaces it
+      always. XP added to the selection with Ctrl and toggled with it - the
+      rectangle as a modifier, not a reset.
 
 ## Portfolio
 

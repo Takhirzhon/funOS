@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDialogStore, type DialogRequest } from "../store/dialogStore";
-import { listEntries, useFsStore, type FsEntry } from "../store/fsStore";
+import { isHiddenPath, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { basename, dirname, display, isDriveRoot, join, normalize } from "../fs/path";
 import { entryBytes, entryIcon, entryType, formatBytes } from "../fs/icons";
 import { isSystemPath } from "../fs/system";
@@ -220,6 +220,7 @@ function Properties({
 }) {
   const entries = useFsStore((s) => s.entries);
   const targets = request.paths.map((p) => entries[p]).filter(Boolean);
+  const [hidden, setHidden] = useState(() => entries[request.paths[0]]?.hidden === true);
 
   /* A folder's size is everything under it, which is the number Windows shows
    * and the only one anybody opens this dialog to find. Computed for the whole
@@ -286,6 +287,9 @@ function Properties({
   if (single?.mime) rows.push(["Content type:", single.mime]);
   if (single?.restorePath) rows.push(["Origin:", display(single.restorePath)]);
   if (single && isSystemPath(single.path)) rows.push(["Attributes:", "Read-only, System"]);
+  /* The one attribute a visitor can set. Applied on OK, like the real
+   * dialog; Cancel (the X) leaves it. */
+  const canHide = single !== null && !isSystemPath(single.path) && !isHiddenPath(single.path);
   if (single) {
     rows.push(["Created:", new Date(single.created).toLocaleString()]);
     rows.push(["Modified:", new Date(single.modified).toLocaleString()]);
@@ -312,12 +316,38 @@ function Properties({
               <dd>{value}</dd>
             </div>
           ))}
+          {canHide && (
+            <div className={styles.propsRow}>
+              <dt>Attributes:</dt>
+              <dd className={styles.attrs}>
+                <input
+                  type="checkbox"
+                  id="props-hidden"
+                  checked={hidden}
+                  onChange={(e) => setHidden(e.target.checked)}
+                />
+                <label htmlFor="props-hidden">Hidden</label>
+              </dd>
+            </div>
+          )}
         </dl>
 
         <div className={styles.buttons}>
-          <button type="button" onClick={() => close(null)} autoFocus>
+          <button
+            type="button"
+            onClick={() => {
+              if (canHide && single) useFsStore.getState().setHidden(single.path, hidden);
+              close(null);
+            }}
+            autoFocus
+          >
             OK
           </button>
+          {canHide && (
+            <button type="button" onClick={() => close(null)}>
+              Cancel
+            </button>
+          )}
         </div>
       </div>
     </div>

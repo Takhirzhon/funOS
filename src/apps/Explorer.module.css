@@ -155,6 +155,7 @@
 .pane {
   flex: 1;
   min-width: 0;
+  position: relative;
   overflow: auto;
   background: #fff;
   padding: 4px;
@@ -191,6 +192,22 @@
   display: flex;
   flex-direction: column;
   padding: 0;
+}
+
+/* The marquee, as on the desktop: dotted edge, translucent blue fill,
+ * positioned in the pane's scrolled space. */
+.marquee {
+  position: absolute;
+  border: 1px dotted #316ac5;
+  background: rgba(49, 106, 197, 0.2);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* A hidden file, shown: at half strength, so it is visibly not like the
+ * others. Applied to the whole row or tile. */
+.ghost {
+  opacity: 0.55;
 }
 
 .item {

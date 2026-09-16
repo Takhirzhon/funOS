@@ -1,11 +1,14 @@
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
   type DragEvent as ReactDragEvent,
   type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
-import { blobUrlFor, isBinary, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
+import { blobUrlFor, isBinary, isHiddenEntry, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
+import { useFolderOptions } from "../store/folderOptions";
 import { useMenuStore } from "../store/menuStore";
 import { useDndStore } from "../store/dndStore";
 import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
@@ -24,8 +27,9 @@ import {
   isDriveRoot,
   normalize,
 } from "../fs/path";
-import { MY_DOCUMENTS, RECYCLE_BIN } from "../fs/seed";
-import { PATH_MIME } from "../fs/dnd";
+import { MY_DOCUMENTS } from "../fs/seed";
+import { getDragPaths, isPathDrag, setDragPaths } from "../fs/dnd";
+import { moveInto } from "../fs/move";
 import { importFiles } from "../fs/import";
 import { launchFile } from "../fs/open";
 import { accessDenied, containsSystemPath } from "../fs/system";
@@ -91,7 +95,6 @@ export function Explorer({ path, windowId }: Props) {
   const entries = useFsStore((s) => s.entries);
   const mkdir = useFsStore((s) => s.mkdir);
   const writeFile = useFsStore((s) => s.writeFile);
-  const move = useFsStore((s) => s.move);
   const rename = useFsStore((s) => s.rename);
   const uniquePath = useFsStore((s) => s.uniquePath);
   const openMenu = useMenuStore((s) => s.open);
@@ -103,6 +106,8 @@ export function Explorer({ path, windowId }: Props) {
   const clipboardMode = useClipboardStore((s) => s.mode);
   const focusedWindow = useWindowStore((s) => s.focusedId);
   const coarse = useMediaQuery(COARSE);
+  const showHidden = useFolderOptions((s) => s.showHidden);
+  const setShowHidden = useFolderOptions((s) => s.setShowHidden);
   const cutToClipboard = useClipboardStore((s) => s.cut);
   const copyToClipboard = useClipboardStore((s) => s.copy);
 
@@ -118,6 +123,12 @@ export function Explorer({ path, windowId }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   const anchor = useRef<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  /* The marquee: a rectangle dragged out on the pane's background, in the
+   * pane's own scrolled coordinates, selecting whatever it crosses. Mouse
+   * only - on a finger a drag across the pane is a scroll. */
+  const paneRef = useRef<HTMLDivElement>(null);
+  const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
+  const marqueeRef = useRef<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   /* The view, per folder, remembered: XP kept each folder's view and so
    * does this, in localStorage. Thumbnails is the default because a folder
    * of photographs is what most visitors open, and a grid of identical
@@ -134,7 +145,10 @@ export function Explorer({ path, windowId }: Props) {
     () => new Set(ancestors(normalize(path ?? MY_DOCUMENTS)))
   );
 
-  const items = useMemo(() => listEntries(entries, current), [entries, current]);
+  const items = useMemo(
+    () => listEntries(entries, current, showHidden ? "attribute" : false),
+    [entries, current, showHidden]
+  );
 
   const arriveAt = (target: string) => {
     setAddress(display(target));
@@ -318,37 +332,80 @@ export function Explorer({ path, windowId }: Props) {
     ]);
   };
 
-  /* ---- Drag and drop ------------------------------------------------------ */
+  /* ---- Marquee ---------------------------------------------------------- */
 
-  const moveInto = (source: string, folder: string) => {
-    if (containsSystemPath(source)) {
-      void accessDenied("move", source);
+  const beginMarquee = (e: ReactPointerEvent<HTMLDivElement>) => {
+    /* Only from the pane's own background. The items stop mousedown, which
+     * is what the selection listens to; pointerdown still bubbles. */
+    if ((e.target as HTMLElement).closest("[data-path]")) return;
+    if (e.button !== 0 || e.pointerType !== "mouse") {
+      setSelected([]);
       return;
     }
-    if (folder === RECYCLE_BIN) {
-      if (useFsStore.getState().recycle(source) === null) {
-        void errorDialog("Recycle Bin", `Cannot send '${basename(source)}' to the Recycle Bin.`);
-      }
-      return;
-    }
-    if (move(source, folder) === null) {
-      void errorDialog(
-        "Move",
-        `Cannot move '${basename(source)}' here: something with that name already exists, or that folder is inside the one being moved.`
-      );
-    }
+    const pane = paneRef.current;
+    if (!pane) return;
+    const r = pane.getBoundingClientRect();
+    const start = {
+      x0: e.clientX - r.left + pane.scrollLeft,
+      y0: e.clientY - r.top + pane.scrollTop,
+      x1: e.clientX - r.left + pane.scrollLeft,
+      y1: e.clientY - r.top + pane.scrollTop,
+    };
+    marqueeRef.current = start;
+    setMarquee(start);
+    if (!e.ctrlKey) setSelected([]);
   };
 
-  const acceptsDrag = (e: ReactDragEvent) =>
-    e.dataTransfer.types.includes(PATH_MIME) || e.dataTransfer.types.includes("Files");
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const m = marqueeRef.current;
+      const pane = paneRef.current;
+      if (!m || !pane) return;
+      const r = pane.getBoundingClientRect();
+      m.x1 = e.clientX - r.left + pane.scrollLeft;
+      m.y1 = e.clientY - r.top + pane.scrollTop;
+      setMarquee({ ...m });
+
+      /* Hit-test against the items as drawn, in the same scrolled space. */
+      const left = Math.min(m.x0, m.x1);
+      const top = Math.min(m.y0, m.y1);
+      const right = Math.max(m.x0, m.x1);
+      const bottom = Math.max(m.y0, m.y1);
+      const hit: string[] = [];
+      for (const el of pane.querySelectorAll<HTMLElement>("[data-path]")) {
+        const b = el.getBoundingClientRect();
+        const x0 = b.left - r.left + pane.scrollLeft;
+        const y0 = b.top - r.top + pane.scrollTop;
+        if (x0 < right && x0 + b.width > left && y0 < bottom && y0 + b.height > top) {
+          hit.push(el.dataset.path!);
+        }
+      }
+      setSelected(hit);
+    };
+    const onUp = () => {
+      if (!marqueeRef.current) return;
+      marqueeRef.current = null;
+      setMarquee(null);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  /* ---- Drag and drop ------------------------------------------------------ */
+
+  const acceptsDrag = (e: ReactDragEvent) => isPathDrag(e.dataTransfer) || e.dataTransfer.types.includes("Files");
 
   const dropOn = (folder: string) => (e: ReactDragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDropTarget(null);
-    const source = e.dataTransfer.getData(PATH_MIME);
-    if (source) {
-      moveInto(source, folder);
+    const sources = getDragPaths(e.dataTransfer);
+    if (sources.length) {
+      moveInto(sources, folder);
     } else if (e.dataTransfer.files.length) {
       void importFiles(e.dataTransfer.files, folder).then((error) => {
         if (error) void errorDialog("Copy", error);
@@ -370,8 +427,8 @@ export function Explorer({ path, windowId }: Props) {
   const dragProps = (entry: FsEntry) => ({
     draggable: true,
     onDragStart: (e: ReactDragEvent) => {
-      e.dataTransfer.setData(PATH_MIME, entry.path);
-      e.dataTransfer.effectAllowed = "move";
+      /* The whole selection, when the gesture starts on a member of it. */
+      setDragPaths(e.dataTransfer, targetsFor(entry.path));
     },
     /* A drag that landed where nothing accepted it - the toolbar, another
      * program's window - ends with no effect and no word, which for a file
@@ -380,8 +437,9 @@ export function Explorer({ path, windowId }: Props) {
      * for the ones that did not. */
     onDragEnd: (e: ReactDragEvent) => {
       setDropTarget(null);
-      if (e.dataTransfer.dropEffect === "none" && containsSystemPath(entry.path)) {
-        void accessDenied("move", entry.path);
+      const owned = targetsFor(entry.path).find(containsSystemPath);
+      if (e.dataTransfer.dropEffect === "none" && owned) {
+        void accessDenied("move", owned);
       }
     },
     onDragOver: entry.kind === "dir" ? dragOver(entry.path) : undefined,
@@ -393,6 +451,7 @@ export function Explorer({ path, windowId }: Props) {
 
   const itemProps = (entry: FsEntry) => ({
     type: "button" as const,
+    "data-path": entry.path,
     onMouseDown: (e: ReactMouseEvent) => {
       e.stopPropagation();
       selectOn(e, entry.path);
@@ -408,6 +467,9 @@ export function Explorer({ path, windowId }: Props) {
     [
       base,
       selected.includes(entry.path) ? styles.selected : "",
+      /* Shown because the option is on: drawn ghosted, the way XP drew a
+       * hidden file you had asked to see. */
+      isHiddenEntry(entry) ? styles.ghost : "",
       isDropTarget(entry.path) ? styles.dropTarget : "",
       clipboardMode === "cut" && clipboardPaths.includes(entry.path) ? styles.cut : "",
     ].join(" ");
@@ -429,10 +491,16 @@ export function Explorer({ path, windowId }: Props) {
           },
           {
             label: "View",
-            items: (Object.keys(VIEW_LABELS) as ViewMode[]).map((mode) => ({
-              label: view === mode ? `• ${VIEW_LABELS[mode]}` : `   ${VIEW_LABELS[mode]}`,
-              onClick: () => setView(mode),
-            })),
+            items: [
+              ...(Object.keys(VIEW_LABELS) as ViewMode[]).map((mode) => ({
+                label: view === mode ? `• ${VIEW_LABELS[mode]}` : `   ${VIEW_LABELS[mode]}`,
+                onClick: () => setView(mode),
+              })),
+              {
+                label: `${showHidden ? "✓" : "   "} Show hidden files and folders`,
+                onClick: () => setShowHidden(!showHidden),
+              },
+            ],
           },
         ]}
       />
@@ -504,6 +572,7 @@ export function Explorer({ path, windowId }: Props) {
               })
             }
             onSelect={navigate}
+            showHidden={showHidden}
             dropTarget={isDropTarget}
             onDragOverDir={dragOver}
             onDropDir={dropOn}
@@ -517,14 +586,26 @@ export function Explorer({ path, windowId }: Props) {
             styles[view],
             isDropTarget(current) ? styles.dropTarget : "",
           ].join(" ")}
+          ref={paneRef}
           onContextMenu={backgroundMenu}
-          onMouseDown={() => setSelected([])}
+          onPointerDown={beginMarquee}
           onDragOver={dragOver(current)}
           onDragLeave={() => setDropTarget(null)}
           onDrop={dropOn(current)}
           data-drop-path={current}
         >
           {items.length === 0 && <div className={styles.empty}>This folder is empty.</div>}
+          {marquee && (
+            <div
+              className={styles.marquee}
+              style={{
+                left: Math.min(marquee.x0, marquee.x1),
+                top: Math.min(marquee.y0, marquee.y1),
+                width: Math.abs(marquee.x1 - marquee.x0),
+                height: Math.abs(marquee.y1 - marquee.y0),
+              }}
+            />
+          )}
 
           {view === "details" ? (
             <>
@@ -589,13 +670,14 @@ type TreeProps = {
   onDragOverDir: (path: string) => (e: ReactDragEvent) => void;
   onDropDir: (path: string) => (e: ReactDragEvent) => void;
   onDragLeaveDir: () => void;
+  showHidden: boolean;
 };
 
 function TreeNode(props: TreeProps) {
   const { path, depth, entries, current, expanded, onToggle, onSelect } = props;
   const children = useMemo(
-    () => listEntries(entries, path).filter((e) => e.kind === "dir"),
-    [entries, path]
+    () => listEntries(entries, path, props.showHidden ? "attribute" : false).filter((e) => e.kind === "dir"),
+    [entries, path, props.showHidden]
   );
   const isOpen = expanded.has(path);
   const label = isDriveRoot(path) ? `Local Disk (${path})` : basename(path);

@@ -48,6 +48,12 @@
   width: 100%;
 }
 
+.attrs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* "Open:" and its box, on one line under the sentence, the way the real
  * dialog laid them out. */
 .runRow {

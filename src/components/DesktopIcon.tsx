@@ -16,6 +16,8 @@ type Props = {
   dragging: boolean;
   /** On the clipboard, waiting to be pasted somewhere else. */
   cut: boolean;
+  /** Hidden, but shown because the folder option says so: drawn ghosted. */
+  ghost?: boolean;
   onPointerDown: (e: ReactPointerEvent<HTMLButtonElement>) => void;
   onContextMenu: (e: ReactMouseEvent<HTMLButtonElement>) => void;
   onOpen: () => void;
@@ -45,6 +47,7 @@ export function DesktopIcon({
   y,
   dragging,
   cut,
+  ghost,
   onPointerDown,
   onContextMenu,
   onOpen,
@@ -58,7 +61,7 @@ export function DesktopIcon({
   const classes = [styles.icon];
   if (selected || dropTarget) classes.push(styles.selected);
   if (dragging) classes.push(styles.dragging);
-  if (cut) classes.push(styles.cut);
+  if (cut || ghost) classes.push(styles.cut);
 
   return (
     <button
