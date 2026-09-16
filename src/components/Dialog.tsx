@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDialogStore, type DialogRequest } from "../store/dialogStore";
+import { BROWSE, useDialogStore, type DialogRequest } from "../store/dialogStore";
 import { isHiddenPath, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { basename, dirname, display, isDriveRoot, join, normalize } from "../fs/path";
 import { entryBytes, entryIcon, entryType, formatBytes } from "../fs/icons";
@@ -54,17 +54,18 @@ type BodyProps = {
 function Body({ request, close }: BodyProps) {
   if (request.kind === "properties") return <Properties request={request} close={close} />;
   if (request.kind === "file") return <FilePicker request={request} close={close} />;
-  if (request.kind === "run") return <Run close={close} />;
+  if (request.kind === "run") return <Run close={close} initial={request.initial} />;
   return <Message request={request} close={close} />;
 }
 
 /* ---- Run ------------------------------------------------------------------ */
 
 /* The Run box, as it was: the icon, the sentence, "Open:" and a box that
- * remembers what you typed last time. Browse... is greyed - there is one
- * dialog at a time here, and a file picker would replace this one. */
-function Run({ close }: { close: (value: string | boolean | null) => void }) {
-  const [value, setValue] = useState(() => runHistory()[0] ?? "");
+ * remembers what you typed last time. Browse... resolves BROWSE; fs/run.ts
+ * shows the picker and reopens the box with the choice, since there is one
+ * dialog at a time here. */
+function Run({ close, initial }: { close: (value: string | boolean | null) => void; initial?: string }) {
+  const [value, setValue] = useState(() => initial ?? runHistory()[0] ?? "");
   const [history] = useState(runHistory);
 
   const focusInput = useCallback((el: HTMLInputElement | null) => {
@@ -120,7 +121,7 @@ function Run({ close }: { close: (value: string | boolean | null) => void }) {
           <button type="button" onClick={() => close(null)}>
             Cancel
           </button>
-          <button type="button" disabled>
+          <button type="button" onClick={() => close(BROWSE)}>
             Browse...
           </button>
         </div>

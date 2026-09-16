@@ -1,0 +1,106 @@
+/* Classic view: the task pane XP put down the left of every folder, and a
+ * grid of applets on white. */
+.app {
+  display: flex;
+  height: 100%;
+  background: #fff;
+  font-size: 11px;
+}
+
+.side {
+  flex: none;
+  width: 190px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to bottom, #7ba2e7 0%, #6375d6 100%);
+  padding: 10px;
+  gap: 8px;
+  overflow: auto;
+}
+
+.sideHead {
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.sideBody {
+  background: #d6dff7;
+  border: 1px solid #fff;
+  border-radius: 3px;
+  padding: 8px;
+  color: #215dc6;
+}
+
+.sideTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #000;
+  margin-bottom: 6px;
+}
+
+.sideText {
+  margin: 0 0 10px;
+  color: #000;
+  line-height: 1.45;
+}
+
+.link {
+  all: unset;
+  color: #215dc6;
+  cursor: default;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.grid {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 150px);
+  align-content: start;
+  gap: 4px 2px;
+}
+
+.applet {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 150px;
+  padding: 4px 6px;
+  cursor: default;
+  color: #000;
+}
+
+.applet:hover .appletLabel {
+  text-decoration: underline;
+}
+
+.appletLabel {
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.selected .appletLabel {
+  background: #316ac5;
+  color: #fff;
+  padding: 0 2px;
+}
+
+@media (max-width: 700px) {
+  .side {
+    display: none;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, 170px);
+  }
+}

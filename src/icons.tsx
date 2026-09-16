@@ -109,6 +109,27 @@ export const DisplayPropertiesIcon = ({ size = 24, ...p }: IconProps) => <Xp nam
 export const HelpIcon = ({ size = 24, ...p }: IconProps) => <Xp name="help" size={size} {...p} />;
 export const SearchIcon = ({ size = 24, ...p }: IconProps) => <Xp name="search" size={size} {...p} />;
 export const RunIcon = ({ size = 24, ...p }: IconProps) => <Xp name="run" size={size} {...p} />;
+/* Control Panel's applets, at the size the classic view drew them. */
+export const AccessibilityIcon = (p: IconProps) => <Xp name="accessibility" {...p} />;
+export const AddHardwareIcon = (p: IconProps) => <Xp name="add-hardware" {...p} />;
+export const AddRemoveProgramsIcon = (p: IconProps) => <Xp name="add-remove-programs" {...p} />;
+export const AudioDevicesIcon = (p: IconProps) => <Xp name="audio-devices" {...p} />;
+export const DateTimeIcon = (p: IconProps) => <Xp name="date-time" {...p} />;
+export const FolderOptionsIcon = (p: IconProps) => <Xp name="folder-options" {...p} />;
+export const FontsIcon = (p: IconProps) => <Xp name="fonts" {...p} />;
+export const GameControllerIcon = (p: IconProps) => <Xp name="game-controller" {...p} />;
+export const InternetOptionsIcon = (p: IconProps) => <Xp name="internet-options" {...p} />;
+export const KeyboardIcon = (p: IconProps) => <Xp name="keyboard" {...p} />;
+export const MouseIcon = (p: IconProps) => <Xp name="mouse" {...p} />;
+export const NetworkConnectionsIcon = (p: IconProps) => <Xp name="network-connections" {...p} />;
+export const PhoneModemIcon = (p: IconProps) => <Xp name="phone-modem" {...p} />;
+export const PowerOptionsIcon = (p: IconProps) => <Xp name="power-options" {...p} />;
+export const PrintersIcon = (p: IconProps) => <Xp name="printers" {...p} />;
+export const RegionalIcon = (p: IconProps) => <Xp name="regional" {...p} />;
+export const ScannersCamerasIcon = (p: IconProps) => <Xp name="scanners-cameras" {...p} />;
+export const ScheduledTasksIcon = (p: IconProps) => <Xp name="scheduled-tasks" {...p} />;
+export const SecurityCenterIcon = (p: IconProps) => <Xp name="security" {...p} />;
+export const TaskbarStartMenuIcon = (p: IconProps) => <Xp name="taskbar-start-menu" {...p} />;
 export const RecentDocumentsIcon = ({ size = 24, ...p }: IconProps) => <Xp name="recent-documents" size={size} {...p} />;
 export const LogOffIcon = ({ size = 20, ...p }: IconProps) => <Xp name="log-off" size={size} {...p} />;
 export const ShutdownIcon = ({ size = 20, ...p }: IconProps) => <Xp name="power" size={size} {...p} />;

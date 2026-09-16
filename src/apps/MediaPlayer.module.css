@@ -74,6 +74,13 @@
   }
 }
 
+/* The bars, across the middle of the stage. */
+.viz {
+  width: 86%;
+  height: 46%;
+  display: block;
+}
+
 .nowPlaying {
   font-size: 12px;
   color: #eaf1ff;

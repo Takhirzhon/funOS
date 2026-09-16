@@ -11,6 +11,7 @@ import {
 import { useWindowStore } from "../store/windowStore";
 import { isHiddenEntry, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { useFolderOptions } from "../store/folderOptions";
+import { useThemeStore } from "../store/themeStore";
 import { apps, appIds, type AppId } from "../apps/registry";
 import { DesktopIcon } from "./DesktopIcon";
 import {
@@ -40,6 +41,7 @@ import { moveInto } from "../fs/move";
 import { basename } from "../fs/path";
 import { entryIcon } from "../fs/icons";
 import { CV_PATH, urlForPath } from "../apps/ie/site";
+import { useWallpaperStyle } from "../store/wallpaper";
 import styles from "./Desktop.module.css";
 
 const ICON_W = 76;
@@ -87,6 +89,7 @@ export function Desktop() {
   const clipboardPaths = useClipboardStore((s) => s.paths);
   const clipboardMode = useClipboardStore((s) => s.mode);
   const showHidden = useFolderOptions((s) => s.showHidden);
+  const wallpaper = useWallpaperStyle();
   const cutToClipboard = useClipboardStore((s) => s.cut);
   const copyToClipboard = useClipboardStore((s) => s.copy);
 
@@ -518,6 +521,16 @@ export function Desktop() {
         onClick: () => void deletePaths(targetsFor(item.entry.path)),
       },
       { kind: "separator" },
+      ...(item.entry.mime?.startsWith("image/")
+        ? [
+            { kind: "separator" as const },
+            {
+              kind: "item" as const,
+              label: "Set as Desktop Background",
+              onClick: () => useThemeStore.getState().setWallpaper(item.entry.path as `C:${string}`),
+            },
+          ]
+        : []),
       {
         kind: "item",
         label: "Properties",
@@ -574,7 +587,7 @@ export function Desktop() {
   };
 
   return (
-    <div className="desktop">
+    <div className="desktop" style={wallpaper}>
       <div
         ref={fieldRef}
         className={dropActive ? `${styles.field} ${styles.dropActive}` : styles.field}

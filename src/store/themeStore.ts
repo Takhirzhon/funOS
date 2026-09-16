@@ -28,9 +28,21 @@ export const SAVER_NAMES: Record<Saver, string> = {
 
 const KEY = "funos.display";
 
-type Stored = { theme: Theme; saver: Saver; idleMinutes: number };
+/* The wallpaper: Bliss, nothing (the Luna blue), or a picture from the file
+ * system by path - which is how a photograph in My Pictures, or one dropped
+ * in from the host, becomes the background. XP's three ways of fitting it. */
+export type Wallpaper = "bliss" | "none" | `C:${string}`;
+export type WallpaperFit = "stretch" | "center" | "tile";
 
-const DEFAULTS: Stored = { theme: "blue", saver: "starfield", idleMinutes: 3 };
+export const FIT_NAMES: Record<WallpaperFit, string> = {
+  stretch: "Stretch",
+  center: "Center",
+  tile: "Tile",
+};
+
+type Stored = { theme: Theme; saver: Saver; idleMinutes: number; wallpaper: Wallpaper; fit: WallpaperFit };
+
+const DEFAULTS: Stored = { theme: "blue", saver: "starfield", idleMinutes: 3, wallpaper: "bliss", fit: "stretch" };
 
 const load = (): Stored => {
   try {
@@ -46,6 +58,11 @@ const load = (): Stored => {
         typeof parsed.idleMinutes === "number" && parsed.idleMinutes > 0
           ? Math.min(60, parsed.idleMinutes)
           : DEFAULTS.idleMinutes,
+      wallpaper:
+        parsed.wallpaper === "none" || parsed.wallpaper === "bliss" || (typeof parsed.wallpaper === "string" && parsed.wallpaper.startsWith("C:"))
+          ? (parsed.wallpaper as Wallpaper)
+          : DEFAULTS.wallpaper,
+      fit: parsed.fit && parsed.fit in FIT_NAMES ? parsed.fit : DEFAULTS.fit,
     };
   } catch {
     return DEFAULTS;
@@ -64,6 +81,8 @@ type ThemeStore = Stored & {
   setTheme: (theme: Theme) => void;
   setSaver: (saver: Saver) => void;
   setIdleMinutes: (minutes: number) => void;
+  setWallpaper: (wallpaper: Wallpaper, fit?: WallpaperFit) => void;
+  setFit: (fit: WallpaperFit) => void;
 };
 
 const initial = load();
@@ -94,5 +113,16 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     const clamped = Math.max(1, Math.min(60, Math.round(idleMinutes)));
     set({ idleMinutes: clamped });
     save({ ...get(), idleMinutes: clamped });
+  },
+
+  setWallpaper: (wallpaper, fit) => {
+    const next = { wallpaper, fit: fit ?? get().fit };
+    set(next);
+    save({ ...get(), ...next });
+  },
+
+  setFit: (fit) => {
+    set({ fit });
+    save({ ...get(), fit });
   },
 }));

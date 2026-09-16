@@ -1,0 +1,156 @@
+.app {
+  display: flex;
+  height: 100%;
+  font-size: 11px;
+  background: #fff;
+}
+
+/* The Search Companion pane: the pale yellow XP used for it, and nothing
+ * else on the desktop, which is why it read as its own thing. */
+.side {
+  flex: none;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: #fdf7d8;
+  border-right: 1px solid #d5d2c4;
+  overflow: auto;
+}
+
+.sideHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.sideText {
+  margin: 4px 0 8px;
+  line-height: 1.4;
+  color: #333;
+}
+
+.label {
+  margin-top: 6px;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.buttons button {
+  min-width: 60px;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.status {
+  flex: none;
+  padding: 8px 10px;
+  color: #333;
+  border-bottom: 1px solid #d5d2c4;
+  background: #fff;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.headerRow {
+  position: sticky;
+  top: 0;
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) minmax(140px, 1.5fr) 60px 110px;
+  background: linear-gradient(to bottom, #fff 0%, #f0f0ea 100%);
+  border-bottom: 1px solid #d5d2c4;
+}
+
+.headerRow span {
+  padding: 2px 6px;
+  border-right: 1px solid #d5d2c4;
+  white-space: nowrap;
+}
+
+.row {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) minmax(140px, 1.5fr) 60px 110px;
+  width: 100%;
+  cursor: default;
+  color: #000;
+}
+
+.row > span {
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.row:hover {
+  background: #e4eefb;
+}
+
+.selected,
+.selected:hover {
+  background: #316ac5;
+  color: #fff;
+}
+
+.cellName {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.cellSize {
+  text-align: right;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .side {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid #d5d2c4;
+  }
+
+  .headerRow,
+  .row {
+    grid-template-columns: 1fr 60px;
+  }
+
+  .headerRow span:nth-child(2),
+  .headerRow span:nth-child(4),
+  .row > span:nth-child(2),
+  .row > span:nth-child(4) {
+    display: none;
+  }
+}

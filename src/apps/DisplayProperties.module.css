@@ -129,6 +129,95 @@
   box-shadow: inset 0 0 0 1px #6b6a5e, 0 1px 3px #0004;
 }
 
+/* The Desktop tab's little screen shows the real background. */
+.monitorBliss {
+  background-image: url("../assets/bliss.webp");
+  background-size: cover;
+  background-position: center;
+}
+
+.wallRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.wallList {
+  flex: 1;
+  min-width: 0;
+  height: 118px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #7f9db9;
+}
+
+.wallItem {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 2px 5px;
+  cursor: default;
+}
+
+.wallItem:hover {
+  background: #e4eefb;
+}
+
+.wallCurrent,
+.wallCurrent:hover {
+  background: #316ac5;
+  color: #fff;
+}
+
+.wallSwatch {
+  width: 16px;
+  height: 16px;
+  object-fit: cover;
+  flex: none;
+}
+
+.wallNone {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  background: #3a6ea5;
+  border: 1px solid #7f9db9;
+}
+
+.wallLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallSide {
+  flex: none;
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Stacked: the shared .field puts its label in a 92px column, which in a
+ * 130px side leaves the dropdown nothing. */
+.wallSide .field {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+}
+
+.wallSide .field > span:first-child {
+  width: auto;
+}
+
+.wallSide select {
+  width: 100%;
+  max-width: none;
+}
+
 .stand {
   width: 54px;
   height: 10px;

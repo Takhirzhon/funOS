@@ -56,23 +56,17 @@ this; what is left is content and the places it should be reachable from.
 
 Ordered by ratio of "makes the place feel alive" to effort.
 
-- [ ] **Control Panel proper.** Display Properties exists and owns Themes and
-      Screen Saver. It has no Desktop tab, so the wallpaper is still fixed, and
-      there is no Control Panel window listing anything else.
-- [ ] **Run… Browse.** Greyed, because there is one dialog at a time and a
-      file picker would replace the Run box. Either the picker returns into
-      the box, or Run becomes a window. Win+R never reaches the page.
-- [ ] **Search and Help and Support.** Both are Start menu items with no
-      window behind them. Search can be a real search over the VFS - the
-      dog is optional, the results list is not. Help can be one page.
-- [ ] **Media Player: the visualiser.** `My Music` has a track now (a
-      generated ambient sketch - a real one, with rights to put it here,
-      would be better), and the visualiser that is currently a gradient
-      earns a real waveform.
-- [ ] **The guestbook, moderated from the desktop.** Entries are removed
-      with `curl -X DELETE` and the admin token (deploy/README.md). A
-      Delete button on the page, shown only when the token is in
-      localStorage, would make it a thing the owner does from the site.
+- [ ] **Control Panel's other applets.** Seventeen of the twenty-three say,
+      honestly, what they would have done and that this computer has no such
+      part. Date and Time could set the clock's time zone; Sounds could pick
+      a scheme; Taskbar and Start Menu could lock the taskbar and hide the
+      Quick Launch bar. Each is an afternoon and each is a window somebody
+      opened in 2004.
+- [ ] **Search: the dog.** The Search Companion works and has no animated
+      character in the corner. Rover was optional then too.
+- [ ] **A real track in My Music.** The visualiser has something to draw now;
+      what it draws is a generated ambient sketch. A real one, with the
+      rights to put it here, would be better.
 
 ## The details nobody asks for and everybody notices
 

@@ -1,0 +1,148 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-size: 11px;
+  background: #fff;
+}
+
+/* The banner: the deep blue with the white wordmark, over a thin gold line,
+ * that every Help and Support page opened with. */
+.banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(to right, #1b4fb3 0%, #3f7fd6 60%, #6ea5f0 100%);
+  color: #fff;
+  border-bottom: 2px solid #f5a623;
+}
+
+.bannerTitle {
+  font-family: var(--font-caption);
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.bannerSub {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.topics {
+  flex: none;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px;
+  background: #eef3fb;
+  border-right: 1px solid #b7c8e2;
+  overflow: auto;
+}
+
+.topicsHead {
+  font-weight: bold;
+  color: #1c3f7a;
+  padding: 2px 6px 8px;
+}
+
+.topic {
+  all: unset;
+  padding: 4px 6px;
+  color: #215dc6;
+  cursor: default;
+  border-radius: 3px;
+}
+
+.topic:hover {
+  text-decoration: underline;
+}
+
+.topicCurrent,
+.topicCurrent:hover {
+  background: #fff;
+  color: #000;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 12px 18px 18px;
+  line-height: 1.5;
+}
+
+.content p {
+  margin: 0 0 10px;
+}
+
+.h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-caption);
+  font-size: 16px;
+  color: #1c3f7a;
+  border-bottom: 1px solid #b7c8e2;
+  padding-bottom: 4px;
+}
+
+.keys {
+  border-collapse: collapse;
+}
+
+.keys td {
+  padding: 3px 12px 3px 0;
+  vertical-align: top;
+  border-bottom: 1px dotted #ccd;
+}
+
+.keys td:first-child {
+  white-space: nowrap;
+  font-family: "Courier New", monospace;
+  color: #1c3f7a;
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.list li {
+  margin-bottom: 6px;
+}
+
+.link {
+  all: unset;
+  color: #215dc6;
+  text-decoration: underline;
+  cursor: default;
+}
+
+@media (max-width: 700px) {
+  .body {
+    flex-direction: column;
+  }
+
+  .topics {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 2px;
+    border-right: none;
+    border-bottom: 1px solid #b7c8e2;
+  }
+
+  .topicsHead {
+    width: 100%;
+    padding-bottom: 2px;
+  }
+}

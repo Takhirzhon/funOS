@@ -43,9 +43,9 @@ const places: { appId?: AppId; label: string; icon: ReactNode }[] = [
 ];
 
 const tools: { label: string; icon: ReactNode; appId?: AppId; action?: () => void }[] = [
-  { label: "Control Panel", icon: <ControlPanelIcon size={22} />, appId: "displayProperties" },
-  { label: "Help and Support", icon: <HelpIcon size={22} /> },
-  { label: "Search", icon: <SearchIcon size={22} /> },
+  { label: "Control Panel", icon: <ControlPanelIcon size={22} />, appId: "controlPanel" },
+  { label: "Help and Support", icon: <HelpIcon size={22} />, appId: "helpAndSupport" },
+  { label: "Search", icon: <SearchIcon size={22} />, appId: "search" },
   { label: "Run...", icon: <RunIcon size={22} />, action: () => void run() },
 ];
 

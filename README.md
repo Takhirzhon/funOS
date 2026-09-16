@@ -78,6 +78,8 @@ mapping and the formats.
   - **Display Properties** — Luna Blue / Olive / Silver, screensavers including 3D Maze and 3D Text (the owner's name, on three.js, one lazy chunk for both)
   - **System Properties** — right-click My Computer, or Pause: registered to, build from `/health`, what the browser knows about the machine
   - **Run…** — `notepad`, `calc`, `mspaint`, `sol`, `winmine`, `sysdm.cpl`, `taskmgr`, a path, or an address
+  - **Control Panel** — classic view, twenty-three applets; Display (themes, desktop background from any picture, screen savers), System, Folder Options, Add or Remove Programs open; the rest say what they would have done
+  - **Search** and **Help and Support** — the Search Companion over the file system, and one help page with the shortcuts
   - **Task Manager** — Applications (real), Processes (the windows as their .exe names, plus every XP machine's svchost.exe), Performance with a measured CPU graph. Ending csrss.exe does what it did.
   - A blue screen — `crash` at the Command Prompt or in Run, the memory dump, any key to reboot
   - **About funOS**

@@ -1,10 +1,11 @@
 import { useWindowStore } from "../store/windowStore";
 import { useFsStore } from "../store/fsStore";
-import { errorDialog, runDialog } from "../store/dialogStore";
+import { BROWSE, errorDialog, fileDialog, runDialog } from "../store/dialogStore";
+import { MY_DOCUMENTS } from "./seed";
 import { apps, type AppId } from "../apps/registry";
 import { useSessionStore } from "../store/sessionStore";
 import { launchFile } from "./open";
-import { basename, normalize } from "./path";
+import { basename, display, normalize } from "./path";
 
 /* Run... - the box that took a program's name.
  *
@@ -26,7 +27,9 @@ const PROGRAMS: Record<string, AppId> = {
   mplayer2: "mediaPlayer",
   iexplore: "internetExplorer",
   "desk.cpl": "displayProperties",
-  control: "displayProperties",
+  control: "controlPanel",
+  "appwiz.cpl": "addRemovePrograms",
+  helpctr: "helpAndSupport",
   "sysdm.cpl": "systemProperties",
   winver: "about",
   taskmgr: "taskManager",
@@ -117,8 +120,20 @@ export function runCommand(input: string): boolean {
   return false;
 }
 
-/** The whole gesture: the box, then the command. */
+/** The whole gesture: the box, then the command. Browse... closes the box,
+ *  shows the file picker, and reopens the box with what was picked - one
+ *  dialog at a time, and it still reads as one dialog. */
 export async function run(): Promise<void> {
-  const command = await runDialog();
-  if (command !== null) runCommand(command);
+  let initial: string | undefined;
+  for (;;) {
+    const command = await runDialog(initial);
+    if (command === null) return;
+    if (command === BROWSE) {
+      const picked = await fileDialog("open", MY_DOCUMENTS, "");
+      initial = picked !== null ? display(picked) : (initial ?? "");
+      continue;
+    }
+    runCommand(command);
+    return;
+  }
 }

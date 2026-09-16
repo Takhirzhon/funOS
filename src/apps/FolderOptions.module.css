@@ -1,0 +1,97 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--luna-face);
+  font-size: 11px;
+}
+
+.tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid #919b9c;
+}
+
+.tab {
+  padding: 3px 10px 4px;
+  color: #000;
+  background: linear-gradient(to bottom, #fdfdfb 0%, #ece9d8 100%);
+  border: 1px solid #919b9c;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  margin-bottom: -1px;
+}
+
+.tab.active {
+  background: #fff;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #fff;
+}
+
+.page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  background: #fff;
+}
+
+.group {
+  margin: 0 0 12px;
+  padding: 6px 10px 10px;
+  border: 1px solid #d0d0bf;
+  border-radius: 3px;
+}
+
+.group legend {
+  color: #0046d5;
+  padding: 0 3px;
+}
+
+.views {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.advancedHead {
+  margin-bottom: 3px;
+}
+
+/* The tree: a sunken white box, folder headings, indented leaves. */
+.tree {
+  border: 1px solid #7f9db9;
+  padding: 4px 6px;
+  line-height: 1.7;
+}
+
+.node {
+  padding-left: 4px;
+}
+
+.leaf {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 22px;
+}
+
+.deep {
+  padding-left: 40px;
+}
+
+.footer {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.footer button {
+  min-width: 75px;
+  height: 23px;
+}

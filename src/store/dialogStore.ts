@@ -18,8 +18,9 @@ export type DialogRequest =
   | { kind: "confirm"; title: string; message: string }
   | { kind: "error"; title: string; message: string }
   | { kind: "properties"; title: string; paths: string[] }
-  /* The Run box. Resolves to the line typed, or null. */
-  | { kind: "run" }
+  /* The Run box. Resolves to the line typed, BROWSE for the Browse...
+   * button, or null. `initial` is what the box opens with. */
+  | { kind: "run"; initial?: string }
   /* The file picker. `mode` decides the button label and whether an existing
    * name is a warning ("replace?") or the whole point. */
   | {
@@ -116,10 +117,13 @@ export const fileDialog = (
     })
     .then((result) => (typeof result === "string" ? result : null));
 
-export const runDialog = (): Promise<string | null> =>
+/** What the Run box resolves to when Browse... was pressed. */
+export const BROWSE = "\u0000browse";
+
+export const runDialog = (initial?: string): Promise<string | null> =>
   useDialogStore
     .getState()
-    .ask({ kind: "run" })
+    .ask({ kind: "run", initial })
     .then((result) => (typeof result === "string" ? result : null));
 
 export const errorDialog = (title: string, message: string): Promise<void> =>

@@ -281,6 +281,27 @@
   margin: 14px 0;
 }
 
+/* Moderation, for the one browser with the token: a plain link where the
+ * date is, and a nearly invisible "owner" at the foot for everyone else. */
+.guestDelete {
+  all: unset;
+  color: #cc0000;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ownerLink {
+  all: unset;
+  color: #bbb;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.ownerLink:hover {
+  color: #0000cc;
+  text-decoration: underline;
+}
+
 .button {
   font: inherit;
   font-size: 11px;

@@ -3,6 +3,7 @@ import { blobUrlFor, listEntries, useFsStore, type FsEntry } from "../../store/f
 import { DESKTOP_DIR, MY_DOCUMENTS } from "../../fs/seed";
 import { basename, join } from "../../fs/path";
 import { launchFile } from "../../fs/open";
+import { confirmDialog, promptDialog } from "../../store/dialogStore";
 import { EMAIL, LINKS, openExternal, useNavigate } from "./site";
 import { postUrl, usePosts } from "../../blog/posts";
 import { Markdown } from "./Markdown";
@@ -424,6 +425,18 @@ type GuestbookEntry = { id: string; name: string; message: string; date: string 
 
 const GUESTBOOK_API = "/api/guestbook";
 
+/* The owner's token, kept in this browser only. With it, every entry gets a
+ * Delete; without it the page is the same for everyone. Set from the
+ * "owner" link at the foot of the page, which asks for it once. */
+const TOKEN_KEY = "guestbook.token";
+const readToken = (): string => {
+  try {
+    return localStorage.getItem(TOKEN_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+
 export function GuestbookPage({ url }: PageProps) {
   const [entries, setEntries] = useState<GuestbookEntry[] | null | "down">(null);
   const [name, setName] = useState("");
@@ -431,6 +444,40 @@ export function GuestbookPage({ url }: PageProps) {
   const [website, setWebsite] = useState("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [token, setToken] = useState(readToken);
+
+  const becomeOwner = async () => {
+    const t = await promptDialog("Guestbook", "The admin token (empty to sign out):", token, "OK");
+    if (t === null) return;
+    try {
+      if (t.trim()) localStorage.setItem(TOKEN_KEY, t.trim());
+      else localStorage.removeItem(TOKEN_KEY);
+    } catch {
+      /* Private mode: the token lasts the page. */
+    }
+    setToken(t.trim());
+  };
+
+  const remove = async (id: string) => {
+    if (!(await confirmDialog("Guestbook", "Delete this entry? It cannot be restored."))) return;
+    try {
+      const r = await fetch(`${GUESTBOOK_API}/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.status === 403) {
+        setNote("The guestbook refused that token.");
+        return;
+      }
+      if (!r.ok) {
+        setNote("The guestbook did not delete that. Try again in a moment.");
+        return;
+      }
+      setEntries((was) => (Array.isArray(was) ? was.filter((e) => e.id !== id) : was));
+    } catch {
+      setNote("The guestbook server is not answering.");
+    }
+  };
 
   useEffect(() => {
     let live = true;
@@ -524,9 +571,22 @@ export function GuestbookPage({ url }: PageProps) {
             <div className={styles.guestMessage}>{en.message}</div>
             <div className={styles.guestMeta}>
               &mdash; <b>{en.name}</b>, {longDate(en.date.slice(0, 10))}
+              {token && (
+                <>
+                  {" · "}
+                  <button type="button" className={styles.guestDelete} onClick={() => void remove(en.id)}>
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           </div>
         ))}
+      <p className={styles.small}>
+        <button type="button" className={styles.ownerLink} onClick={() => void becomeOwner()}>
+          {token ? "owner: signed in" : "owner"}
+        </button>
+      </p>
     </Layout>
   );
 }

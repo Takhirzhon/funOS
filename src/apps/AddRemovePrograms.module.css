@@ -1,0 +1,129 @@
+.app {
+  display: flex;
+  height: 100%;
+  font-size: 11px;
+  background: #fff;
+}
+
+/* The tall buttons down the left, the one place XP used them. */
+.side {
+  flex: none;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 4px;
+  background: #fff;
+  border-right: 1px solid #d5d2c4;
+}
+
+.sideButton {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  text-align: center;
+  line-height: 1.25;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: default;
+  color: #000;
+}
+
+.sideButton:hover {
+  background: #e4eefb;
+}
+
+.sideCurrent,
+.sideCurrent:hover {
+  background: #fff;
+  border-color: #919b9c;
+  box-shadow: 0 1px 2px #0002;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  background: var(--luna-face);
+}
+
+.head {
+  margin-bottom: 4px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #7f9db9;
+}
+
+.row {
+  padding: 2px 4px;
+  border-bottom: 1px solid #f0f0ea;
+}
+
+.rowHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.size {
+  flex: none;
+  min-width: 90px;
+  text-align: right;
+}
+
+.dim {
+  color: #666;
+}
+
+/* The selected program opens up, with its buttons, the way the real list
+ * did - one open row at a time. */
+.current {
+  background: #316ac5;
+  color: #fff;
+  padding-bottom: 6px;
+}
+
+.current .dim {
+  color: #dbe4f5;
+}
+
+.rowBody {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 0 30px;
+}
+
+.rowButtons {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.rowButtons button {
+  min-width: 70px;
+}
+
+@media (max-width: 700px) {
+  .side {
+    display: none;
+  }
+}

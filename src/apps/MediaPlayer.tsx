@@ -6,6 +6,7 @@ import { basename, dirname, display, normalize } from "../fs/path";
 import { MY_DOCUMENTS } from "../fs/seed";
 import { MenuBar } from "../components/MenuBar";
 import { MediaPlayerIcon } from "../icons";
+import { Visualizer } from "./Visualizer";
 import styles from "./MediaPlayer.module.css";
 
 type Props = { path?: string; windowId?: string };
@@ -39,6 +40,14 @@ export function MediaPlayer({ path, windowId }: Props) {
   const [volume, setVolume] = useState(0.8);
   const [muted, setMuted] = useState(false);
   const media = useRef<HTMLVideoElement>(null);
+  /* The element as state too, for the visualizer: a ref does not re-render
+   * when the element arrives, and the analyser has to be wired to the one
+   * that exists now. */
+  const [mediaEl, setMediaEl] = useState<HTMLVideoElement | null>(null);
+  const attach = useCallback((el: HTMLVideoElement | null) => {
+    media.current = el;
+    setMediaEl(el);
+  }, []);
 
   const entry = current ? entries[current] : undefined;
   const url = entry && isMedia(entry) ? blobUrlFor(entry) : undefined;
@@ -186,17 +195,17 @@ export function MediaPlayer({ path, windowId }: Props) {
             <>
               <video
                 key={url}
-                ref={media}
+                ref={attach}
                 src={url}
                 className={isVideo ? styles.video : styles.audioOnly}
                 autoPlay
                 playsInline
               />
               {!isVideo && (
-                /* Ambience, in the spirit of the visualizations: a slow wash
-                   under the file name rather than a black rectangle. */
+                /* The visualization over the ambience: bars that follow the
+                   sound, the file's name under them. */
                 <div className={styles.ambience}>
-                  <MediaPlayerIcon size={64} />
+                  <Visualizer media={mediaEl} className={styles.viz} />
                   <div className={styles.nowPlaying}>{name}</div>
                 </div>
               )}

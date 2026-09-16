@@ -9,6 +9,7 @@ import {
 } from "react";
 import { blobUrlFor, isBinary, isHiddenEntry, listEntries, useFsStore, type FsEntry } from "../store/fsStore";
 import { useFolderOptions } from "../store/folderOptions";
+import { useThemeStore } from "../store/themeStore";
 import { useMenuStore } from "../store/menuStore";
 import { useDndStore } from "../store/dndStore";
 import { errorDialog, promptDialog, propertiesDialog } from "../store/dialogStore";
@@ -323,6 +324,16 @@ export function Explorer({ path, windowId }: Props) {
       { kind: "separator" },
       { kind: "item", label: "Rename", onClick: () => void renameEntry(entry) },
       { kind: "item", label: "Delete", onClick: () => void deleteEntry(entry) },
+      ...(entry.mime?.startsWith("image/")
+        ? [
+            { kind: "separator" as const },
+            {
+              kind: "item" as const,
+              label: "Set as Desktop Background",
+              onClick: () => useThemeStore.getState().setWallpaper(entry.path as `C:${string}`),
+            },
+          ]
+        : []),
       { kind: "separator" },
       {
         kind: "item",
